@@ -1,0 +1,27 @@
+{
+  "name": "@wagyu-a5/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "@wagyu-a5/auth": "workspace:*",
+    "@wagyu-a5/db": "workspace:*",
+    "@wagyu-a5/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@wagyu-a5/config": "workspace:*",
+    "hono": "catalog:",
+    "typescript": "catalog:"
+  }
+}

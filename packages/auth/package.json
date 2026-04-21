@@ -1,0 +1,24 @@
+{
+  "name": "@wagyu-a5/auth",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@wagyu-a5/db": "workspace:*",
+    "@wagyu-a5/env": "workspace:*",
+    "better-auth": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@wagyu-a5/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

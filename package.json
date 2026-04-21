@@ -1,0 +1,32 @@
+{
+  "name": "wagyu-a5",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @wagyu-a5/db db:push",
+    "db:studio": "turbo -F @wagyu-a5/db db:studio",
+    "db:generate": "turbo -F @wagyu-a5/db db:generate",
+    "db:migrate": "turbo -F @wagyu-a5/db db:migrate"
+  },
+  "dependencies": {
+    "@wagyu-a5/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.14",
+    "@wagyu-a5/config": "workspace:*",
+    "turbo": "^2.8.12",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@10.28.0"
+}

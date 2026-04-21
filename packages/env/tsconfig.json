@@ -1,0 +1,3 @@
+{
+  "extends": "@wagyu-a5/config/tsconfig.base.json"
+}
