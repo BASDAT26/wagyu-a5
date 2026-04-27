@@ -231,7 +231,7 @@ export default function DesignSystem() {
           <div className="flex flex-wrap gap-4">
             {/* Basic Modal */}
             <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
-              <ModalTrigger>
+              <ModalTrigger asChild>
                 <Button>Open Basic Modal</Button>
               </ModalTrigger>
               <ModalPopup>
@@ -257,7 +257,7 @@ export default function DesignSystem() {
 
             {/* Destructive Modal */}
             <Modal open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-              <ModalTrigger>
+              <ModalTrigger asChild>
                 <Button variant="destructive">Delete Confirmation</Button>
               </ModalTrigger>
               <ModalPopup>

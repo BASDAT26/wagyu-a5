@@ -5,11 +5,37 @@ import { cn } from "@wagyu-a5/ui/lib/utils";
 
 const Modal = DialogPrimitive.Root;
 
-const ModalTrigger = DialogPrimitive.Trigger;
+const ModalTrigger = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger> & {
+    asChild?: boolean;
+  }
+>(({ className, asChild = false, ...props }, ref) => (
+  <DialogPrimitive.Trigger
+    ref={ref}
+    asChild={asChild}
+    className={cn(className)}
+    {...props}
+  />
+));
+ModalTrigger.displayName = "ModalTrigger";
 
 const ModalPortal = DialogPrimitive.Portal;
 
-const ModalClose = DialogPrimitive.Close;
+const ModalClose = React.forwardRef<
+  React.ElementRef<typeof DialogPrimitive.Close>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Close> & {
+    asChild?: boolean;
+  }
+>(({ className, asChild = false, ...props }, ref) => (
+  <DialogPrimitive.Close
+    ref={ref}
+    asChild={asChild}
+    className={cn(className)}
+    {...props}
+  />
+));
+ModalClose.displayName = "ModalClose";
 
 const ModalOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
