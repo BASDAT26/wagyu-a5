@@ -18,7 +18,7 @@ export default function DeleteSeat({ isAssigned = false }: { isAssigned?: boolea
   return (
     <Modal open={open} onOpenChange={setOpen}>
       <ModalTrigger asChild>
-        <button 
+        <button
           className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed group relative transition-colors"
           disabled={isAssigned}
         >
@@ -30,18 +30,18 @@ export default function DeleteSeat({ isAssigned = false }: { isAssigned?: boolea
           <Trash2 className="w-4 h-4" />
         </button>
       </ModalTrigger>
-      <ModalContent className="max-w-md rounded-2xl">
+      <ModalContent className="max-w-md rounded-2xl dark:bg-slate-900 dark:border-slate-800">
         <ModalHeader>
           <ModalTitle className="text-red-500 font-bold text-lg">Hapus Kursi</ModalTitle>
         </ModalHeader>
         <ModalBody className="py-2">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-slate-400">
             Apakah Anda yakin ingin menghapus kursi ini? Tindakan ini tidak dapat dibatalkan.
           </p>
         </ModalBody>
         <ModalFooter className="flex w-full justify-end gap-3 mt-4 sm:space-x-0">
           <ModalClose asChild>
-            <Button variant="outline" className="rounded-xl px-6 h-10 border-gray-200 text-gray-700 font-medium hover:bg-gray-50">
+            <Button variant="outline" className="rounded-xl px-6 h-10 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-800">
               Batal
             </Button>
           </ModalClose>

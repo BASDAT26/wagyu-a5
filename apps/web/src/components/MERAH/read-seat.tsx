@@ -9,13 +9,69 @@ import { Search, XCircle, CheckCircle2 } from "lucide-react";
 
 // Mock Data
 const MOCK_SEATS = [
-  { id: 1, section: "WVIP", baris: "A", noKursi: "1", venue: "Jakarta Convention Center", isAssigned: true },
-  { id: 2, section: "WVIP", baris: "A", noKursi: "2", venue: "Jakarta Convention Center", isAssigned: false },
-  { id: 3, section: "WVIP", baris: "A", noKursi: "3", venue: "Jakarta Convention Center", isAssigned: false },
-  { id: 4, section: "VIP", baris: "B", noKursi: "1", venue: "Jakarta Convention Center", isAssigned: true },
-  { id: 5, section: "VIP", baris: "B", noKursi: "2", venue: "Jakarta Convention Center", isAssigned: true },
-  { id: 6, section: "VIP", baris: "B", noKursi: "3", venue: "Jakarta Convention Center", isAssigned: false },
-  { id: 7, section: "Category 1", baris: "C", noKursi: "1", venue: "Jakarta Convention Center", isAssigned: false },
+  {
+    id: "s1a2b3c4-0001-4aaa-aaaa-aaaaaaaa0001",
+    section: "WVIP",
+    baris: "A",
+    noKursi: "1",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: true
+  },
+  {
+    id: "s1a2b3c4-0002-4aaa-aaaa-aaaaaaaa0002",
+    section: "WVIP",
+    baris: "A",
+    noKursi: "2",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: false
+  },
+  {
+    id: "s1a2b3c4-0003-4aaa-aaaa-aaaaaaaa0003",
+    section: "WVIP",
+    baris: "A",
+    noKursi: "3",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: false
+  },
+  {
+    id: "s1a2b3c4-0004-4aaa-aaaa-aaaaaaaa0004",
+    section: "VIP",
+    baris: "B",
+    noKursi: "1",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: true
+  },
+  {
+    id: "s1a2b3c4-0005-4aaa-aaaa-aaaaaaaa0005",
+    section: "VIP",
+    baris: "B",
+    noKursi: "2",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: true
+  },
+  {
+    id: "s1a2b3c4-0006-4aaa-aaaa-aaaaaaaa0006",
+    section: "VIP",
+    baris: "B",
+    noKursi: "3",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: false
+  },
+  {
+    id: "s1a2b3c4-0007-4aaa-aaaa-aaaaaaaa0007",
+    section: "Category 1",
+    baris: "C",
+    noKursi: "1",
+    venue: "Jakarta Convention Center",
+    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
+    isAssigned: false
+  }
 ];
 
 export default function ReadSeat() {
