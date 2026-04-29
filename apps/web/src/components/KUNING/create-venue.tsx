@@ -15,6 +15,7 @@ import {
 } from "@wagyu-a5/ui/components/modal";
 import { useState } from "react";
 import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
+import { Plus } from "lucide-react";
 
 export default function CreateVenue() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +23,10 @@ export default function CreateVenue() {
     <div>
       <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <ModalTrigger asChild>
-          <Button>Create Venue</Button>
+          <Button>
+            <Plus className="h-4 w-4" />
+            Tambah Venue
+          </Button>
         </ModalTrigger>
         <ModalPopup>
           <ModalHeader>
@@ -64,7 +68,7 @@ export default function CreateVenue() {
             </div>
           </ModalBody>
           <ModalFooter>
-            <ModalClose>
+            <ModalClose asChild>
               <Button variant="outline">Batal</Button>
             </ModalClose>
             <Button>Tambah</Button>

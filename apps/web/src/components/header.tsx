@@ -159,7 +159,7 @@ export default function Header() {
                 onClick={() => setUserMenuOpen((v) => !v)}
                 className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium transition-colors hover:bg-accent"
               >
-                <span className="max-w-[120px] truncate">{session.user.name}</span>
+                <span className="max-w-30 truncate">{session.user.name}</span>
                 <ChevronDown
                   size={14}
                   className={`transition-transform duration-200 ${userMenuOpen ? "rotate-180" : ""}`}

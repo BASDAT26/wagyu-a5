@@ -16,6 +16,7 @@ import {
 import { useState } from "react";
 import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
 import type { Venue } from "./interface";
+import { Pencil } from "lucide-react";
 
 export default function UpdateVenue() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,11 +32,14 @@ export default function UpdateVenue() {
     <div>
       <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <ModalTrigger asChild>
-          <Button>Edit Venue</Button>
+          <Button variant="outline" size="sm" className="gap-1.5">
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </Button>
         </ModalTrigger>
         <ModalPopup>
           <ModalHeader>
-            <ModalTitle>Tambah Venue Baru</ModalTitle>
+            <ModalTitle>Edit Venue</ModalTitle>
           </ModalHeader>
           <ModalBody>
             <div className="space-y-2 w-full">
@@ -79,13 +83,16 @@ export default function UpdateVenue() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Checkbox id="check-seat" checked={dummyVenue.hasReservedSeating}/>
+                <Checkbox
+                  id="check-seat"
+                  checked={dummyVenue.hasReservedSeating}
+                />
                 <Label htmlFor="check-seat">Has Reserved Seating</Label>
               </div>
             </div>
           </ModalBody>
           <ModalFooter>
-            <ModalClose>
+            <ModalClose asChild>
               <Button variant="outline">Batal</Button>
             </ModalClose>
             <Button>Tambah</Button>
