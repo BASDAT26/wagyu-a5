@@ -76,9 +76,12 @@ const MOCK_SEATS = [
 
 type Role = "customer" | "admin" | "organizer";
 
-export default function ReadSeat() {
+export default function ReadSeat({ role: propRole, onRoleChange }: { role?: Role, onRoleChange?: (role: Role) => void } = {}) {
   const [search, setSearch] = useState("");
-  const [role, setRole] = useState<Role>("customer");
+  const [internalRole, setInternalRole] = useState<Role>("customer");
+
+  const role = propRole || internalRole;
+  const setRole = onRoleChange || setInternalRole;
 
   const filteredSeats = useMemo(() => {
     return MOCK_SEATS.filter((seat) => {

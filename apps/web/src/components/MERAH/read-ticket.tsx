@@ -96,9 +96,12 @@ const ALL_TICKETS = [
   }
 ];
 
-export default function ReadTicket() {
-  const [role, setRole] = useState<"admin" | "customer">("customer");
+export default function ReadTicket({ role: propRole, onRoleChange }: { role?: "admin" | "customer", onRoleChange?: (role: "admin" | "customer") => void } = {}) {
+  const [internalRole, setInternalRole] = useState<"admin" | "customer">("customer");
   const [search, setSearch] = useState("");
+
+  const role = propRole || internalRole;
+  const setRole = onRoleChange || setInternalRole;
 
   // Role-based filtering
   const visibleTickets = useMemo(() => {
