@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 
 import type { Route } from "./+types/_index";
+import Header from "@/components/header";
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
