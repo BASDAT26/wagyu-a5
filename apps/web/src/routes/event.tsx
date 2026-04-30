@@ -4,7 +4,7 @@ import Header from "@/components/header";
 export default function Event() {
   return (
     <>
-      <Header role="customer"/>
+      <Header role="organizer"/>
       <ReadEvent />
     </>
   );

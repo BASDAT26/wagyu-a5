@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { MapPin, Calendar, Clock, Ticket, CheckCircle2, ChevronLeft, ShieldCheck, CreditCard } from "lucide-react";
+import Header from "@/components/header";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ export default function CheckoutPage() {
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
       {/* Navbar Minimalist */}
+      <Header role="customer"/>
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center gap-4">
           <Link to="/cari-event" className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors">

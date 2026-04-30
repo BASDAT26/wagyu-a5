@@ -4,7 +4,7 @@ import Header from "@/components/header";
 export default function Venue() {
   return (
     <>
-      <Header role="customer" />
+      <Header role="organizer" />
       <ReadVenue />
     </>
   );
