@@ -17,8 +17,8 @@ const ADMIN_LINKS: NavItem[] = [
   { to: "/ticket-category", label: "Kategori Tiket" },
   { to: "/ticket", label: "Manajemen Tiket" },
   { to: "/order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
+  { to: "/ticket", label: "Tiket (Aset)" },
+  { to: "/order", label: "Order (Aset)" },
   { to: "/profile", label: "Profile" },
 ];
 

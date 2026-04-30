@@ -88,7 +88,7 @@ export default function CheckoutPage() {
       </div>
 
       <div className="max-w-5xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8 mt-4">
-        
+
         {/* Left Column: Form & Selection */}
         <div className="lg:col-span-7 space-y-8">
           {/* Event Summary */}
@@ -115,17 +115,17 @@ export default function CheckoutPage() {
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
               <Ticket className="text-blue-500" size={20} /> Pilih Kategori Tiket
             </h3>
-            
+
             <div className="space-y-3">
               {categories.map((cat) => (
-                <div 
+                <div
                   key={cat.id}
                   onClick={() => cat.available && setSelectedCategory(cat.id)}
                   className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between
-                    ${!cat.available ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800" 
-                    : selectedCategory === cat.id 
-                      ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-md shadow-blue-500/10 cursor-pointer" 
-                      : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-800 cursor-pointer"
+                    ${!cat.available ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"
+                      : selectedCategory === cat.id
+                        ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-md shadow-blue-500/10 cursor-pointer"
+                        : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-800 cursor-pointer"
                     }`}
                 >
                   <div>
@@ -147,14 +147,14 @@ export default function CheckoutPage() {
             <div className="mt-8 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
               <span className="font-bold text-slate-700 dark:text-slate-200">Jumlah Tiket</span>
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   onClick={() => setTicketCount(Math.max(1, ticketCount - 1))}
                   className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
                 >
                   -
                 </button>
                 <span className="w-8 text-center font-black text-xl text-slate-800 dark:text-slate-100">{ticketCount}</span>
-                <button 
+                <button
                   onClick={() => setTicketCount(Math.min(5, ticketCount + 1))}
                   className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
                 >
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
               <CreditCard className="text-blue-500" size={20} /> Ringkasan Pesanan
             </h3>
-            
+
             <div className="space-y-4 mb-6">
               <div className="flex justify-between items-start text-sm">
                 <div>
@@ -192,7 +192,7 @@ export default function CheckoutPage() {
               <span className="text-2xl font-black text-blue-600 dark:text-blue-400">{formatRupiah(total)}</span>
             </div>
 
-            <button 
+            <button
               onClick={handleCheckout}
               disabled={isSubmitting}
               className={`w-full py-4 rounded-2xl font-black text-white shadow-lg transition-all flex items-center justify-center gap-2
