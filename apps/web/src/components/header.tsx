@@ -18,37 +18,37 @@ const GUEST_LINKS: NavItem[] = [
 
 const ADMIN_LINKS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/manajemen-venue", label: "Manajemen Venue" },
-  { to: "/manajemen-kursi", label: "Manajemen Kursi" },
-  { to: "/kategori-tiket", label: "Kategori Tiket" },
-  { to: "/manajemen-tiket", label: "Manajemen Tiket" },
-  { to: "/semua-order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
+  { to: "/venue", label: "Manajemen Venue" },
+  { to: "/seat", label: "Manajemen Kursi" },
+  { to: "/ticket-category", label: "Kategori Tiket" },
+  { to: "/ticket", label: "Manajemen Tiket" },
+  { to: "/order", label: "Semua Order" },
+  { to: "/ticket", label: "Tiket (Aset)" },
+  { to: "/order", label: "Order (Aset)" },
   { to: "/profile", label: "Profile" },
 ];
 
 const ORGANIZER_LINKS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/event-saya", label: "Event Saya" },
-  { to: "/manajemen-venue", label: "Manajemen Venue" },
-  { to: "/manajemen-kursi", label: "Manajemen Kursi" },
-  { to: "/kategori-tiket", label: "Kategori Tiket" },
-  { to: "/manajemen-tiket", label: "Manajemen Tiket" },
-  { to: "/semua-order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
+  { to: "/event", label: "Event Saya" },
+  { to: "/venue", label: "Manajemen Venue" },
+  { to: "/seat", label: "Manajemen Kursi" },
+  { to: "/ticket-category", label: "Kategori Tiket" },
+  { to: "/ticket", label: "Manajemen Tiket" },
+  { to: "/order", label: "Semua Order" },
+  { to: "/ticket", label: "Tiket (Aset)" },
+  { to: "/order", label: "Order (Aset)" },
   { to: "/profile", label: "Profile" },
 ];
 
 const CUSTOMER_LINKS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/tiket-saya", label: "Tiket Saya" },
-  { to: "/pesanan", label: "Pesanan" },
+  { to: "/ticket", label: "Tiket Saya" },
+  { to: "/order", label: "Pesanan" },
   { to: "/cari-event", label: "Cari Event" },
   { to: "/promosi", label: "Promosi" },
   { to: "/venue", label: "Venue" },
-  { to: "/artis", label: "Artis" },
+  { to: "/artist", label: "Artis" },
 ];
 
 // ---------------------------------------------------------------------------
