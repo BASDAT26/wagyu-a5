@@ -55,7 +55,7 @@ const CUSTOMER_LINKS: NavItem[] = [
 // Helper: resolve links based on role
 // ---------------------------------------------------------------------------
 
-type Role = "admin" | "organizer" | "customer" | null | undefined;
+type Role = "admin" | "organizer" | "customer" | "guest" | undefined;
 
 /**
  * Resolves nav links based on role.
@@ -66,6 +66,7 @@ function getLinks(role: Role, isLoggedIn: boolean): NavItem[] {
   if (role === "admin") return ADMIN_LINKS;
   if (role === "organizer") return ORGANIZER_LINKS;
   if (role === "customer") return CUSTOMER_LINKS;
+  if (role === "guest") return GUEST_LINKS;
   if (isLoggedIn) return CUSTOMER_LINKS; // default for logged-in users with no role
   return GUEST_LINKS;
 }
