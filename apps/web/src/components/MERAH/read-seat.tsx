@@ -74,8 +74,11 @@ const MOCK_SEATS = [
   }
 ];
 
+type Role = "customer" | "admin" | "organizer";
+
 export default function ReadSeat() {
   const [search, setSearch] = useState("");
+  const [role, setRole] = useState<Role>("customer");
 
   const filteredSeats = useMemo(() => {
     return MOCK_SEATS.filter((seat) => {
@@ -103,7 +106,18 @@ export default function ReadSeat() {
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-50">Manajemen Kursi</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Kelola kursi dan denah tempat duduk venue</p>
         </div>
-        <CreateSeat />
+        <div className="flex items-center gap-4">
+          <select 
+            value={role} 
+            onChange={(e) => setRole(e.target.value as Role)}
+            className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="customer">View as: Customer</option>
+            <option value="admin">View as: Admin</option>
+            <option value="organizer">View as: Organizer</option>
+          </select>
+          {role !== "customer" && <CreateSeat />}
+        </div>
       </div>
 
       {/* Stat Cards */}
@@ -156,7 +170,7 @@ export default function ReadSeat() {
                 <th className="px-6 py-4 font-bold">No. Kursi</th>
                 <th className="px-6 py-4 font-bold">Venue</th>
                 <th className="px-6 py-4 font-bold">Status</th>
-                <th className="px-6 py-4 font-bold text-right"></th>
+                {role !== "customer" && <th className="px-6 py-4 font-bold text-right">Aksi</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
@@ -189,17 +203,19 @@ export default function ReadSeat() {
                       </Chip>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <UpdateSeat />
-                      <DeleteSeat isAssigned={seat.isAssigned} />
-                    </div>
-                  </td>
+                  {role !== "customer" && (
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <UpdateSeat />
+                        <DeleteSeat isAssigned={seat.isAssigned} />
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
               {filteredSeats.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                  <td colSpan={role !== "customer" ? 6 : 5} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                     Tidak ada kursi yang ditemukan.
                   </td>
                 </tr>
