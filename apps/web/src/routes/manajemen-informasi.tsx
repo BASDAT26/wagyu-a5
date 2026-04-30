@@ -7,17 +7,17 @@ import ReadPromotion from "@/components/BIRU/read-promotion";
 import UpdateOrder from "@/components/BIRU/update-order";
 import UpdatePromotion from "@/components/BIRU/update-promotion";
 
-export default function Biru() {
+export default function ManajemenInformasi() {
   return (
-    <div className="w-full flex flex-col">
-      <CreateOrder />
-      <UpdateOrder />
-      <DeleteOrder />
-      <ReadOrder />
+    <div className="w-full flex flex-col min-h-screen">
+      {/* <CreateOrder /> */}
+      {/* <UpdateOrder /> */}
+      {/* <DeleteOrder /> */}
+      {/* <ReadOrder /> */}
       <CreatePromotion />
-      <UpdatePromotion />
-      <DeletePromotion />
-      <ReadPromotion />
+      {/* <UpdatePromotion /> */}
+      {/* <DeletePromotion /> */}
+      {/* <ReadPromotion /> */}
     </div>
   );
 }
