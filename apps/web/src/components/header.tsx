@@ -13,7 +13,7 @@ type NavItem = { to: string; label: string };
 
 const GUEST_LINKS: NavItem[] = [
   { to: "/login", label: "Login" },
-  { to: "/login", label: "Registrasi" },
+  { to: "/register", label: "Registrasi" },
 ];
 
 const ADMIN_LINKS: NavItem[] = [
