@@ -13,9 +13,9 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import Header from "./components/header";
 import { ThemeProvider } from "./components/theme-provider";
 import { queryClient } from "./utils/trpc";
+import AdminNavbar from "./components/admin-navbar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,7 +54,7 @@ export default function App() {
         storageKey="vite-ui-theme"
       >
         <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Header />
+          <AdminNavbar />
           <Outlet />
         </div>
         <Toaster richColors />

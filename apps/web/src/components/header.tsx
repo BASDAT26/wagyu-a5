@@ -99,16 +99,19 @@ function NavItem({ to, label, onClick }: NavItem & { onClick?: () => void }) {
 // Main Header component
 // ---------------------------------------------------------------------------
 
-export default function Header() {
+interface HeaderProps {
+  role?: Role;
+}
+
+export default function Header({ role: propRole }: HeaderProps) {
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // better-auth exposes user.role if the plugin / schema has it.
-  // We cast safely — if undefined it falls back to guest links.
+  // Use prop-provided role, or fall back to session role
   const isLoggedIn = !!session;
-  const role = (session?.user as { role?: Role })?.role;
+  const role = propRole || (session?.user as { role?: Role })?.role;
   const links = getLinks(role, isLoggedIn);
 
   const handleSignOut = async () => {
