@@ -43,12 +43,12 @@ const ORGANIZER_LINKS: NavItem[] = [
 
 const CUSTOMER_LINKS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard" },
-  { to: "/tiket-saya", label: "Tiket Saya" },
-  { to: "/pesanan", label: "Pesanan" },
-  { to: "/cari-event", label: "Cari Event" },
+  { to: "/ticket", label: "Tiket Saya" },
+  { to: "/order", label: "Pesanan" },
+  { to: "/event", label: "Cari Event" },
   { to: "/promosi", label: "Promosi" },
   { to: "/venue", label: "Venue" },
-  { to: "/artis", label: "Artis" },
+  { to: "/artist", label: "Artis" },
 ];
 
 // ---------------------------------------------------------------------------
