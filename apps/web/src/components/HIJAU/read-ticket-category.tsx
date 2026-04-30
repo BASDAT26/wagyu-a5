@@ -335,7 +335,7 @@ export default function ReadTicketCategory() {
                       <td className="px-4 py-4 text-muted-foreground">
                         {tc.event_name}
                       </td>
-                      <td className="px-4 py-4 font-medium text-primary">
+                      <td className="px-4 py-4 font-medium text-indigo-600 dark:text-indigo-400">
                         {formatRupiah(tc.price)}
                       </td>
                       <td className="px-4 py-4 text-muted-foreground">
@@ -405,7 +405,7 @@ export default function ReadTicketCategory() {
                       )}
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="font-medium text-primary">
+                      <span className="font-medium text-indigo-600 dark:text-indigo-400">
                         {formatRupiah(tc.price)}
                       </span>
                       <span className="text-muted-foreground">
