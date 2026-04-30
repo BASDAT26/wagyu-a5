@@ -146,8 +146,10 @@ function formatRupiah(value: number): string {
 }
 
 // ── Component ─────────────────────────────────────────────────────
-export default function ReadTicketCategory() {
-  const [isAdmin, setIsAdmin] = useState(true);
+export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin }: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
+  const [internalIsAdmin, setInternalIsAdmin] = useState(true);
+  const isAdmin = propIsAdmin !== undefined ? propIsAdmin : internalIsAdmin;
+  const setIsAdmin = onToggleAdmin || setInternalIsAdmin;
   const [search, setSearch] = useState("");
   const [eventFilter, setEventFilter] = useState("");
   const [view, setView] = useState<"table" | "list">("table");

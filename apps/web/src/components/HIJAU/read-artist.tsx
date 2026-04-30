@@ -49,8 +49,10 @@ function ArtistAvatar({ name }: { name: string }) {
   );
 }
 
-export default function ReadArtist() {
-  const [isAdmin, setIsAdmin] = useState(true);
+export default function ReadArtist({ isAdmin: propIsAdmin, onToggleAdmin }: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
+  const [internalIsAdmin, setInternalIsAdmin] = useState(true);
+  const isAdmin = propIsAdmin !== undefined ? propIsAdmin : internalIsAdmin;
+  const setIsAdmin = onToggleAdmin || setInternalIsAdmin;
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("");
   const [view, setView] = useState<"table" | "list">("list");
