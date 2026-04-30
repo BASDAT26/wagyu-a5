@@ -11,7 +11,6 @@ import {
   ModalClose,
   ModalHeader,
   ModalTitle,
-  ModalDescription,
 } from "@wagyu-a5/ui/components/modal";
 import { useState } from "react";
 import { Checkbox } from "@wagyu-a5/ui/components/checkbox";

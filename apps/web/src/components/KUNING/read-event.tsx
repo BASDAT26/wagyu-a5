@@ -81,8 +81,19 @@ const dummyEvents: EventItem[] = [
   },
 ];
 
-const allVenues = ["Jakarta Convention Center", "Taman Impian Jayakarta", "Bandung Hall Center"];
-const allArtists = ["Fourtwenty", "Hindia", "Tulus", "Nadin Amizah", "Pamungkas", "Raisa"];
+const allVenues = [
+  "Jakarta Convention Center",
+  "Taman Impian Jayakarta",
+  "Bandung Hall Center",
+];
+const allArtists = [
+  "Fourtwenty",
+  "Hindia",
+  "Tulus",
+  "Nadin Amizah",
+  "Pamungkas",
+  "Raisa",
+];
 
 function getLowestPrice(categories: TicketCategory[]): number {
   return Math.min(...categories.map((c) => c.price));
@@ -167,7 +178,7 @@ export default function ReadEvent() {
             className="overflow-hidden flex flex-col group hover:shadow-lg transition-shadow duration-300"
           >
             {/* Card Header — Gradient with Icon */}
-            <div className="relative h-36 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+            <div className="relative h-36 bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
               <EventIcon type={event.icon} />
               <button
                 className="absolute top-3 right-3 p-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/40 transition-colors"
@@ -212,7 +223,8 @@ export default function ReadEvent() {
               <div className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
                 <DollarSign className="h-3.5 w-3.5 shrink-0" />
                 <span>
-                  Mulai Rp {getLowestPrice(event.ticketCategories).toLocaleString()}
+                  Mulai Rp{" "}
+                  {getLowestPrice(event.ticketCategories).toLocaleString()}
                 </span>
               </div>
 
@@ -226,7 +238,10 @@ export default function ReadEvent() {
               </div>
 
               {/* Buy Button */}
-              <Button className="w-full mt-1">Beli Tiket</Button>
+              <div className="flex gap-2 items-center justify-center">
+                <Button className="w-full">Beli Tiket</Button>
+                <UpdateEvent />
+              </div>
             </CardContent>
           </Card>
         ))}
