@@ -1,253 +1,477 @@
-import { useState } from "react";
-import { Tag, Ticket, Percent, Activity, Search, X, Calendar, Edit3, Trash2, Plus } from "lucide-react";
+import { useState, useMemo, useEffect } from "react";
+import { Ticket, Percent, Activity, Search, X, Calendar, Edit3, Trash2, Plus, Filter, ChevronDown, ShieldAlert, User, AlertCircle } from "lucide-react";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// --- Types ---
+type Role = "Admin" | "Guest/Customer";
+type DiscountType = "PERSENTASE" | "NOMINAL";
 
-const STATS = [
-  { label: "Total Promo", value: "3", icon: Ticket },
-  { label: "Total Penggunaan", value: "144x", icon: Activity },
-  { label: "Tipe Persentase", value: "2", icon: Percent },
-];
+interface Promotion {
+  id: string;
+  code: string;
+  type: DiscountType;
+  value: number;
+  startDate: string;
+  endDate: string;
+  usageLimit: number;
+  usageCount: number;
+}
 
-const PROMOS = [
+// --- Mock Data ---
+const INITIAL_PROMOS: Promotion[] = [
   {
     id: "p1",
     code: "TIKTAK20",
     type: "PERSENTASE",
-    value: "20%",
-    start: "2024-01-01",
-    end: "2024-12-31",
-    usage: "45 / 100",
+    value: 20,
+    startDate: "2024-01-01",
+    endDate: "2024-12-31",
+    usageLimit: 100,
+    usageCount: 45,
   },
   {
     id: "p2",
     code: "HEMAT50K",
     type: "NOMINAL",
-    value: "Rp 50,000",
-    start: "2024-01-01",
-    end: "2024-12-31",
-    usage: "12 / 50",
+    value: 50000,
+    startDate: "2024-01-01",
+    endDate: "2024-12-31",
+    usageLimit: 50,
+    usageCount: 12,
   },
   {
     id: "p3",
     code: "NEWUSER30",
     type: "PERSENTASE",
-    value: "30%",
-    start: "2024-03-01",
-    end: "2024-06-30",
-    usage: "87 / 200",
+    value: 30,
+    startDate: "2024-03-01",
+    endDate: "2024-06-30",
+    usageLimit: 200,
+    usageCount: 87,
   },
 ];
 
-// ─── Type Badge ───────────────────────────────────────────────────────────────
-
-function TypeBadge({ type }: { type: string }) {
+// --- Helper Components ---
+function TypeBadge({ type }: { type: DiscountType }) {
   if (type === "PERSENTASE") {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+      <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800">
         PERSENTASE
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+    <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black tracking-wider bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800">
       NOMINAL
     </span>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+function formatValue(type: DiscountType, value: number) {
+  if (type === "PERSENTASE") return `${value}%`;
+  return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(value);
+}
 
-export default function CreatePromotion() {
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isUpdateOpen, setIsUpdateOpen] = useState(false);
+// --- Main Component ---
+export default function PromotionList() {
+  const [promos, setPromos] = useState<Promotion[]>(INITIAL_PROMOS);
+  const [role, setRole] = useState<Role>("Admin");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("Semua");
+
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedPromo, setSelectedPromo] = useState<Promotion | null>(null);
+  const [modalMode, setModalMode] = useState<"create" | "update">("create");
+  
+  // Form States & Validation
+  const [formData, setFormData] = useState<Partial<Promotion>>({});
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Derived Filters
+  const filteredPromos = useMemo(() => {
+    let result = [...promos];
+    if (searchQuery) {
+      result = result.filter(p => p.code.toLowerCase().includes(searchQuery.toLowerCase()));
+    }
+    if (typeFilter !== "Semua") {
+      result = result.filter(p => p.type === typeFilter.toUpperCase());
+    }
+    return result;
+  }, [promos, searchQuery, typeFilter]);
+
+  // Derived Stats
+  const stats = useMemo(() => {
+    const totalPromo = filteredPromos.length;
+    const totalUsage = filteredPromos.reduce((acc, p) => acc + p.usageCount, 0);
+    const totalPersentase = filteredPromos.filter(p => p.type === "PERSENTASE").length;
+    
+    return [
+      { label: "Total Promo", value: totalPromo, icon: Ticket, color: "text-blue-500" },
+      { label: "Total Penggunaan", value: `${totalUsage}x`, icon: Activity, color: "text-emerald-500" },
+      { label: "Tipe Persentase", value: totalPersentase, icon: Percent, color: "text-purple-500" },
+    ];
+  }, [filteredPromos]);
+
+  // Actions
+  const handleOpenCreate = () => {
+    setModalMode("create");
+    setFormData({ type: "PERSENTASE", usageCount: 0 });
+    setErrorMsg("");
+    setIsModalOpen(true);
+  };
+
+  const handleOpenUpdate = (promo: Promotion) => {
+    setModalMode("update");
+    setFormData({ ...promo });
+    setErrorMsg("");
+    setSelectedPromo(promo);
+    setIsModalOpen(true);
+  };
+
+  const handleSavePromo = () => {
+    // Validations
+    if (!formData.code || formData.code.trim() === "") return setErrorMsg("Kode promo wajib diisi.");
+    if (!formData.value || Number(formData.value) <= 0) return setErrorMsg("Nilai diskon harus lebih dari 0.");
+    if (!formData.startDate) return setErrorMsg("Tanggal mulai wajib diisi.");
+    if (!formData.endDate) return setErrorMsg("Tanggal berakhir wajib diisi.");
+    if (new Date(formData.endDate) < new Date(formData.startDate)) return setErrorMsg("Tanggal berakhir tidak valid (sebelum tanggal mulai).");
+    if (!formData.usageLimit || Number(formData.usageLimit) <= 0) return setErrorMsg("Batas penggunaan harus bilangan bulat positif.");
+    
+    // Unique Check for Create
+    if (modalMode === "create" && promos.some(p => p.code.toLowerCase() === formData.code?.toLowerCase())) {
+      return setErrorMsg("Kode promo sudah ada, gunakan kode unik lainnya.");
+    }
+    
+    // Unique Check for Update
+    if (modalMode === "update" && promos.some(p => p.code.toLowerCase() === formData.code?.toLowerCase() && p.id !== selectedPromo?.id)) {
+      return setErrorMsg("Kode promo sudah digunakan oleh promo lain.");
+    }
+
+    if (modalMode === "create") {
+      const newPromo: Promotion = {
+        id: `p_${Date.now()}`,
+        code: formData.code.toUpperCase(),
+        type: formData.type as DiscountType,
+        value: Number(formData.value),
+        startDate: formData.startDate,
+        endDate: formData.endDate,
+        usageLimit: Number(formData.usageLimit),
+        usageCount: 0,
+      };
+      setPromos(prev => [newPromo, ...prev]);
+    } else {
+      setPromos(prev => prev.map(p => p.id === selectedPromo?.id ? {
+        ...p,
+        code: formData.code!.toUpperCase(),
+        type: formData.type as DiscountType,
+        value: Number(formData.value),
+        startDate: formData.startDate!,
+        endDate: formData.endDate!,
+        usageLimit: Number(formData.usageLimit),
+      } : p));
+    }
+    setIsModalOpen(false);
+  };
+
+  const handleDelete = () => {
+    if (selectedPromo) {
+      setPromos(prev => prev.filter(p => p.id !== selectedPromo.id));
+    }
+    setIsDeleteOpen(false);
+  };
 
   return (
-    <div className="w-full space-y-6 p-6">
+    <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
       
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Manajemen Promosi</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Kelola kode promo dan kampanye diskon</p>
+      {/* --- Role Simulator --- */}
+      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-purple-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-purple-600 text-white rounded-lg shadow-sm">
+            {role === "Admin" ? <ShieldAlert size={18} /> : <User size={18} />}
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Simulasi Tampilan Hak Akses</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">Pilih role untuk melihat perbedaan tombol aksi (CUD khusus Admin).</p>
+          </div>
         </div>
-        <button
-          onClick={() => setIsCreateOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors"
-        >
-          <Plus size={16} strokeWidth={3} />
-          Buat Promo
-        </button>
+        <div className="flex gap-2 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+          {(["Admin", "Guest/Customer"] as Role[]).map(r => (
+            <button
+              key={r}
+              onClick={() => setRole(r)}
+              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
+                role === r 
+                  ? "bg-purple-600 text-white shadow-md" 
+                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* ── Stats cards ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {STATS.map(({ label, value }) => (
-          <div
-            key={label}
-            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm px-6 py-5 space-y-1"
+      {/* --- Header --- */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Manajemen Promosi</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Kelola kode promo dan kampanye diskon untuk pelanggan.</p>
+        </div>
+        {role === "Admin" && (
+          <button
+            onClick={handleOpenCreate}
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-xl shadow-md shadow-blue-500/20 transition-all"
           >
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
-            <p className="text-3xl font-extrabold text-slate-800 dark:text-slate-100">{value}</p>
+            <Plus size={18} strokeWidth={3} />
+            Buat Promo Baru
+          </button>
+        )}
+      </div>
+
+      {/* --- Stats --- */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {stats.map(({ label, value, icon: Icon, color }, idx) => (
+          <div
+            key={idx}
+            className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm px-6 py-5 flex items-center justify-between group hover:border-slate-300 dark:hover:border-slate-700 transition-colors"
+          >
+            <div className="space-y-1">
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-100">{value}</p>
+            </div>
+            <div className={`p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 ${color} group-hover:scale-110 transition-transform`}>
+              <Icon size={28} />
+            </div>
           </div>
         ))}
       </div>
 
-      {/* ── Search & Filter ── */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      {/* --- Filters --- */}
+      <div className="flex flex-col sm:flex-row gap-3 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
           <input
             type="text"
             placeholder="Cari kode promo..."
-            className="w-full pl-9 pr-4 h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-4 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
           />
         </div>
-        <div className="relative">
-          <select className="h-10 pl-4 pr-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm appearance-none focus:outline-none">
-            <option>Semua Tipe</option>
-            <option>Persentase</option>
-            <option>Nominal</option>
+        <div className="relative w-full sm:w-auto">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <Filter size={14} className="text-slate-400" />
+          </div>
+          <select 
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
+            className="h-10 pl-9 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/30 cursor-pointer w-full"
+          >
+            <option value="Semua">Semua Tipe Diskon</option>
+            <option value="Persentase">Persentase</option>
+            <option value="Nominal">Nominal</option>
           </select>
-          <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
         </div>
       </div>
 
-      {/* ── Table ── */}
+      {/* --- Table --- */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="grid grid-cols-[2fr_1.5fr_1.5fr_1.5fr_1.5fr_1fr_auto] gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
-          {["KODE PROMO", "TIPE", "NILAI DISKON", "MULAI", "BERAKHIR", "PENGGUNAAN", ""].map((h) => (
-            <span key={h} className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              {h}
-            </span>
-          ))}
-        </div>
-        <div className="divide-y divide-slate-100 dark:divide-slate-800">
-          {PROMOS.map((row) => (
-            <div key={row.id} className="grid grid-cols-[2fr_1.5fr_1.5fr_1.5fr_1.5fr_1fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-              <div className="flex items-center gap-2">
-                <div className="p-1.5 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-md">
-                  <Ticket size={14} />
-                </div>
-                <span className="font-bold text-slate-800 dark:text-slate-200 text-sm">{row.code}</span>
-              </div>
-              <div><TypeBadge type={row.type} /></div>
-              <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{row.value}</span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">{row.start}</span>
-              <span className="text-sm text-slate-500 dark:text-slate-400">{row.end}</span>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{row.usage}</span>
-              <div className="flex items-center gap-1">
-                <button onClick={() => setIsUpdateOpen(true)} className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors">
-                  <Edit3 size={16} />
-                </button>
-                <button onClick={() => setIsDeleteOpen(true)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors">
-                  <Trash2 size={16} />
-                </button>
-              </div>
+        <div className="overflow-x-auto">
+          <div className="min-w-[900px]">
+            <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
+              {["KODE PROMO", "TIPE DISKON", "NILAI", "TGL MULAI", "TGL BERAKHIR", "PENGGUNAAN", role === "Admin" ? "AKSI" : ""].map((h, i) => (
+                <span key={i} className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+                  {h}
+                </span>
+              ))}
             </div>
-          ))}
+            <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {filteredPromos.length > 0 ? (
+                filteredPromos.map((row) => (
+                  <div key={row.id} className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg">
+                        <Ticket size={16} />
+                      </div>
+                      <span className="font-mono font-bold text-slate-800 dark:text-slate-200 text-sm">{row.code}</span>
+                    </div>
+                    
+                    <div><TypeBadge type={row.type} /></div>
+                    
+                    <span className="text-sm font-black text-slate-700 dark:text-slate-300">
+                      {formatValue(row.type, row.value)}
+                    </span>
+                    
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{row.startDate}</span>
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">{row.endDate}</span>
+                    
+                    <div className="flex items-center gap-2">
+                      <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-1.5">
+                        <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, (row.usageCount / row.usageLimit) * 100)}%` }}></div>
+                      </div>
+                      <span className="text-xs font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                        {row.usageCount} / {row.usageLimit}
+                      </span>
+                    </div>
+
+                    <div className="w-[80px] flex justify-end">
+                      {role === "Admin" && (
+                        <div className="flex items-center gap-1.5">
+                          <button 
+                            onClick={() => handleOpenUpdate(row)} 
+                            className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-md transition-colors border border-transparent hover:border-blue-200 dark:hover:border-blue-800"
+                            title="Edit Promo"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button 
+                            onClick={() => { setSelectedPromo(row); setIsDeleteOpen(true); }} 
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-md transition-colors border border-transparent hover:border-red-200 dark:hover:border-red-800"
+                            title="Hapus Promo"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="px-6 py-12 flex flex-col items-center justify-center text-slate-400">
+                  <Ticket size={32} className="text-slate-300 dark:text-slate-600 mb-3" />
+                  <p className="text-sm font-medium">Tidak ada promo yang ditemukan.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ── Create / Update Modal ── */}
-      {(isCreateOpen || isUpdateOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800">
+      {/* --- CUD Modal (Admin Only) --- */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                {isCreateOpen ? "Buat Promo Baru" : "Update Promo"}
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
+                {modalMode === "create" ? "Buat Promo Baru" : "Update Promo"}
               </h3>
-              <button onClick={() => { setIsCreateOpen(false); setIsUpdateOpen(false); }} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full transition-colors">
+                <X size={16} />
               </button>
             </div>
+
+            {errorMsg && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl flex gap-2 items-start text-red-600 dark:text-red-400 text-sm">
+                <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                <span className="font-medium">{errorMsg}</span>
+              </div>
+            )}
             
             <div className="space-y-4">
-              {/* Kode Promo */}
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kode Promo</label>
-                <input type="text" placeholder="CTH. TIKTAK20" defaultValue={isUpdateOpen ? "TIKTAK20" : ""} className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 font-mono" />
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Kode Promo</label>
+                <input 
+                  type="text" 
+                  value={formData.code || ""} 
+                  onChange={e => setFormData({...formData, code: e.target.value.toUpperCase()})}
+                  placeholder="CTH. TIKTAK20" 
+                  className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm font-mono focus:outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-colors uppercase" 
+                />
               </div>
 
-              {/* Tipe Diskon */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tipe Diskon</label>
-                <div className="relative">
-                  <select className="w-full h-10 pl-3 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/30">
-                    <option>Persentase (%)</option>
-                    <option>Nominal (Rp)</option>
-                  </select>
-                  <svg className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
-                </div>
-              </div>
-
-              {/* Nilai Diskon */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Nilai Diskon</label>
-                <input type="text" placeholder="cth. 20" defaultValue={isUpdateOpen ? "20" : ""} className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
-              </div>
-
-              {/* Tanggal */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal Mulai</label>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tipe Diskon</label>
                   <div className="relative">
-                    <input type="date" defaultValue={isUpdateOpen ? "2024-01-01" : ""} className="w-full h-10 pl-3 pr-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-slate-600 dark:text-slate-300 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full" />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+                    <select 
+                      value={formData.type}
+                      onChange={e => setFormData({...formData, type: e.target.value as DiscountType})}
+                      className="w-full h-11 pl-4 pr-8 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm font-medium appearance-none focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                    >
+                      <option value="PERSENTASE">Persentase (%)</option>
+                      <option value="NOMINAL">Nominal (Rp)</option>
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Tanggal Berakhir</label>
-                  <div className="relative">
-                    <input type="date" defaultValue={isUpdateOpen ? "2024-12-31" : ""} className="w-full h-10 pl-3 pr-9 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 text-slate-600 dark:text-slate-300 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:w-full" />
-                    <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
-                  </div>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Nilai Diskon</label>
+                  <input 
+                    type="number" 
+                    value={formData.value || ""}
+                    onChange={e => setFormData({...formData, value: Number(e.target.value)})}
+                    placeholder={formData.type === "PERSENTASE" ? "cth. 20" : "cth. 50000"} 
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" 
+                  />
                 </div>
               </div>
 
-              {/* Batas Penggunaan */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tanggal Mulai</label>
+                  <input 
+                    type="date" 
+                    value={formData.startDate || ""}
+                    onChange={e => setFormData({...formData, startDate: e.target.value})}
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" 
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Tanggal Berakhir</label>
+                  <input 
+                    type="date" 
+                    value={formData.endDate || ""}
+                    onChange={e => setFormData({...formData, endDate: e.target.value})}
+                    className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm font-medium focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" 
+                  />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Batas Penggunaan</label>
-                <input type="number" min="1" defaultValue={isUpdateOpen ? 100 : 1} className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Batas Maksimal Penggunaan</label>
+                <input 
+                  type="number" 
+                  value={formData.usageLimit || ""}
+                  onChange={e => setFormData({...formData, usageLimit: Number(e.target.value)})}
+                  placeholder="Jumlah kuota promo" 
+                  className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-colors" 
+                />
               </div>
             </div>
 
             <div className="mt-8 flex gap-3">
-              <button onClick={() => { setIsCreateOpen(false); setIsUpdateOpen(false); }} className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <button onClick={() => setIsModalOpen(false)} className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
                 Batal
               </button>
-              <button onClick={() => { setIsCreateOpen(false); setIsUpdateOpen(false); }} className="flex-1 h-11 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-semibold transition-colors shadow-sm">
-                {isCreateOpen ? "Buat" : "Simpan"}
+              <button onClick={handleSavePromo} className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-500/30 transition-all">
+                {modalMode === "create" ? "Buat Promo" : "Simpan Perubahan"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Delete Modal ── */}
-      {isDeleteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-6 shadow-xl border border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-red-600">Hapus Promo</h3>
-              <button onClick={() => setIsDeleteOpen(false)} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
+      {/* --- Delete Confirm Modal --- */}
+      {isDeleteOpen && selectedPromo && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-200">
+            <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShieldAlert size={28} />
             </div>
             
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
-              Apakah Anda yakin ingin menghapus kode promo ini? Tindakan ini tidak dapat dibatalkan.
+            <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-2">Hapus Promo?</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
+              Apakah Anda yakin ingin menghapus promo <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{selectedPromo.code}</span> secara permanen?
             </p>
 
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setIsDeleteOpen(false)} className="px-5 h-10 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                Batal
+            <div className="flex flex-col gap-2">
+              <button onClick={handleDelete} className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold shadow-lg shadow-red-500/30 transition-all">
+                Ya, Hapus Promo
               </button>
-              <button onClick={() => setIsDeleteOpen(false)} className="px-5 h-10 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-sm">
-                Hapus
+              <button onClick={() => setIsDeleteOpen(false)} className="w-full h-11 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                Batal
               </button>
             </div>
           </div>
