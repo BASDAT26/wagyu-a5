@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Lock, Edit3, User, Mail, Phone, Building2, AtSign, ShieldAlert } from "lucide-react";
+import { Lock, Edit3, User, Mail, Phone, Building2, AtSign, ShieldAlert, CheckCircle2, AlertCircle } from "lucide-react";
 
 type Role = "Customer" | "Organizer";
 
 export default function ProfilePage() {
-  const [role, setRole] = useState<Role>("Customer");
+  const [role, setRole] = useState<Role>("Organizer"); // Default to organizer based on recent user request
   const [isEditing, setIsEditing] = useState(false);
 
   // Mock data states
@@ -19,6 +19,46 @@ export default function ProfilePage() {
     email: "organizer1@example.com",
     username: "@organizer1",
   });
+
+  // Password states
+  const [passwords, setPasswords] = useState({
+    old: "",
+    new: "",
+    confirm: ""
+  });
+  const [passError, setPassError] = useState("");
+  const [passSuccess, setPassSuccess] = useState(false);
+
+  const handleUpdatePassword = () => {
+    setPassError("");
+    setPassSuccess(false);
+
+    if (!passwords.old || !passwords.new || !passwords.confirm) {
+      setPassError("Semua kolom password harus diisi.");
+      return;
+    }
+    if (passwords.new !== passwords.confirm) {
+      setPassError("Password baru dan konfirmasi tidak cocok.");
+      return;
+    }
+    if (passwords.new.length < 6) {
+      setPassError("Password baru minimal 6 karakter.");
+      return;
+    }
+
+    // Simulate success
+    setTimeout(() => {
+      setPassSuccess(true);
+      setPasswords({ old: "", new: "", confirm: "" });
+      setTimeout(() => setPassSuccess(false), 3000);
+    }, 500);
+  };
+
+  const handleCancelPassword = () => {
+    setPasswords({ old: "", new: "", confirm: "" });
+    setPassError("");
+    setPassSuccess(false);
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans flex justify-center">
@@ -175,7 +215,7 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        {/* ── Update Password Card ── */}
+        {/* ── Update Password Modal/Card ── */}
         <div className="bg-white dark:bg-slate-900 rounded-[20px] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
           <div className="mb-6">
             <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -184,38 +224,64 @@ export default function ProfilePage() {
             <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Perbarui password Anda untuk menjaga keamanan akun</p>
           </div>
 
+          {passError && (
+            <div className="mb-6 p-3 bg-red-50 border border-red-200 rounded-xl flex gap-2 items-start text-red-600 text-sm">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <span className="font-semibold">{passError}</span>
+            </div>
+          )}
+
+          {passSuccess && (
+            <div className="mb-6 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex gap-2 items-start text-emerald-600 text-sm">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
+              <span className="font-semibold">Password berhasil diperbarui!</span>
+            </div>
+          )}
+
           <div className="space-y-4 max-w-md">
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Password Lama</label>
               <input 
                 type="password" 
+                value={passwords.old}
+                onChange={e => setPasswords({...passwords, old: e.target.value})}
                 placeholder="Password Lama" 
-                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400" 
+                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400" 
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Password Baru</label>
               <input 
                 type="password" 
+                value={passwords.new}
+                onChange={e => setPasswords({...passwords, new: e.target.value})}
                 placeholder="Password Baru" 
-                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400" 
+                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400" 
               />
             </div>
             <div className="space-y-1.5">
               <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300">Konfirmasi Password Baru</label>
               <input 
                 type="password" 
+                value={passwords.confirm}
+                onChange={e => setPasswords({...passwords, confirm: e.target.value})}
                 placeholder="Konfirmasi Password Baru" 
-                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400" 
+                className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400" 
               />
             </div>
           </div>
 
           <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 pt-6">
-            <button className="px-6 h-[42px] rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm">
+            <button 
+              onClick={handleCancelPassword}
+              className="px-6 h-[42px] rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+            >
               Cancel
             </button>
-            <button className="px-6 h-[42px] rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[13px] hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm">
+            <button 
+              onClick={handleUpdatePassword}
+              className="px-6 h-[42px] rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[13px] hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
+            >
               Update Password
             </button>
           </div>
