@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { Lock, Edit3, User, Mail, Phone, Building2, AtSign, ShieldAlert, CheckCircle2, AlertCircle } from "lucide-react";
+import Header from "@/components/header";
 
 type Role = "Customer" | "Organizer";
 
 export default function ProfilePage() {
-  const [role, setRole] = useState<Role>("Organizer"); // Default to organizer based on recent user request
+  const [role, setRole] = useState<Role>("Organizer");
   const [isEditing, setIsEditing] = useState(false);
+
+  const headerRole = role.toLowerCase() as "customer" | "organizer";
 
   // Mock data states
   const [customerData, setCustomerData] = useState({
@@ -61,6 +64,8 @@ export default function ProfilePage() {
   };
 
   return (
+    <>
+    <Header role={headerRole} />
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans flex justify-center">
       <div className="w-full max-w-3xl space-y-8">
 
@@ -289,5 +294,6 @@ export default function ProfilePage() {
 
       </div>
     </div>
+    </>
   );
 }

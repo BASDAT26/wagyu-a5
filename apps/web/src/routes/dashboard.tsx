@@ -1,12 +1,17 @@
 import { useState } from "react";
 import { Users, Calendar, TrendingUp, Ticket, MapPin, Percent, ArrowUpRight, Music, Theater, Mic2, Star, ChevronRight, ShieldAlert, User, Briefcase } from "lucide-react";
+import Header from "@/components/header";
 
 type Role = "Admin" | "Organizer" | "Customer";
 
 export default function DashboardPage() {
   const [role, setRole] = useState<Role>("Admin");
 
+  const headerRole = role.toLowerCase() as "admin" | "organizer" | "customer";
+
   return (
+    <>
+    <Header role={headerRole} />
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans">
       <div className="max-w-6xl mx-auto space-y-8">
 
@@ -352,5 +357,6 @@ export default function DashboardPage() {
 
       </div>
     </div>
+    </>
   );
 }
