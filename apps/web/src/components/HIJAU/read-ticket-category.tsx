@@ -172,7 +172,7 @@ export default function ReadTicketCategory() {
     : 0;
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 gap-12 p-6 max-w-6xl mx-auto">
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
