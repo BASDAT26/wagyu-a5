@@ -8,7 +8,6 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  
 } from "@wagyu-a5/ui/components/card";
 import { Chip } from "@wagyu-a5/ui/components/chip";
 import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
@@ -31,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@wagyu-a5/ui/components/dropdown-menu";
+import Header from "@/components/header";
 
 export default function DesignSystem() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -283,7 +283,9 @@ export default function DesignSystem() {
 
         {/* DropdownMenu Section */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold border-b pb-2">Dropdown Menus</h2>
+          <h2 className="text-2xl font-semibold border-b pb-2">
+            Dropdown Menus
+          </h2>
 
           <div className="flex flex-wrap gap-4">
             <DropdownMenu>
@@ -309,6 +311,45 @@ export default function DesignSystem() {
                 <DropdownMenuItem>Delete</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+          </div>
+        </section>
+
+        {/* Headers Section */}
+        <section className="space-y-4">
+          <h2 className="text-2xl font-semibold border-b pb-2">Headers</h2>
+
+          <div className="space-y-8">
+            {/* Guest Header */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Guest Header</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <Header role="guest" />
+              </div>
+            </div>
+
+            {/* Customer Header */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Customer Header</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <Header role="customer" />
+              </div>
+            </div>
+
+            {/* Organizer Header */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Organizer Header</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <Header role="organizer" />
+              </div>
+            </div>
+
+            {/* Admin Header */}
+            <div>
+              <h3 className="text-sm font-medium mb-2">Admin Header</h3>
+              <div className="border rounded-lg overflow-hidden">
+                <Header role="admin" />
+              </div>
+            </div>
           </div>
         </section>
 

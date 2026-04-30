@@ -4,7 +4,7 @@ import Header from "@/components/header";
 export default function PromosiPage() {
   return (
     <>
-      <Header />
+      <Header role="customer"/>
       <CreatePromotion />
     </>
   );
