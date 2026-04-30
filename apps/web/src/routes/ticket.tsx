@@ -9,6 +9,7 @@ export default function Ticket() {
 
   return (
     <div className="w-full min-h-screen bg-background">
+      <Header role={role}/>
       <ReadTicket role={role} onRoleChange={setRole} />
     </div>
   );
