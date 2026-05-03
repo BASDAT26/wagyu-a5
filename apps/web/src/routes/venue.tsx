@@ -1,7 +1,7 @@
 import ReadVenue from "@/modules/venue/read-venue";
 import Navbar from "@/components/Navbar";
 
-export default function Venue() {
+export default function VenuePage() {
   return (
     <>
       <Navbar role="organizer" />

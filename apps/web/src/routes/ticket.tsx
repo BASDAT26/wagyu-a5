@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 
 type Role = "admin" | "customer";
 
-export default function Ticket() {
+export default function TicketPage() {
   const [role, setRole] = useState<Role>("customer");
 
   return (

@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 type Role = "Pelanggan" | "Penyelenggara" | "Administrator" | null;
 
-export default function Register() {
+export default function RegisterModule() {
   const navigate = useNavigate();
   const [role, setRole] = useState<Role>(null);
 
@@ -56,11 +56,11 @@ export default function Register() {
   };
 
   return (
-    <div className="w-full h-full overflow-y-auto bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-white to-white dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 flex flex-col items-center p-4">
-      <div className="my-auto w-full max-w-[460px] py-8 flex flex-col items-center">
+    <div className="w-full h-full overflow-y-auto bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-blue-50 via-white to-white dark:from-slate-900 dark:via-slate-950 dark:to-slate-950 flex flex-col items-center p-4">
+      <div className="my-auto w-full max-w-115 py-8 flex flex-col items-center">
         {/* Logo & Header */}
         <div className="text-center mb-10 animate-in slide-in-from-bottom-4 duration-500">
-          <div className="w-14 h-14 bg-gradient-to-br from-blue-600 to-indigo-600 shadow-xl shadow-blue-500/20 rounded-2xl mx-auto flex items-center justify-center mb-6 transform rotate-3 hover:rotate-0 transition-transform">
+          <div className="w-14 h-14 bg-linear-to-br from-blue-600 to-indigo-600 shadow-xl shadow-blue-500/20 rounded-2xl mx-auto flex items-center justify-center mb-6 transform rotate-3 hover:rotate-0 transition-transform">
             <span className="text-white font-black text-2xl tracking-tighter">TT</span>
           </div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">TikTakTuk</h1>
@@ -94,7 +94,7 @@ export default function Register() {
                     </div>
                     <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Pelanggan</span>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-[3.25rem]">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-13">
                     Beli, temukan, dan kelola tiket untuk berbagai acara favorit Anda.
                   </p>
                 </button>
@@ -110,7 +110,7 @@ export default function Register() {
                     </div>
                     <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Penyelenggara</span>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-[3.25rem]">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-13">
                     Buat acara, kelola venue, dan pantau penjualan tiket Anda.
                   </p>
                 </button>
@@ -126,7 +126,7 @@ export default function Register() {
                     </div>
                     <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Administrator</span>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-[3.25rem]">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-13">
                     Kelola sistem, verifikasi entitas, dan pantau aktivitas platform secara penuh.
                   </p>
                 </button>

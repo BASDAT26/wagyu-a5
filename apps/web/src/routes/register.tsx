@@ -1,11 +1,5 @@
-import RegisterComponent from "@/modules/auth/register";
-import Navbar from "@/components/Navbar";
+import RegisterModule from "@/modules/auth/RegisterModule";
 
-export default function RegisterRoute() {
-  return (
-    <>
-      <Navbar role="guest" />
-      <RegisterComponent />
-    </>
-  );
+export default function RegisterPage() {
+  return <RegisterModule />;
 }

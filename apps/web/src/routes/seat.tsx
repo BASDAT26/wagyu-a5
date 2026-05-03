@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 
 type Role = "customer" | "admin" | "organizer";
 
-export default function Seat() {
+export default function SeatPage() {
   const [role, setRole] = useState<Role>("customer");
 
   return (

@@ -1,9 +1,5 @@
-import SignInForm from "@/components/sign-in-form";
+import LoginModule from "@/modules/auth/LoginModule";
 
-export default function Login() {
-  return (
-    <>
-      <SignInForm />
-    </>
-  );
+export default function LoginPage() {
+  return <LoginModule />;
 }

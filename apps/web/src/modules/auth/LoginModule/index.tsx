@@ -8,11 +8,11 @@ import z from "zod";
 
 import { authClient } from "@/lib/auth-client";
 
-import Loader from "./loader";
+import Loader from "../../../components/loader";
 import { Card } from "@wagyu-a5/ui/components/card";
 import Navbar from "@/components/Navbar";
 
-export default function SignInForm() {
+export default function LoginModule() {
   const navigate = useNavigate();
   const { isPending } = authClient.useSession();
 
