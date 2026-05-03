@@ -15,6 +15,7 @@ import {
 import type { Route } from "./+types/root";
 import { ThemeProvider } from "./components/theme-provider";
 import { queryClient } from "./utils/trpc";
+import Navbar from "./components/Navbar";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -53,6 +54,7 @@ export default function App() {
         storageKey="vite-ui-theme"
       >
         <div className="grid grid-rows-[auto_1fr] h-svh">
+          <Navbar/>
           <Outlet />
         </div>
         <Toaster richColors />
