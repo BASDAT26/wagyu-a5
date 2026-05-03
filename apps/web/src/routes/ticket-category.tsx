@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReadTicketCategory from "@/components/HIJAU/read-ticket-category";
+import ReadTicketCategory from "@/components/ticket-category/read-ticket-category";
 import Header from "@/components/header";
 
 export default function TicketCategory() {

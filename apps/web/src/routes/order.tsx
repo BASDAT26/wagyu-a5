@@ -1,4 +1,4 @@
-import CreateOrder from "@/components/BIRU/create-order";
+import CreateOrder from "@/components/order/create-order";
 import Header from "@/components/header";
 
 export default function OrderPage() {

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReadTicket from "@/components/MERAH/read-ticket";
+import ReadTicket from "@/components/ticket/read-ticket";
 import Header from "@/components/header";
 
 type Role = "admin" | "customer";

@@ -8,7 +8,6 @@ import {
   ModalClose,
   ModalHeader,
   ModalTitle,
-  ModalDescription,
 } from "@wagyu-a5/ui/components/modal";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";

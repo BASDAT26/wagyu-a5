@@ -11,7 +11,7 @@ import {
   Building2,
   ChevronDown,
 } from "lucide-react";
-import type { Venue } from "./interface";
+import type { Venue } from "../interface";
 import CreateVenue from "./create-venue";
 import UpdateVenue from "./update-venue";
 import DeleteVenue from "./delete-venue";

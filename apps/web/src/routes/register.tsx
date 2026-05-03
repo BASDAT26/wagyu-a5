@@ -1,4 +1,4 @@
-import RegisterComponent from "@/components/PUTIH/register";
+import RegisterComponent from "@/components/auth/register";
 import Header from "@/components/header";
 
 export default function RegisterRoute() {

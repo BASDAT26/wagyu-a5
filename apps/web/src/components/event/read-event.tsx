@@ -15,24 +15,10 @@ import {
 } from "lucide-react";
 import CreateEvent from "./create-event";
 import UpdateEvent from "./update-event";
+import type { TicketCategoryDisplay, EventItem } from "./types";
+import { MOCK_VENUE_NAMES, MOCK_ARTISTS } from "@/data/mock";
 
-interface TicketCategory {
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface EventItem {
-  id: string;
-  title: string;
-  date: string;
-  time: string;
-  venueName: string;
-  venueCity: string;
-  artists: string[];
-  ticketCategories: TicketCategory[];
-  icon: "music" | "palette" | "guitar";
-}
+// [REFACTOR] TicketCategory and EventItem interfaces moved to ./types.ts
 
 const dummyEvents: EventItem[] = [
   {
@@ -81,21 +67,9 @@ const dummyEvents: EventItem[] = [
   },
 ];
 
-const allVenues = [
-  "Jakarta Convention Center",
-  "Taman Impian Jayakarta",
-  "Bandung Hall Center",
-];
-const allArtists = [
-  "Fourtwenty",
-  "Hindia",
-  "Tulus",
-  "Nadin Amizah",
-  "Pamungkas",
-  "Raisa",
-];
+// [REFACTOR] Mock venue names and artists moved to @/data/mock.ts
 
-function getLowestPrice(categories: TicketCategory[]): number {
+function getLowestPrice(categories: TicketCategoryDisplay[]): number {
   return Math.min(...categories.map((c) => c.price));
 }
 
@@ -146,7 +120,7 @@ export default function ReadEvent() {
             className="appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
           >
             <option value="all">Semua Venue</option>
-            {allVenues.map((v) => (
+            {MOCK_VENUE_NAMES.map((v) => (
               <option key={v} value={v}>
                 {v}
               </option>
@@ -160,7 +134,7 @@ export default function ReadEvent() {
             className="appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
           >
             <option value="all">Semua Artis</option>
-            {allArtists.map((a) => (
+            {MOCK_ARTISTS.map((a) => (
               <option key={a} value={a}>
                 {a}
               </option>

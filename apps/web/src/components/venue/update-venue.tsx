@@ -11,12 +11,11 @@ import {
   ModalClose,
   ModalHeader,
   ModalTitle,
-  ModalDescription,
 } from "@wagyu-a5/ui/components/modal";
 import { useState } from "react";
 import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
-import type { Venue } from "./interface";
 import { Pencil } from "lucide-react";
+import type { Venue } from "../interface";
 
 export default function UpdateVenue() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,7 +94,7 @@ export default function UpdateVenue() {
             <ModalClose asChild>
               <Button variant="outline">Batal</Button>
             </ModalClose>
-            <Button>Tambah</Button>
+            <Button>Simpan</Button>
           </ModalFooter>
         </ModalPopup>
       </Modal>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReadSeat from "@/components/MERAH/read-seat";
+import ReadSeat from "@/components/seat/read-seat";
 import Header from "@/components/header";
 
 type Role = "customer" | "admin" | "organizer";
