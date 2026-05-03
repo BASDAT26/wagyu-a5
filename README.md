@@ -13,7 +13,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Node.js** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
+- **Authentication** - Basic Auth
 - **Turborepo** - Optimized monorepo build system
 
 ## Getting Started

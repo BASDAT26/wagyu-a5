@@ -21,7 +21,6 @@
     "@wagyu-a5/auth": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
     "@wagyu-a5/ui": "workspace:*",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
     "isbot": "^5.1.39",
     "lucide-react": "^1.8.0",

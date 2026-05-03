@@ -1,7 +1,6 @@
 import { trpcServer } from "@hono/trpc-server";
 import { createContext } from "@wagyu-a5/api/context";
 import { appRouter } from "@wagyu-a5/api/routers/index";
-import { auth } from "@wagyu-a5/auth";
 import { env } from "@wagyu-a5/env/server";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
@@ -19,8 +18,6 @@ app.use(
     credentials: true,
   }),
 );
-
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.use(
   "/trpc/*",

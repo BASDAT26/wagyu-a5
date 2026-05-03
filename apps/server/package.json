@@ -17,7 +17,6 @@
     "@wagyu-a5/auth": "workspace:*",
     "@wagyu-a5/db": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"

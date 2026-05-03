@@ -13,7 +13,6 @@
   "dependencies": {
     "@wagyu-a5/db": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
-    "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
