@@ -4,7 +4,6 @@ import Navbar from "@/components/Navbar";
 export default function OrderPage() {
   return (
     <>
-      <Navbar role="CUSTOMER" />
       <CreateOrder />
     </>
   );

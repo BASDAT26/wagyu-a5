@@ -46,7 +46,7 @@ export default function Navbar({ role: propRole }: NavbarProps) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const isLoggedIn = !!session;
-  const role = propRole || (session?.user as { role?: Role })?.role;
+  const role = (session?.user as { role?: Role })?.role ?? propRole;
   const links = getLinks(role);
 
   const handleSignOut = async () => {

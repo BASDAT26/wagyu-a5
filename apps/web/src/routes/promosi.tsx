@@ -4,7 +4,6 @@ import Navbar from "@/components/Navbar";
 export default function PromotionPage() {
   return (
     <>
-      <Navbar role="CUSTOMER" />
       <CreatePromotion />
     </>
   );

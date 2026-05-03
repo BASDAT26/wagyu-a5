@@ -107,7 +107,6 @@ export default function CheckoutPage() {
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
       {/* Navbar Minimalist */}
-      <Navbar role="CUSTOMER" />
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center gap-4">
           <Link

@@ -45,7 +45,6 @@ const EVENTS = [
 export default function CariEventPage() {
   return (
     <>
-      <Navbar role="CUSTOMER" />
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Header Section */}
