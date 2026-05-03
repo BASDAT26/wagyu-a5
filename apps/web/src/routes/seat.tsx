@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ReadSeat from "@/components/seat/read-seat";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 type Role = "customer" | "admin" | "organizer";
 
@@ -9,7 +9,7 @@ export default function Seat() {
 
   return (
     <div className="w-full min-h-screen bg-background">
-      <Header role={role} />
+      <Navbar role={role} />
       <ReadSeat role={role} onRoleChange={setRole} />
     </div>
   );

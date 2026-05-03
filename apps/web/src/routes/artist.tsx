@@ -1,13 +1,13 @@
 import { useState } from "react";
 import ReadArtist from "@/components/artist/read-artist";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 export default function Artist() {
   const [isAdmin, setIsAdmin] = useState(true);
 
   return (
     <>
-      <Header role={isAdmin ? "admin" : "customer"} />
+      <Navbar role={isAdmin ? "admin" : "customer"} />
       <ReadArtist isAdmin={isAdmin} onToggleAdmin={setIsAdmin} />
     </>
   );

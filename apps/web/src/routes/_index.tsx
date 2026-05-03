@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 
 import type { Route } from "./+types/_index";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 const TITLE_TEXT = `
  ██████╗ ███████╗████████╗████████╗███████╗██████╗
@@ -22,7 +22,10 @@ const TITLE_TEXT = `
  `;
 
 export function meta({}: Route.MetaArgs) {
-  return [{ title: "wagyu-a5" }, { name: "description", content: "wagyu-a5 is a web application" }];
+  return [
+    { title: "wagyu-a5" },
+    { name: "description", content: "wagyu-a5 is a web application" },
+  ];
 }
 
 export default function Home() {

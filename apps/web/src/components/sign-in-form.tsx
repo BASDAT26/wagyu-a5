@@ -10,7 +10,7 @@ import { authClient } from "@/lib/auth-client";
 
 import Loader from "./loader";
 import { Card } from "@wagyu-a5/ui/components/card";
-import Header from "./header";
+import Navbar from "@/components/Navbar";
 
 export default function SignInForm() {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ export default function SignInForm() {
 
   return (
     <>
-      <Header role="guest"/>
+      <Navbar role="guest" />
       <div className="flex items-center justify-center bg-background">
         <div className="w-full max-w-md">
           {/* Header */}

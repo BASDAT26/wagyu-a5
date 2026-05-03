@@ -1,10 +1,10 @@
 import ReadVenue from "@/components/venue/read-venue";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 export default function Venue() {
   return (
     <>
-      <Header role="organizer" />
+      <Navbar role="organizer" />
       <ReadVenue />
     </>
   );

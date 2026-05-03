@@ -1,9 +1,11 @@
 import RegisterComponent from "@/components/auth/register";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 export default function RegisterRoute() {
-  return <>
-    <Header role="guest" />
-    <RegisterComponent />
-  </>;
+  return (
+    <>
+      <Navbar role="guest" />
+      <RegisterComponent />
+    </>
+  );
 }

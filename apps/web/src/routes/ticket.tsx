@@ -1,6 +1,6 @@
 import { useState } from "react";
 import ReadTicket from "@/components/ticket/read-ticket";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 type Role = "admin" | "customer";
 
@@ -9,7 +9,7 @@ export default function Ticket() {
 
   return (
     <div className="w-full min-h-screen bg-background">
-      <Header role={role}/>
+      <Navbar role={role} />
       <ReadTicket role={role} onRoleChange={setRole} />
     </div>
   );

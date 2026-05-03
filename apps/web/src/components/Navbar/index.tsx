@@ -3,77 +3,17 @@ import { NavLink, useNavigate } from "react-router";
 import { Menu, X, ChevronDown } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
-import { ModeToggle } from "./mode-toggle";
+import { ModeToggle } from "@/components/mode-toggle";
+import { ADMIN_LINKS, CUSTOMER_LINKS, GUEST_LINKS, ORGANIZER_LINKS, type NavItem, type Role } from "./const";
 
-// ---------------------------------------------------------------------------
-// Route definitions per role
-// ---------------------------------------------------------------------------
-
-type NavItem = { to: string; label: string };
-
-const GUEST_LINKS: NavItem[] = [
-  { to: "/login", label: "Login" },
-  { to: "/register", label: "Registrasi" },
-];
-
-const ADMIN_LINKS: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/venue", label: "Manajemen Venue" },
-  { to: "/seat", label: "Manajemen Kursi" },
-  { to: "/ticket-category", label: "Kategori Tiket" },
-  { to: "/ticket", label: "Manajemen Tiket" },
-  { to: "/order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
-  { to: "/profile", label: "Profile" },
-];
-
-const ORGANIZER_LINKS: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/event", label: "Event Saya" },
-  { to: "/venue", label: "Manajemen Venue" },
-  { to: "/seat", label: "Manajemen Kursi" },
-  { to: "/ticket-category", label: "Kategori Tiket" },
-  { to: "/ticket", label: "Manajemen Tiket" },
-  { to: "/order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
-  { to: "/profile", label: "Profile" },
-];
-
-const CUSTOMER_LINKS: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard" },
-  { to: "/ticket", label: "Tiket Saya" },
-  { to: "/order", label: "Pesanan" },
-  { to: "/event", label: "Cari Event" },
-  { to: "/promosi", label: "Promosi" },
-  { to: "/venue", label: "Venue" },
-  { to: "/artist", label: "Artis" },
-];
-
-// ---------------------------------------------------------------------------
-// Helper: resolve links based on role
-// ---------------------------------------------------------------------------
-
-type Role = "admin" | "organizer" | "customer" | "guest" | undefined;
-
-/**
- * Resolves nav links based on role.
- * Falls back to CUSTOMER_LINKS for logged-in users without a role assigned,
- * because the `role` column may not exist in the DB schema yet.
- */
 function getLinks(role: Role, isLoggedIn: boolean): NavItem[] {
   if (role === "admin") return ADMIN_LINKS;
   if (role === "organizer") return ORGANIZER_LINKS;
   if (role === "customer") return CUSTOMER_LINKS;
   if (role === "guest") return GUEST_LINKS;
-  if (isLoggedIn) return CUSTOMER_LINKS; // default for logged-in users with no role
+  if (isLoggedIn) return CUSTOMER_LINKS;
   return GUEST_LINKS;
 }
-
-// ---------------------------------------------------------------------------
-// NavLink item component
-// ---------------------------------------------------------------------------
 
 function NavItem({ to, label, onClick }: NavItem & { onClick?: () => void }) {
   return (
@@ -96,21 +36,16 @@ function NavItem({ to, label, onClick }: NavItem & { onClick?: () => void }) {
   );
 }
 
-// ---------------------------------------------------------------------------
-// Main Header component
-// ---------------------------------------------------------------------------
-
-interface HeaderProps {
+interface NavbarProps {
   role?: Role;
 }
 
-export default function Header({ role: propRole }: HeaderProps) {
+export default function Navbar({ role: propRole }: NavbarProps) {
   const navigate = useNavigate();
   const { data: session, isPending } = authClient.useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // Use prop-provided role, or fall back to session role
   const isLoggedIn = !!session;
   const role = propRole || (session?.user as { role?: Role })?.role;
   const links = getLinks(role, isLoggedIn);

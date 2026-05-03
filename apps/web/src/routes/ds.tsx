@@ -30,7 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@wagyu-a5/ui/components/dropdown-menu";
-import Header from "@/components/header";
+import Navbar from "@/components/Navbar";
 
 export default function DesignSystem() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -323,7 +323,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Guest Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Header role="guest" />
+                <Navbar role="guest" />
               </div>
             </div>
 
@@ -331,7 +331,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Customer Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Header role="customer" />
+                <Navbar role="customer" />
               </div>
             </div>
 
@@ -339,7 +339,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Organizer Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Header role="organizer" />
+                <Navbar role="organizer" />
               </div>
             </div>
 
@@ -347,7 +347,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Admin Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Header role="admin" />
+                <Navbar role="admin" />
               </div>
             </div>
           </div>
