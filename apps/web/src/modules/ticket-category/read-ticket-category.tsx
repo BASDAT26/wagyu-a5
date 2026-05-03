@@ -146,7 +146,10 @@ function formatRupiah(value: number): string {
 }
 
 // ── Component ─────────────────────────────────────────────────────
-export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin }: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
+export default function ReadTicketCategory({
+  isAdmin: propIsAdmin,
+  onToggleAdmin,
+}: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
   const [internalIsAdmin, setInternalIsAdmin] = useState(true);
   const isAdmin = propIsAdmin !== undefined ? propIsAdmin : internalIsAdmin;
   const setIsAdmin = onToggleAdmin || setInternalIsAdmin;
@@ -166,12 +169,8 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
   // Stats
   const totalCategories = filtered.length;
   const totalQuota = filtered.reduce((sum, tc) => sum + tc.quota, 0);
-  const highestPrice = filtered.length
-    ? Math.max(...filtered.map((tc) => tc.price))
-    : 0;
-  const lowestPrice = filtered.length
-    ? Math.min(...filtered.map((tc) => tc.price))
-    : 0;
+  const highestPrice = filtered.length ? Math.max(...filtered.map((tc) => tc.price)) : 0;
+  const lowestPrice = filtered.length ? Math.min(...filtered.map((tc) => tc.price)) : 0;
 
   return (
     <div className="w-full space-y-6 gap-12 p-6 max-w-6xl mx-auto">
@@ -179,9 +178,7 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Kategori Tiket</h1>
-          <p className="text-sm text-muted-foreground">
-            Kelola kategori dan harga tiket per acara
-          </p>
+          <p className="text-sm text-muted-foreground">Kelola kategori dan harga tiket per acara</p>
         </div>
         <div className="flex items-center gap-3">
           {/* Role toggle for demo */}
@@ -214,9 +211,7 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Total Kuota
             </p>
-            <p className="text-3xl font-bold mt-1">
-              {totalQuota.toLocaleString("id-ID")}
-            </p>
+            <p className="text-3xl font-bold mt-1">{totalQuota.toLocaleString("id-ID")}</p>
           </CardContent>
         </Card>
         <Card>
@@ -271,9 +266,7 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
 
           {/* Count + View Toggle */}
           <div className="flex items-center justify-between mt-4">
-            <p className="text-sm text-muted-foreground">
-              {filtered.length} kategori ditemukan
-            </p>
+            <p className="text-sm text-muted-foreground">{filtered.length} kategori ditemukan</p>
             <div className="flex items-center rounded-md border border-input overflow-hidden">
               <button
                 onClick={() => setView("table")}
@@ -331,18 +324,12 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
                       key={tc.category_id}
                       className="border-b last:border-b-0 hover:bg-muted/30 transition-colors"
                     >
-                      <td className="px-4 py-4 font-semibold">
-                        {tc.category_name}
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {tc.event_name}
-                      </td>
+                      <td className="px-4 py-4 font-semibold">{tc.category_name}</td>
+                      <td className="px-4 py-4 text-muted-foreground">{tc.event_name}</td>
                       <td className="px-4 py-4 font-medium text-indigo-600 dark:text-indigo-400">
                         {formatRupiah(tc.price)}
                       </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {tc.quota} tiket
-                      </td>
+                      <td className="px-4 py-4 text-muted-foreground">{tc.quota} tiket</td>
                       {isAdmin && (
                         <td className="px-4 py-4">
                           <div className="flex items-center gap-2">
@@ -382,12 +369,8 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
                   <CardContent className="pt-5 pb-5 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0">
-                        <p className="font-semibold truncate">
-                          {tc.category_name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {tc.event_name}
-                        </p>
+                        <p className="font-semibold truncate">{tc.category_name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{tc.event_name}</p>
                       </div>
                       {isAdmin && (
                         <div className="flex items-center gap-2 shrink-0">
@@ -410,9 +393,7 @@ export default function ReadTicketCategory({ isAdmin: propIsAdmin, onToggleAdmin
                       <span className="font-medium text-indigo-600 dark:text-indigo-400">
                         {formatRupiah(tc.price)}
                       </span>
-                      <span className="text-muted-foreground">
-                        {tc.quota} tiket
-                      </span>
+                      <span className="text-muted-foreground">{tc.quota} tiket</span>
                     </div>
                   </CardContent>
                 </Card>

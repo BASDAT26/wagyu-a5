@@ -1,5 +1,3 @@
 export default function DeleteOrder() {
-  return (
-    <div>ini delete-order</div>
-  );
+  return <div>ini delete-order</div>;
 }

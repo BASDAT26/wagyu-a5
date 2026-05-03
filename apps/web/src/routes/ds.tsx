@@ -96,11 +96,7 @@ export default function DesignSystem() {
 
             <div>
               <Label htmlFor="input-email">Email Input</Label>
-              <Input
-                id="input-email"
-                type="email"
-                placeholder="Enter email..."
-              />
+              <Input id="input-email" type="email" placeholder="Enter email..." />
             </div>
 
             <div>
@@ -110,11 +106,7 @@ export default function DesignSystem() {
 
             <div>
               <Label htmlFor="input-error">Error Input</Label>
-              <Input
-                id="input-error"
-                placeholder="Error state..."
-                aria-invalid="true"
-              />
+              <Input id="input-error" placeholder="Error state..." aria-invalid="true" />
             </div>
           </div>
         </section>
@@ -191,14 +183,11 @@ export default function DesignSystem() {
             <Card>
               <CardHeader>
                 <CardTitle>Default Card</CardTitle>
-                <CardDescription>
-                  This is a default card with title and description
-                </CardDescription>
+                <CardDescription>This is a default card with title and description</CardDescription>
               </CardHeader>
               <CardContent>
                 <p>
-                  Card content goes here. This is a flexible container for
-                  various content types.
+                  Card content goes here. This is a flexible container for various content types.
                 </p>
               </CardContent>
             </Card>
@@ -237,14 +226,10 @@ export default function DesignSystem() {
               <ModalPopup>
                 <ModalHeader>
                   <ModalTitle>Basic Modal</ModalTitle>
-                  <ModalDescription>
-                    This is a simple modal dialog
-                  </ModalDescription>
+                  <ModalDescription>This is a simple modal dialog</ModalDescription>
                 </ModalHeader>
                 <ModalBody>
-                  <p>
-                    Modal content goes here. You can put any content inside.
-                  </p>
+                  <p>Modal content goes here. You can put any content inside.</p>
                 </ModalBody>
                 <ModalFooter>
                   <ModalClose>
@@ -263,9 +248,7 @@ export default function DesignSystem() {
               <ModalPopup>
                 <ModalHeader>
                   <ModalTitle>Hapus Data</ModalTitle>
-                  <ModalDescription>
-                    Apakah kamu yakin ingin menghapus data ini?
-                  </ModalDescription>
+                  <ModalDescription>Apakah kamu yakin ingin menghapus data ini?</ModalDescription>
                 </ModalHeader>
                 <ModalBody>
                   <p>Data yang dihapus tidak dapat dikembalikan.</p>
@@ -283,9 +266,7 @@ export default function DesignSystem() {
 
         {/* DropdownMenu Section */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-semibold border-b pb-2">
-            Dropdown Menus
-          </h2>
+          <h2 className="text-2xl font-semibold border-b pb-2">Dropdown Menus</h2>
 
           <div className="flex flex-wrap gap-4">
             <DropdownMenu>
@@ -323,7 +304,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Guest Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Navbar role="guest" />
+                <Navbar />
               </div>
             </div>
 
@@ -331,7 +312,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Customer Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Navbar role="customer" />
+                <Navbar role="CUSTOMER" />
               </div>
             </div>
 
@@ -339,7 +320,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Organizer Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Navbar role="organizer" />
+                <Navbar role="ORGANIZER" />
               </div>
             </div>
 
@@ -347,7 +328,7 @@ export default function DesignSystem() {
             <div>
               <h3 className="text-sm font-medium mb-2">Admin Header</h3>
               <div className="border rounded-lg overflow-hidden">
-                <Navbar role="admin" />
+                <Navbar role="ADMIN" />
               </div>
             </div>
           </div>

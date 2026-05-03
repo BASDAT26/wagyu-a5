@@ -49,9 +49,7 @@ export default function DeleteTicketCategory({
       <ModalPopup>
         <ModalHeader>
           <ModalTitle>Hapus Kategori Tiket</ModalTitle>
-          <ModalDescription>
-            Apakah kamu yakin ingin menghapus kategori tiket ini?
-          </ModalDescription>
+          <ModalDescription>Apakah kamu yakin ingin menghapus kategori tiket ini?</ModalDescription>
         </ModalHeader>
         <ModalBody>
           <div className="rounded-md border border-destructive/20 bg-destructive/5 p-4 space-y-2">

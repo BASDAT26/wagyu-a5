@@ -17,11 +17,14 @@
     "@wagyu-a5/auth": "workspace:*",
     "@wagyu-a5/db": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
+    "bcrypt": "^6.0.0",
     "dotenv": "catalog:",
     "hono": "catalog:",
+    "jsonwebtoken": "^9.0.3",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.13.14",
     "@wagyu-a5/config": "workspace:*",
     "tsdown": "^0.16.5",

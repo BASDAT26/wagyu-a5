@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "check-types": "turbo check-types",
     "dev:web": "turbo -F web dev",
     "dev:server": "turbo -F server dev",
@@ -23,8 +25,11 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^22.13.14",
     "@wagyu-a5/config": "workspace:*",
+    "prettier": "^3.3.3",
     "turbo": "^2.8.12",
     "typescript": "catalog:"
   },

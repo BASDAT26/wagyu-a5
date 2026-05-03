@@ -40,12 +40,7 @@ export default function UpdateTicketCategory({
   return (
     <Modal open={open} onOpenChange={setOpen}>
       {!isControlled && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5"
-          onClick={() => setOpen(true)}
-        >
+        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
           <Pencil className="h-3.5 w-3.5" />
           Edit
         </Button>

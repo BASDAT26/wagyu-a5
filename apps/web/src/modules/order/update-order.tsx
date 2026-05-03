@@ -1,5 +1,3 @@
 export default function UpdateOrder() {
-  return (
-    <div>ini update-order</div>
-  );
+  return <div>ini update-order</div>;
 }

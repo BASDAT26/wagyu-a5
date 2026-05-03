@@ -1,5 +1,3 @@
 export default function DeletePromotion() {
-  return (
-    <div>ini delete-promotion</div>
-  );
+  return <div>ini delete-promotion</div>;
 }

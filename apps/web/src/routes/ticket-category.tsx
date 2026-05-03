@@ -7,7 +7,7 @@ export default function TicketCategoryPage() {
 
   return (
     <>
-      <Navbar role={isAdmin ? "admin" : "customer"} />
+      <Navbar role={isAdmin ? "ADMIN" : "CUSTOMER"} />
       <ReadTicketCategory isAdmin={isAdmin} onToggleAdmin={setIsAdmin} />
     </>
   );

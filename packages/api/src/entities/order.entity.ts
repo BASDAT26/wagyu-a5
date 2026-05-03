@@ -9,7 +9,7 @@ export interface Order {
 export interface Promotion {
   promotionId: string;
   promoCode: string;
-  discountType: 'NOMINAL' | 'PERCENTAGE';
+  discountType: "NOMINAL" | "PERCENTAGE";
   discountValue: number;
   startDate: Date | string;
   endDate: Date | string;

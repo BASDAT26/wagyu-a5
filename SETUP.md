@@ -190,14 +190,14 @@ VITE_SERVER_URL=http://localhost:3000
 
 ### Penjelasan Variabel
 
-| Variabel             | Deskripsi                                                    |
-| -------------------- | ------------------------------------------------------------ |
-| `DATABASE_URL`       | Connection string ke database PostgreSQL kamu                |
-| `BETTER_AUTH_SECRET`  | Secret key untuk authentication (minimal 32 karakter)        |
-| `BETTER_AUTH_URL`     | URL dimana backend server berjalan                           |
-| `CORS_ORIGIN`         | URL frontend yang diperbolehkan mengakses API                |
-| `NODE_ENV`            | Mode environment (`development` saat develop)                |
-| `VITE_SERVER_URL`     | URL backend yang diakses frontend                            |
+| Variabel             | Deskripsi                                             |
+| -------------------- | ----------------------------------------------------- |
+| `DATABASE_URL`       | Connection string ke database PostgreSQL kamu         |
+| `BETTER_AUTH_SECRET` | Secret key untuk authentication (minimal 32 karakter) |
+| `BETTER_AUTH_URL`    | URL dimana backend server berjalan                    |
+| `CORS_ORIGIN`        | URL frontend yang diperbolehkan mengakses API         |
+| `NODE_ENV`           | Mode environment (`development` saat develop)         |
+| `VITE_SERVER_URL`    | URL backend yang diakses frontend                     |
 
 ### Generate Auth Secret
 
@@ -310,6 +310,7 @@ Ada proses lain yang menggunakan port 3000 atau 5173. Matikan proses tersebut at
 - Pastikan PostgreSQL berjalan
 - Pastikan database yang dituju sudah ada (buat dulu jika belum)
 - Untuk membuat database di PostgreSQL:
+
   ```bash
   # Masuk ke psql
   psql -U postgres
@@ -344,17 +345,17 @@ wagyu-a5/
 
 ## 📜 Perintah-Perintah Penting
 
-| Perintah               | Fungsi                                     |
-| ---------------------- | ------------------------------------------ |
-| `pnpm run dev`         | Jalankan semua apps (frontend + backend)   |
-| `pnpm run dev:web`     | Jalankan hanya frontend                    |
-| `pnpm run dev:server`  | Jalankan hanya backend                     |
-| `pnpm run build`       | Build semua apps untuk production          |
-| `pnpm run db:push`     | Push schema ke database                   |
-| `pnpm run db:studio`   | Buka database studio (GUI)                |
-| `pnpm run db:generate` | Generate database types                   |
-| `pnpm run db:migrate`  | Jalankan database migrations              |
-| `pnpm run check-types` | Cek TypeScript types                      |
+| Perintah               | Fungsi                                   |
+| ---------------------- | ---------------------------------------- |
+| `pnpm run dev`         | Jalankan semua apps (frontend + backend) |
+| `pnpm run dev:web`     | Jalankan hanya frontend                  |
+| `pnpm run dev:server`  | Jalankan hanya backend                   |
+| `pnpm run build`       | Build semua apps untuk production        |
+| `pnpm run db:push`     | Push schema ke database                  |
+| `pnpm run db:studio`   | Buka database studio (GUI)               |
+| `pnpm run db:generate` | Generate database types                  |
+| `pnpm run db:migrate`  | Jalankan database migrations             |
+| `pnpm run check-types` | Cek TypeScript types                     |
 
 ---
 

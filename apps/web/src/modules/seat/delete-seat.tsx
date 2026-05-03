@@ -24,7 +24,8 @@ export default function DeleteSeat({ isAssigned = false }: { isAssigned?: boolea
         >
           {isAssigned && (
             <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-2 bg-red-50 text-red-600 text-xs rounded-md shadow-lg z-50 text-left border border-red-100">
-              Kursi ini sudah di-assign ke tiket dan tidak dapat dihapus. Hapus atau ubah tiket terlebih dahulu.
+              Kursi ini sudah di-assign ke tiket dan tidak dapat dihapus. Hapus atau ubah tiket
+              terlebih dahulu.
             </div>
           )}
           <Trash2 className="w-4 h-4" />
@@ -41,11 +42,18 @@ export default function DeleteSeat({ isAssigned = false }: { isAssigned?: boolea
         </ModalBody>
         <ModalFooter className="flex w-full justify-end gap-3 mt-4 sm:space-x-0">
           <ModalClose asChild>
-            <Button variant="outline" className="rounded-xl px-6 h-10 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-800">
+            <Button
+              variant="outline"
+              className="rounded-xl px-6 h-10 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-slate-300 font-medium hover:bg-gray-50 dark:hover:bg-slate-800"
+            >
               Batal
             </Button>
           </ModalClose>
-          <Button variant="destructive" className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-6 h-10 font-medium" onClick={() => setOpen(false)}>
+          <Button
+            variant="destructive"
+            className="bg-red-500 hover:bg-red-600 text-white rounded-xl px-6 h-10 font-medium"
+            onClick={() => setOpen(false)}
+          >
             Hapus
           </Button>
         </ModalFooter>

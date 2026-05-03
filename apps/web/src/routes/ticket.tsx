@@ -2,10 +2,10 @@ import { useState } from "react";
 import ReadTicket from "@/modules/ticket/read-ticket";
 import Navbar from "@/components/Navbar";
 
-type Role = "admin" | "customer";
+type Role = "ADMIN" | "CUSTOMER";
 
 export default function TicketPage() {
-  const [role, setRole] = useState<Role>("customer");
+  const [role, setRole] = useState<Role>("CUSTOMER");
 
   return (
     <div className="w-full min-h-screen bg-background">

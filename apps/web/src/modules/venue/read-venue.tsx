@@ -45,9 +45,7 @@ const dummyVenues: Venue[] = [
 
 export default function ReadVenue() {
   const totalVenue = dummyVenues.length;
-  const reservedSeatingCount = dummyVenues.filter(
-    (v) => v.hasReservedSeating,
-  ).length;
+  const reservedSeatingCount = dummyVenues.filter((v) => v.hasReservedSeating).length;
   const totalCapacity = dummyVenues.reduce((sum, v) => sum + v.capacity, 0);
 
   return (
@@ -62,7 +60,7 @@ export default function ReadVenue() {
               Kelola lokasi pertunjukan dan kapasitas tempat duduk
             </p>
           </div>
-          <CreateVenue/>
+          <CreateVenue />
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-6">
@@ -157,9 +155,7 @@ export default function ReadVenue() {
                   }`}
                 >
                   <Armchair className="h-3.5 w-3.5" />
-                  {venue.hasReservedSeating
-                    ? "Reserved Seating"
-                    : "Free Seating"}
+                  {venue.hasReservedSeating ? "Reserved Seating" : "Free Seating"}
                 </span>
               </div>
 
@@ -176,8 +172,8 @@ export default function ReadVenue() {
               </div>
 
               <div className="mt-4 ml-13 flex items-center gap-2">
-                <UpdateVenue/>
-                <DeleteVenue/>
+                <UpdateVenue />
+                <DeleteVenue />
               </div>
             </CardContent>
           </Card>

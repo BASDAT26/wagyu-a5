@@ -63,34 +63,20 @@ export default function CreateTicketCategory({ events }: CreateTicketCategoryPro
               <Label htmlFor="create-tc-name">
                 NAMA KATEGORI <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="create-tc-name"
-                placeholder="cth. WVIP"
-                maxLength={100}
-              />
+              <Input id="create-tc-name" placeholder="cth. WVIP" maxLength={100} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="create-tc-price">
                   HARGA (RP) <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="create-tc-price"
-                  type="number"
-                  placeholder="750000"
-                  min={0}
-                />
+                <Input id="create-tc-price" type="number" placeholder="750000" min={0} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="create-tc-quota">
                   KUOTA <span className="text-destructive">*</span>
                 </Label>
-                <Input
-                  id="create-tc-quota"
-                  type="number"
-                  placeholder="100"
-                  min={1}
-                />
+                <Input id="create-tc-quota" type="number" placeholder="100" min={1} />
               </div>
             </div>
           </div>

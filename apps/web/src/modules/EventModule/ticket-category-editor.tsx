@@ -27,11 +27,7 @@ export default function TicketCategoryEditor({
     onChange(categories.filter((_, i) => i !== index));
   };
 
-  const updateCategory = (
-    index: number,
-    field: keyof TicketCategoryForm,
-    value: string
-  ) => {
+  const updateCategory = (index: number, field: keyof TicketCategoryForm, value: string) => {
     const updated = [...categories];
     updated[index] = { ...updated[index], [field]: value };
     onChange(updated);
@@ -51,9 +47,7 @@ export default function TicketCategoryEditor({
                 type="text"
                 placeholder="Nama kategori"
                 value={cat.name}
-                onChange={(e) =>
-                  updateCategory(index, "name", e.target.value)
-                }
+                onChange={(e) => updateCategory(index, "name", e.target.value)}
                 className="flex-1"
               />
               <button
@@ -71,18 +65,14 @@ export default function TicketCategoryEditor({
                 type="number"
                 placeholder="Harga"
                 value={cat.price}
-                onChange={(e) =>
-                  updateCategory(index, "price", e.target.value)
-                }
+                onChange={(e) => updateCategory(index, "price", e.target.value)}
               />
               <Input
                 id={`${idPrefix}-cat-qty-${index}`}
                 type="number"
                 placeholder="Jumlah"
                 value={cat.quantity}
-                onChange={(e) =>
-                  updateCategory(index, "quantity", e.target.value)
-                }
+                onChange={(e) => updateCategory(index, "quantity", e.target.value)}
               />
             </div>
           </div>

@@ -1,12 +1,4 @@
-import {
-  Calendar,
-  MapPin,
-  Tag,
-  ChevronRight,
-  Music,
-  Theater,
-  Mic2,
-} from "lucide-react";
+import { Calendar, MapPin, Tag, ChevronRight, Music, Theater, Mic2 } from "lucide-react";
 import { Link } from "react-router";
 import Navbar from "@/components/Navbar";
 
@@ -53,7 +45,7 @@ const EVENTS = [
 export default function CariEventPage() {
   return (
     <>
-      <Navbar role="customer" />
+      <Navbar role="CUSTOMER" />
       <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 p-6">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Header Section */}
@@ -64,8 +56,8 @@ export default function CariEventPage() {
                 Temukan Event Impianmu
               </h1>
               <p className="text-slate-500 dark:text-slate-400 text-lg">
-                Eksplorasi ribuan konser, pertunjukan seni, dan acara menarik
-                lainnya di sekitarmu. Beli tiket dengan mudah dan aman.
+                Eksplorasi ribuan konser, pertunjukan seni, dan acara menarik lainnya di sekitarmu.
+                Beli tiket dengan mudah dan aman.
               </p>
 
               {/* Search Bar */}
@@ -84,25 +76,20 @@ export default function CariEventPage() {
 
           {/* Filters */}
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-            {[
-              "Semua Kategori",
-              "Musik",
-              "Seni Pertunjukan",
-              "Komedi",
-              "Olahraga",
-              "Seminar",
-            ].map((cat, i) => (
-              <button
-                key={cat}
-                className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-colors ${
-                  i === 0
-                    ? "bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md"
-                    : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
+            {["Semua Kategori", "Musik", "Seni Pertunjukan", "Komedi", "Olahraga", "Seminar"].map(
+              (cat, i) => (
+                <button
+                  key={cat}
+                  className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-colors ${
+                    i === 0
+                      ? "bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900 shadow-md"
+                      : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ),
+            )}
           </div>
 
           {/* Event List */}
@@ -120,10 +107,7 @@ export default function CariEventPage() {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                   <div className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                    <evt.icon
-                      size={14}
-                      className="text-blue-600 dark:text-blue-400"
-                    />
+                    <evt.icon size={14} className="text-blue-600 dark:text-blue-400" />
                     <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                       {evt.category}
                     </span>
@@ -143,9 +127,7 @@ export default function CariEventPage() {
                     </div>
                     <div className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400">
                       <MapPin size={16} className="text-rose-500" />
-                      <span className="text-sm font-medium truncate">
-                        {evt.location}
-                      </span>
+                      <span className="text-sm font-medium truncate">{evt.location}</span>
                     </div>
                     <div className="flex items-center gap-2.5 text-slate-500 dark:text-slate-400">
                       <Tag size={16} className="text-emerald-500" />

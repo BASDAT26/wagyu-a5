@@ -34,9 +34,7 @@ export default function CreateVenue() {
           <ModalBody>
             <div className="space-y-2 w-full">
               <div>
-                <Label htmlFor="input-venue-name">
-                  NAMA VENUE (VENUE_NAME)
-                </Label>
+                <Label htmlFor="input-venue-name">NAMA VENUE (VENUE_NAME)</Label>
                 <Input
                   id="input-venue-name"
                   type="text"
@@ -55,10 +53,7 @@ export default function CreateVenue() {
               </div>
               <div>
                 <Label htmlFor="input-address">ALAMAT (ADDRESS)</Label>
-                <Textarea
-                  id="input-address"
-                  placeholder="Jl. Gatot Subroto No.1"
-                />
+                <Textarea id="input-address" placeholder="Jl. Gatot Subroto No.1" />
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox id="check-seat" />

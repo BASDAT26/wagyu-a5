@@ -1,5 +1,4 @@
 export type NavItem = { to: string; label: string };
-export type Role = "admin" | "organizer" | "customer" | "guest" | undefined;
 
 export const GUEST_LINKS: NavItem[] = [
   { to: "/login", label: "Login" },

@@ -7,7 +7,7 @@ export default function ArtistPage() {
 
   return (
     <>
-      <Navbar role={isAdmin ? "admin" : "customer"} />
+      <Navbar role={isAdmin ? "ADMIN" : "CUSTOMER"} />
       <ReadArtist isAdmin={isAdmin} onToggleAdmin={setIsAdmin} />
     </>
   );

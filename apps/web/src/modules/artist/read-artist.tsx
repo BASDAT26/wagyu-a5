@@ -26,18 +26,22 @@ const ARTISTS = [
   { artist_id: "b4d8f9e0-a1c2-4b3d-5e6f-7a8b9c0d1e08", name: "Tenxi", genre: "Hip-dut" },
 ];
 
-const GENRE_CHIP_VARIANT: Record<string, "default" | "secondary" | "destructive" | "success" | "warning" | "outline"> = {
+const GENRE_CHIP_VARIANT: Record<
+  string,
+  "default" | "secondary" | "destructive" | "success" | "warning" | "outline"
+> = {
   "K-Pop": "default",
   "K-Hiphop": "outline",
   "Indie Pop": "success",
-  "Rock": "destructive",
-  "Pop": "warning",
+  Rock: "destructive",
+  Pop: "warning",
   "Hip-dut": "outline",
 };
 
 // Custom className overrides for genres that need non-standard colors
 const GENRE_CHIP_CLASS: Record<string, string> = {
-  "K-Hiphop": "bg-purple-500/10 text-purple-700 border-purple-500/20 hover:bg-purple-500/20 dark:text-purple-400",
+  "K-Hiphop":
+    "bg-purple-500/10 text-purple-700 border-purple-500/20 hover:bg-purple-500/20 dark:text-purple-400",
 };
 
 function ArtistAvatar({ name }: { name: string }) {
@@ -49,7 +53,10 @@ function ArtistAvatar({ name }: { name: string }) {
   );
 }
 
-export default function ReadArtist({ isAdmin: propIsAdmin, onToggleAdmin }: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
+export default function ReadArtist({
+  isAdmin: propIsAdmin,
+  onToggleAdmin,
+}: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
   const [internalIsAdmin, setInternalIsAdmin] = useState(true);
   const isAdmin = propIsAdmin !== undefined ? propIsAdmin : internalIsAdmin;
   const setIsAdmin = onToggleAdmin || setInternalIsAdmin;
@@ -219,10 +226,7 @@ export default function ReadArtist({ isAdmin: propIsAdmin, onToggleAdmin }: { is
                           currentName={artist.name}
                           currentGenre={artist.genre}
                         />
-                        <DeleteArtist
-                          artistId={artist.artist_id}
-                          artistName={artist.name}
-                        />
+                        <DeleteArtist artistId={artist.artist_id} artistName={artist.name} />
                       </div>
                     )}
                   </div>

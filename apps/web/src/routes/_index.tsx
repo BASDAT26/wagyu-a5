@@ -21,10 +21,7 @@ const TITLE_TEXT = `
  `;
 
 export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "wagyu-a5" },
-    { name: "description", content: "wagyu-a5 is a web application" },
-  ];
+  return [{ title: "wagyu-a5" }, { name: "description", content: "wagyu-a5 is a web application" }];
 }
 
 export default function Home() {

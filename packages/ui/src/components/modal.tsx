@@ -12,12 +12,7 @@ const ModalTrigger = React.forwardRef<
     asChild?: boolean;
   }
 >(({ className, asChild = false, ...props }, ref) => (
-  <DialogPrimitive.Trigger
-    ref={ref}
-    asChild={asChild}
-    className={cn(className)}
-    {...props}
-  />
+  <DialogPrimitive.Trigger ref={ref} asChild={asChild} className={cn(className)} {...props} />
 ));
 ModalTrigger.displayName = "ModalTrigger";
 
@@ -29,12 +24,7 @@ const ModalClose = React.forwardRef<
     asChild?: boolean;
   }
 >(({ className, asChild = false, ...props }, ref) => (
-  <DialogPrimitive.Close
-    ref={ref}
-    asChild={asChild}
-    className={cn(className)}
-    {...props}
-  />
+  <DialogPrimitive.Close ref={ref} asChild={asChild} className={cn(className)} {...props} />
 ));
 ModalClose.displayName = "ModalClose";
 
@@ -93,29 +83,14 @@ ModalContent.displayName = DialogPrimitive.Content.displayName;
 const ModalPopup = ModalContent;
 const ModalBackdrop = ModalOverlay;
 
-const ModalHeader = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
-  <div
-    className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
-      className,
-    )}
-    {...props}
-  />
+const ModalHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)} {...props} />
 );
 ModalHeader.displayName = "ModalHeader";
 
-const ModalFooter = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const ModalFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
-      className,
-    )}
+    className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
     {...props}
   />
 );
@@ -127,10 +102,7 @@ const ModalTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className,
-    )}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
     {...props}
   />
 ));
@@ -149,10 +121,7 @@ const ModalDescription = React.forwardRef<
 ModalDescription.displayName = DialogPrimitive.Description.displayName;
 
 // Aliases for compatibility
-const ModalBody = ({
-  className,
-  ...props
-}: React.HTMLAttributes<HTMLDivElement>) => (
+const ModalBody = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("space-y-4", className)} {...props} />
 );
 ModalBody.displayName = "ModalBody";

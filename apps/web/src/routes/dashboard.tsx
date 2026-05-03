@@ -17,17 +17,14 @@ import {
   Briefcase,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
-
-type Role = "Admin" | "Organizer" | "Customer";
+import type { Role } from "@/data/type";
 
 export default function DashboardPage() {
-  const [role, setRole] = useState<Role>("Admin");
-
-  const headerRole = role.toLowerCase() as "admin" | "organizer" | "customer";
+  const [role, setRole] = useState<Role>("ADMIN");
 
   return (
     <>
-      <Navbar role={headerRole} />
+      <Navbar role={role} />
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans">
         <div className="max-w-6xl mx-auto space-y-8">
           {/* --- Role Simulator --- */}
@@ -46,7 +43,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex gap-2 bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700">
-              {(["Admin", "Organizer", "Customer"] as Role[]).map((r) => (
+              {(["ADMIN", "ORGANIZER", "CUSTOMER"] as Role[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => setRole(r)}
@@ -65,7 +62,7 @@ export default function DashboardPage() {
           {/* =========================================
             ADMIN DASHBOARD 
         ========================================= */}
-          {role === "Admin" && (
+          {role === "ADMIN" && (
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
               {/* Header */}
               <div className="bg-[#2A3441] dark:bg-[#1E2530] rounded-[24px] p-8 sm:p-10 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
@@ -73,12 +70,8 @@ export default function DashboardPage() {
                   <p className="text-sm text-slate-400 mb-1 font-semibold tracking-wide">
                     Administrator
                   </p>
-                  <h1 className="text-3xl font-black mb-2 tracking-tight">
-                    System Console
-                  </h1>
-                  <p className="text-sm text-slate-300">
-                    Pantau dan kelola platform TikTakTuk
-                  </p>
+                  <h1 className="text-3xl font-black mb-2 tracking-tight">System Console</h1>
+                  <p className="text-sm text-slate-300">Pantau dan kelola platform TikTakTuk</p>
                 </div>
                 <button className="bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 rounded-xl font-bold text-sm shadow-sm transition-colors">
                   Promosi
@@ -140,9 +133,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
                       Promosi Aktif
                     </p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">
-                      3
-                    </p>
+                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">3</p>
                     <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                       Running campaigns
                     </p>
@@ -161,27 +152,20 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                       Infrastruktur Venue
                     </h3>
-                    <ArrowUpRight
-                      size={20}
-                      className="text-slate-400 dark:text-slate-500"
-                    />
+                    <ArrowUpRight size={20} className="text-slate-400 dark:text-slate-500" />
                   </div>
                   <div className="space-y-5 mb-10">
                     <div className="flex justify-between items-center text-[15px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
                         Total Venue Terdaftar
                       </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">
-                        3 Lokasi
-                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">3 Lokasi</span>
                     </div>
                     <div className="flex justify-between items-center text-[15px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
                         Reserved Seating
                       </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">
-                        2 Venue
-                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">2 Venue</span>
                     </div>
                     <div className="flex justify-between items-center text-[15px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
@@ -203,35 +187,26 @@ export default function DashboardPage() {
                     <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
                       Marketing & Promosi
                     </h3>
-                    <ArrowUpRight
-                      size={20}
-                      className="text-slate-400 dark:text-slate-500"
-                    />
+                    <ArrowUpRight size={20} className="text-slate-400 dark:text-slate-500" />
                   </div>
                   <div className="space-y-5 mb-10">
                     <div className="flex justify-between items-center text-[15px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
                         Promo Persentase
                       </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">
-                        1 Aktif
-                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">1 Aktif</span>
                     </div>
                     <div className="flex justify-between items-center text-[15px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
                         Promo Potongan Nominal
                       </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">
-                        1 Aktif
-                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">1 Aktif</span>
                     </div>
                     <div className="flex justify-between items-center text-[15px]">
                       <span className="text-slate-500 dark:text-slate-400 font-medium">
                         Total Penggunaan
                       </span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">
-                        57 Kali
-                      </span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">57 Kali</span>
                     </div>
                   </div>
                   <button className="w-full py-3.5 rounded-xl border-2 border-slate-100 dark:border-slate-800 font-bold text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
@@ -245,7 +220,7 @@ export default function DashboardPage() {
           {/* =========================================
             ORGANIZER DASHBOARD 
         ========================================= */}
-          {role === "Organizer" && (
+          {role === "ORGANIZER" && (
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
               {/* Header */}
               <div className="bg-[#1A1F2B] dark:bg-[#12161E] rounded-[24px] p-8 sm:p-10 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
@@ -253,12 +228,8 @@ export default function DashboardPage() {
                   <p className="text-sm text-slate-400 mb-1 font-semibold tracking-wide">
                     Dashboard Penyelenggara
                   </p>
-                  <h1 className="text-3xl font-black mb-2 tracking-tight">
-                    Andi Wijaya
-                  </h1>
-                  <p className="text-sm text-slate-400">
-                    Kelola 3 acara aktif Anda
-                  </p>
+                  <h1 className="text-3xl font-black mb-2 tracking-tight">Andi Wijaya</h1>
+                  <p className="text-sm text-slate-400">Kelola 3 acara aktif Anda</p>
                 </div>
                 <div className="flex gap-3">
                   <button className="bg-white text-slate-900 hover:bg-slate-100 px-6 py-3 rounded-xl font-bold text-sm shadow-sm transition-colors">
@@ -277,9 +248,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
                       Acara Aktif
                     </p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">
-                      3
-                    </p>
+                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">3</p>
                     <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                       Dalam koordinasi
                     </p>
@@ -325,9 +294,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
                       Venue Mitra
                     </p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">
-                      3
-                    </p>
+                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">3</p>
                     <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                       Lokasi aktif
                     </p>
@@ -408,7 +375,7 @@ export default function DashboardPage() {
           {/* =========================================
             CUSTOMER DASHBOARD 
         ========================================= */}
-          {role === "Customer" && (
+          {role === "CUSTOMER" && (
             <div className="space-y-6 animate-in fade-in zoom-in-95 duration-300">
               {/* Header */}
               <div className="bg-[#2563EB] dark:bg-blue-700 rounded-[24px] p-8 sm:p-10 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-xl shadow-blue-500/20 dark:shadow-none">
@@ -416,12 +383,8 @@ export default function DashboardPage() {
                   <p className="text-sm text-blue-100 mb-1 font-medium tracking-wide">
                     Selamat datang kembali
                   </p>
-                  <h1 className="text-3xl font-black mb-2 tracking-tight">
-                    Budi Santoso
-                  </h1>
-                  <p className="text-sm text-blue-100">
-                    3 acara menarik menunggu Anda
-                  </p>
+                  <h1 className="text-3xl font-black mb-2 tracking-tight">Budi Santoso</h1>
+                  <p className="text-sm text-blue-100">3 acara menarik menunggu Anda</p>
                 </div>
                 <button className="bg-white text-blue-600 hover:bg-slate-50 px-6 py-3 rounded-xl font-bold text-sm shadow-sm transition-colors">
                   Cari Tiket
@@ -435,9 +398,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
                       Tiket Aktif
                     </p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">
-                      2
-                    </p>
+                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">2</p>
                     <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                       Siap digunakan
                     </p>
@@ -467,9 +428,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
                       Kode Promo
                     </p>
-                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">
-                      3
-                    </p>
+                    <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">3</p>
                     <p className="text-[13px] text-slate-500 dark:text-slate-400 font-medium">
                       Tersedia untuk Anda
                     </p>

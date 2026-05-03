@@ -43,9 +43,7 @@ export default function UpdateVenue() {
           <ModalBody>
             <div className="space-y-2 w-full">
               <div>
-                <Label htmlFor="input-venue-name">
-                  NAMA VENUE (VENUE_NAME)
-                </Label>
+                <Label htmlFor="input-venue-name">NAMA VENUE (VENUE_NAME)</Label>
                 <Input
                   id="input-venue-name"
                   type="text"
@@ -82,10 +80,7 @@ export default function UpdateVenue() {
                 />
               </div>
               <div className="flex items-center gap-2">
-                <Checkbox
-                  id="check-seat"
-                  checked={dummyVenue.hasReservedSeating}
-                />
+                <Checkbox id="check-seat" checked={dummyVenue.hasReservedSeating} />
                 <Label htmlFor="check-seat">Has Reserved Seating</Label>
               </div>
             </div>

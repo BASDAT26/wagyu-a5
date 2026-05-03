@@ -29,26 +29,16 @@ export default function CreateArtist() {
       <ModalPopup>
         <ModalHeader>
           <ModalTitle>Tambah Artis Baru</ModalTitle>
-          <ModalDescription>
-            Isi data artis yang ingin ditambahkan ke platform.
-          </ModalDescription>
+          <ModalDescription>Isi data artis yang ingin ditambahkan ke platform.</ModalDescription>
         </ModalHeader>
         <ModalBody>
           <div className="space-y-2">
             <Label htmlFor="create-artist-name">Nama Artis</Label>
-            <Input
-              id="create-artist-name"
-              placeholder="Masukkan nama artis..."
-              maxLength={100}
-            />
+            <Input id="create-artist-name" placeholder="Masukkan nama artis..." maxLength={100} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="create-artist-genre">Genre</Label>
-            <Input
-              id="create-artist-genre"
-              placeholder="Masukkan genre..."
-              maxLength={100}
-            />
+            <Input id="create-artist-genre" placeholder="Masukkan genre..." maxLength={100} />
           </div>
         </ModalBody>
         <ModalFooter>

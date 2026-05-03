@@ -33,10 +33,7 @@ export default function UpdateEvent() {
   const [date, setDate] = useState("2024-05-15");
   const [time, setTime] = useState("19:00");
   const [venueId, setVenueId] = useState("1");
-  const [selectedArtists, setSelectedArtists] = useState<string[]>([
-    "Fourtwenty",
-    "Hindia",
-  ]);
+  const [selectedArtists, setSelectedArtists] = useState<string[]>(["Fourtwenty", "Hindia"]);
   const [ticketCategories, setTicketCategories] = useState<TicketCategoryForm[]>([
     { name: "WVIP", price: "1500000", quantity: "50" },
     { name: "VIP", price: "750000", quantity: "150" },
@@ -44,14 +41,12 @@ export default function UpdateEvent() {
     { name: "Category 2", price: "250000", quantity: "500" },
   ]);
   const [description, setDescription] = useState(
-    "Nikmati suasana senja dengan alunan musik indie yang menenangkan."
+    "Nikmati suasana senja dengan alunan musik indie yang menenangkan.",
   );
 
   const toggleArtist = (artist: string) => {
     setSelectedArtists((prev) =>
-      prev.includes(artist)
-        ? prev.filter((a) => a !== artist)
-        : [...prev, artist]
+      prev.includes(artist) ? prev.filter((a) => a !== artist) : [...prev, artist],
     );
   };
 
@@ -74,7 +69,10 @@ export default function UpdateEvent() {
               <div className="space-y-4">
                 {/* Event Title */}
                 <div>
-                  <Label htmlFor="edit-event-title" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <Label
+                    htmlFor="edit-event-title"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
                     Judul Acara (EVENT_TITLE)
                   </Label>
                   <Input
@@ -89,7 +87,10 @@ export default function UpdateEvent() {
                 {/* Date & Time */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="edit-date" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <Label
+                      htmlFor="edit-date"
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
                       Tanggal (DATE)
                     </Label>
                     <Input
@@ -100,7 +101,10 @@ export default function UpdateEvent() {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="edit-time" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <Label
+                      htmlFor="edit-time"
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
                       Waktu (TIME)
                     </Label>
                     <Input
@@ -114,7 +118,10 @@ export default function UpdateEvent() {
 
                 {/* Venue Select */}
                 <div>
-                  <Label htmlFor="edit-venue" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <Label
+                    htmlFor="edit-venue"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
                     Venue (VENUE_ID)
                   </Label>
                   <div className="relative">
@@ -166,7 +173,10 @@ export default function UpdateEvent() {
 
                 {/* Description */}
                 <div>
-                  <Label htmlFor="edit-description" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <Label
+                    htmlFor="edit-description"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
                     Deskripsi
                   </Label>
                   <Textarea

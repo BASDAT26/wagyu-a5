@@ -66,9 +66,7 @@ export default function LoginModule() {
           {/* Title */}
           <div className="mb-6">
             <h2 className="text-xl font-bold mb-1">Masuk ke Akun Anda</h2>
-            <p className="text-sm ">
-              Gunakan kredensial Anda untuk mengakses platform
-            </p>
+            <p className="text-sm ">Gunakan kredensial Anda untuk mengakses platform</p>
           </div>
 
           <form
@@ -97,9 +95,7 @@ export default function LoginModule() {
                       className="border-gray-300"
                     />
                     {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm text-red-500">
-                        {field.state.meta.errors[0]?.message}
-                      </p>
+                      <p className="text-sm text-red-500">{field.state.meta.errors[0]?.message}</p>
                     )}
                   </div>
                 )}
@@ -124,9 +120,7 @@ export default function LoginModule() {
                       className="border-gray-300"
                     />
                     {field.state.meta.errors.length > 0 && (
-                      <p className="text-sm text-red-500">
-                        {field.state.meta.errors[0]?.message}
-                      </p>
+                      <p className="text-sm text-red-500">{field.state.meta.errors[0]?.message}</p>
                     )}
                   </div>
                 )}
@@ -155,10 +149,7 @@ export default function LoginModule() {
         {/* Footer */}
         <div className="text-center mt-6  text-sm">
           <span>Belum punya akun? </span>
-          <Link
-            to="/register"
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
+          <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">
             Daftar sekarang
           </Link>
         </div>

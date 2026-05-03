@@ -7,10 +7,8 @@ const chipVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20",
-        secondary:
-          "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20",
+        default: "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20",
+        secondary: "bg-secondary/10 text-secondary border-secondary/20 hover:bg-secondary/20",
         outline: "border-border bg-background hover:bg-muted text-foreground",
         destructive:
           "bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20",
@@ -37,8 +35,7 @@ const chipVariants = cva(
   },
 );
 
-interface ChipProps
-  extends React.ComponentProps<"div">, VariantProps<typeof chipVariants> {
+interface ChipProps extends React.ComponentProps<"div">, VariantProps<typeof chipVariants> {
   onRemove?: () => void;
   icon?: React.ReactNode;
   removableIcon?: React.ReactNode;
@@ -66,16 +63,11 @@ const Chip = React.forwardRef<HTMLDivElement, ChipProps>(
         data-variant={variant}
         data-size={size}
         data-removable={removable}
-        className={cn(
-          chipVariants({ variant, size, removable, className }),
-          removable && "pr-1.5",
-        )}
+        className={cn(chipVariants({ variant, size, removable, className }), removable && "pr-1.5")}
         role="status"
         {...props}
       >
-        {icon && (
-          <span className="flex items-center justify-center">{icon}</span>
-        )}
+        {icon && <span className="flex items-center justify-center">{icon}</span>}
         <span>{children}</span>
         {removable && onRemove && (
           <button
@@ -114,8 +106,7 @@ interface RoleChipProps extends React.ComponentProps<"div"> {
 const roleVariantStyles: Record<string, string> = {
   admin: "bg-red-500/10 text-red-700 border-red-500/20 dark:text-red-400",
   user: "bg-blue-500/10 text-blue-700 border-blue-500/20 dark:text-blue-400",
-  moderator:
-    "bg-purple-500/10 text-purple-700 border-purple-500/20 dark:text-purple-400",
+  moderator: "bg-purple-500/10 text-purple-700 border-purple-500/20 dark:text-purple-400",
   guest: "bg-gray-500/10 text-gray-700 border-gray-500/20 dark:text-gray-400",
 };
 
@@ -134,9 +125,7 @@ const RoleChip = React.forwardRef<HTMLDivElement, RoleChipProps>(
         role="status"
         {...props}
       >
-        {icon && (
-          <span className="flex items-center justify-center">{icon}</span>
-        )}
+        {icon && <span className="flex items-center justify-center">{icon}</span>}
         <span>{role}</span>
       </div>
     );
@@ -162,17 +151,7 @@ const preferenceVariantStyles = {
 };
 
 const PreferenceChip = React.forwardRef<HTMLButtonElement, PreferenceChipProps>(
-  (
-    {
-      label,
-      isSelected = false,
-      icon,
-      variant = "default",
-      className,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ label, isSelected = false, icon, variant = "default", className, ...props }, ref) => {
     return (
       <button
         ref={ref}
@@ -186,9 +165,7 @@ const PreferenceChip = React.forwardRef<HTMLButtonElement, PreferenceChipProps>(
         )}
         {...props}
       >
-        {icon && (
-          <span className="flex items-center justify-center">{icon}</span>
-        )}
+        {icon && <span className="flex items-center justify-center">{icon}</span>}
         <span>{label}</span>
       </button>
     );

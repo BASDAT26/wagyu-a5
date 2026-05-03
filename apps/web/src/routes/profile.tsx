@@ -13,13 +13,11 @@ import {
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 
-type Role = "Customer" | "Organizer";
+type Role = "CUSTOMER" | "ORGANIZER";
 
 export default function ProfilePage() {
-  const [role, setRole] = useState<Role>("Organizer");
+  const [role, setRole] = useState<Role>("ORGANIZER");
   const [isEditing, setIsEditing] = useState(false);
-
-  const headerRole = role.toLowerCase() as "customer" | "organizer";
 
   // Mock data states
   const [customerData, setCustomerData] = useState({
@@ -76,7 +74,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Navbar role={headerRole} />
+      <Navbar role={role} />
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans flex justify-center">
         <div className="w-full max-w-3xl space-y-8">
           {/* --- Role Simulator --- */}
@@ -90,13 +88,12 @@ export default function ProfilePage() {
                   Simulasi Tampilan Profil
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Pilih role untuk melihat perbedaan kolom profil yang bisa
-                  di-edit.
+                  Pilih role untuk melihat perbedaan kolom profil yang bisa di-edit.
                 </p>
               </div>
             </div>
             <div className="flex gap-2 bg-slate-50 dark:bg-slate-800/50 p-1 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700">
-              {(["Customer", "Organizer"] as Role[]).map((r) => (
+              {(["CUSTOMER", "ORGANIZER"] as Role[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => {
@@ -130,7 +127,7 @@ export default function ProfilePage() {
             <div className="flex justify-between items-start mb-8 border-b border-slate-100 dark:border-slate-800 pb-8">
               <div className="flex items-center gap-6">
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-black shadow-inner">
-                  {role === "Customer" ? "B" : "A"}
+                  {role === "CUSTOMER" ? "B" : "A"}
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
@@ -161,10 +158,8 @@ export default function ProfilePage() {
             <div className="space-y-8">
               {/* Role Badge (Read Only) */}
               <div>
-                <p className="text-[11px] font-bold text-slate-500 mb-2">
-                  Role / Peran
-                </p>
-                {role === "Customer" ? (
+                <p className="text-[11px] font-bold text-slate-500 mb-2">Role / Peran</p>
+                {role === "CUSTOMER" ? (
                   <span className="px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-sm font-bold tracking-tight">
                     Pelanggan
                   </span>
@@ -177,7 +172,7 @@ export default function ProfilePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Dynamic Fields based on Role */}
-                {role === "Customer" ? (
+                {role === "CUSTOMER" ? (
                   <>
                     <div className="space-y-2">
                       <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
@@ -226,9 +221,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
                         <AtSign size={14} /> Username{" "}
-                        <span className="font-normal text-[10px] text-slate-400">
-                          (Read-only)
-                        </span>
+                        <span className="font-normal text-[10px] text-slate-400">(Read-only)</span>
                       </p>
                       <p className="text-sm font-semibold text-slate-500">
                         {customerData.username}
@@ -284,9 +277,7 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
                         <AtSign size={14} /> Username{" "}
-                        <span className="font-normal text-[10px] text-slate-400">
-                          (Read-only)
-                        </span>
+                        <span className="font-normal text-[10px] text-slate-400">(Read-only)</span>
                       </p>
                       <p className="text-sm font-semibold text-slate-500">
                         {organizerData.username}
@@ -319,9 +310,7 @@ export default function ProfilePage() {
             {passSuccess && (
               <div className="mb-6 p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex gap-2 items-start text-emerald-600 text-sm">
                 <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-                <span className="font-semibold">
-                  Password berhasil diperbarui!
-                </span>
+                <span className="font-semibold">Password berhasil diperbarui!</span>
               </div>
             )}
 
@@ -333,9 +322,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={passwords.old}
-                  onChange={(e) =>
-                    setPasswords({ ...passwords, old: e.target.value })
-                  }
+                  onChange={(e) => setPasswords({ ...passwords, old: e.target.value })}
                   placeholder="Password Lama"
                   className="w-full h-10.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
                 />
@@ -347,9 +334,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={passwords.new}
-                  onChange={(e) =>
-                    setPasswords({ ...passwords, new: e.target.value })
-                  }
+                  onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
                   placeholder="Password Baru"
                   className="w-full h-10.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
                 />
@@ -361,9 +346,7 @@ export default function ProfilePage() {
                 <input
                   type="password"
                   value={passwords.confirm}
-                  onChange={(e) =>
-                    setPasswords({ ...passwords, confirm: e.target.value })
-                  }
+                  onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
                   placeholder="Konfirmasi Password Baru"
                   className="w-full h-10.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
                 />

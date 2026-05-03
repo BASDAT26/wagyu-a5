@@ -45,9 +45,7 @@ const dummyEvents: EventItem[] = [
     venueName: "Taman Impian Jayakarta",
     venueCity: "Jakarta Utara",
     artists: ["Tulus"],
-    ticketCategories: [
-      { name: "General Admission", price: 150000, quantity: 1000 },
-    ],
+    ticketCategories: [{ name: "General Admission", price: 150000, quantity: 1000 }],
     icon: "palette",
   },
   {
@@ -92,9 +90,7 @@ export default function EventModule() {
       <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">
-              Jelajahi Acara
-            </h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Jelajahi Acara</h1>
             <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Temukan acara terbaik dan beli tiket favorit Anda
             </p>
@@ -196,10 +192,7 @@ export default function EventModule() {
               {/* Price */}
               <div className="flex items-center gap-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
                 <DollarSign className="h-3.5 w-3.5 shrink-0" />
-                <span>
-                  Mulai Rp{" "}
-                  {getLowestPrice(event.ticketCategories).toLocaleString()}
-                </span>
+                <span>Mulai Rp {getLowestPrice(event.ticketCategories).toLocaleString()}</span>
               </div>
 
               {/* Ticket Category Chips */}

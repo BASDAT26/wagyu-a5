@@ -1,8 +1,22 @@
 import { useState, useMemo } from "react";
-import { Tag, ShoppingCart, Clock, CheckCircle, XCircle, TrendingUp, X, Filter, Search, ChevronDown, User, ShieldAlert, Building2 } from "lucide-react";
+import {
+  Tag,
+  ShoppingCart,
+  Clock,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  X,
+  Filter,
+  Search,
+  ChevronDown,
+  User,
+  ShieldAlert,
+  Building2,
+} from "lucide-react";
+import type { Role } from "@/data/type";
 
 // --- Types ---
-type Role = "Admin" | "Organizer" | "Customer";
 type OrderStatus = "LUNAS" | "PENDING" | "DIBATALKAN";
 
 interface Order {
@@ -93,7 +107,9 @@ function StatusBadge({ status }: { status: string }) {
     icon: null,
   };
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${c.className}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border ${c.className}`}
+    >
       {c.icon}
       {c.label}
     </span>
@@ -117,7 +133,16 @@ function ActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
         className="h-7 w-7 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         title="Edit Status"
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
         </svg>
@@ -128,7 +153,16 @@ function ActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
         className="h-7 w-7 flex items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-950 transition-colors"
         title="Hapus Order"
       >
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
           <polyline points="3 6 5 6 21 6" />
           <path d="M19 6l-1 14H6L5 6" />
           <path d="M10 11v6M14 11v6" />
@@ -143,10 +177,10 @@ function ActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
 export default function OrderList() {
   // Visual CRUD States
   const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [role, setRole] = useState<Role>("Admin");
+  const [role, setRole] = useState<Role>("ADMIN");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("Semua");
-  
+
   // Modal States
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -158,26 +192,25 @@ export default function OrderList() {
     let result = [...orders];
 
     // Simulate Role Filtering
-    if (role === "Customer") {
+    if (role === "CUSTOMER") {
       // Hanya lihat order Budi
-      result = result.filter(o => o.customer.includes("Budi"));
-    } else if (role === "Organizer") {
+      result = result.filter((o) => o.customer.includes("Budi"));
+    } else if (role === "ORGANIZER") {
       // Simulate organizer seeing only partial orders
-      result = result.filter(o => o.total > 500000); 
+      result = result.filter((o) => o.total > 500000);
     }
 
     // Search Filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(o => 
-        o.id.toLowerCase().includes(q) || 
-        o.customer.toLowerCase().includes(q)
+      result = result.filter(
+        (o) => o.id.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q),
       );
     }
 
     // Status Filter
     if (statusFilter !== "Semua") {
-      result = result.filter(o => o.status === statusFilter.toUpperCase());
+      result = result.filter((o) => o.status === statusFilter.toUpperCase());
     }
 
     // Default Sorting (Descending by Date)
@@ -189,37 +222,48 @@ export default function OrderList() {
   // Derived Stats
   const stats = useMemo(() => {
     const totalOrder = filteredOrders.length;
-    const lunasCount = filteredOrders.filter(o => o.status === "LUNAS").length;
-    const pendingCount = filteredOrders.filter(o => o.status === "PENDING").length;
+    const lunasCount = filteredOrders.filter((o) => o.status === "LUNAS").length;
+    const pendingCount = filteredOrders.filter((o) => o.status === "PENDING").length;
     const totalRevenue = filteredOrders
-      .filter(o => o.status === "LUNAS")
+      .filter((o) => o.status === "LUNAS")
       .reduce((sum, o) => sum + o.total, 0);
 
     return [
-      { label: "Total Order", value: totalOrder.toString(), icon: ShoppingCart, color: "text-slate-600 dark:text-slate-300" },
+      {
+        label: "Total Order",
+        value: totalOrder.toString(),
+        icon: ShoppingCart,
+        color: "text-slate-600 dark:text-slate-300",
+      },
       { label: "Lunas", value: lunasCount.toString(), icon: CheckCircle, color: "text-green-500" },
       { label: "Pending", value: pendingCount.toString(), icon: Clock, color: "text-amber-500" },
       // Hanya Admin & Organizer yang melihat revenue
-      ...(role !== "Customer" ? [{ 
-        label: "Total Revenue", 
-        value: formatRupiah(totalRevenue), 
-        icon: TrendingUp, 
-        color: "text-blue-600 dark:text-blue-400" 
-      }] : [])
+      ...(role !== "CUSTOMER"
+        ? [
+            {
+              label: "Total Revenue",
+              value: formatRupiah(totalRevenue),
+              icon: TrendingUp,
+              color: "text-blue-600 dark:text-blue-400",
+            },
+          ]
+        : []),
     ];
   }, [filteredOrders, role]);
 
   // Actions
   const handleUpdateStatus = () => {
     if (selectedOrder) {
-      setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, status: updateStatusVal } : o));
+      setOrders((prev) =>
+        prev.map((o) => (o.id === selectedOrder.id ? { ...o, status: updateStatusVal } : o)),
+      );
     }
     setIsUpdateOpen(false);
   };
 
   const handleDelete = () => {
     if (selectedOrder) {
-      setOrders(prev => prev.filter(o => o.id !== selectedOrder.id));
+      setOrders((prev) => prev.filter((o) => o.id !== selectedOrder.id));
     }
     setIsDeleteOpen(false);
   };
@@ -230,21 +274,31 @@ export default function OrderList() {
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-blue-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
-            {role === "Admin" ? <ShieldAlert size={18} /> : role === "Organizer" ? <Building2 size={18} /> : <User size={18} />}
+            {role === "ADMIN" ? (
+              <ShieldAlert size={18} />
+            ) : role === "ORGANIZER" ? (
+              <Building2 size={18} />
+            ) : (
+              <User size={18} />
+            )}
           </div>
           <div>
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">Simulasi Tampilan Berdasarkan Peran</h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Pilih role untuk melihat perbedaan Hak Akses (Data Scope & Action).</p>
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              Simulasi Tampilan Berdasarkan Peran
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Pilih role untuk melihat perbedaan Hak Akses (Data Scope & Action).
+            </p>
           </div>
         </div>
         <div className="flex gap-2 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-          {(["Admin", "Organizer", "Customer"] as Role[]).map(r => (
+          {(["ADMIN", "ORGANIZER", "CUSTOMER"] as Role[]).map((r) => (
             <button
               key={r}
               onClick={() => setRole(r)}
               className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                role === r 
-                  ? "bg-blue-600 text-white shadow-md" 
+                role === r
+                  ? "bg-blue-600 text-white shadow-md"
                   : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
@@ -257,9 +311,11 @@ export default function OrderList() {
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Daftar Order</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Kelola dan pantau seluruh transaksi pemesanan tiket.</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Kelola dan pantau seluruh transaksi pemesanan tiket.
+          </p>
         </div>
-        {role === "Customer" && (
+        {role === "CUSTOMER" && (
           <button className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all">
             <ShoppingCart size={16} />
             Beli Tiket Baru
@@ -315,7 +371,10 @@ export default function OrderList() {
             <option value="Pending">Pending</option>
             <option value="Dibatalkan">Dibatalkan</option>
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
+          <ChevronDown
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+            size={16}
+          />
         </div>
       </div>
 
@@ -325,8 +384,18 @@ export default function OrderList() {
           <div className="min-w-[800px]">
             {/* Table header */}
             <div className="grid grid-cols-[1.2fr_2fr_1.5fr_1fr_1.5fr_auto] gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
-              {["ORDER ID", "PELANGGAN", "TANGGAL", "STATUS", "TOTAL", role === "Admin" ? "AKSI" : ""].map((h, i) => (
-                <span key={i} className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              {[
+                "ORDER ID",
+                "PELANGGAN",
+                "TANGGAL",
+                "STATUS",
+                "TOTAL",
+                role === "ADMIN" ? "AKSI" : "",
+              ].map((h, i) => (
+                <span
+                  key={i}
+                  className="text-[11px] font-bold text-slate-400 uppercase tracking-widest"
+                >
                   {h}
                 </span>
               ))}
@@ -340,7 +409,9 @@ export default function OrderList() {
                     key={row.id}
                     className="grid grid-cols-[1.2fr_2fr_1.5fr_1fr_1.5fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                   >
-                    <span className="text-sm font-mono font-medium text-slate-600 dark:text-slate-300">{row.id}</span>
+                    <span className="text-sm font-mono font-medium text-slate-600 dark:text-slate-300">
+                      {row.id}
+                    </span>
 
                     <div className="flex items-center gap-3">
                       <Avatar initial={row.initial} />
@@ -351,15 +422,17 @@ export default function OrderList() {
 
                     <span className="text-sm text-slate-500 dark:text-slate-400">{row.date}</span>
 
-                    <div><StatusBadge status={row.status} /></div>
+                    <div>
+                      <StatusBadge status={row.status} />
+                    </div>
 
                     <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
                       {formatRupiah(row.total)}
                     </span>
 
                     <div className="w-[80px] flex justify-end">
-                      {role === "Admin" && (
-                        <ActionButtons 
+                      {role === "ADMIN" && (
+                        <ActionButtons
                           onEdit={() => {
                             setSelectedOrder(row);
                             setUpdateStatusVal(row.status);
@@ -392,24 +465,31 @@ export default function OrderList() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">Update Status Order</h3>
-              <button onClick={() => setIsUpdateOpen(false)} className="text-slate-400 hover:text-slate-600 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full transition-colors">
+              <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
+                Update Status Order
+              </h3>
+              <button
+                onClick={() => setIsUpdateOpen(false)}
+                className="text-slate-400 hover:text-slate-600 bg-slate-100 dark:bg-slate-800 p-1.5 rounded-full transition-colors"
+              >
                 <X size={16} />
               </button>
             </div>
-            
+
             <div className="space-y-5 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
               <div className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700 pb-3">
                 <span className="text-xs font-bold text-slate-500 uppercase">Order ID</span>
-                <span className="font-mono text-sm font-semibold text-slate-800 dark:text-slate-200">{selectedOrder.id}</span>
+                <span className="font-mono text-sm font-semibold text-slate-800 dark:text-slate-200">
+                  {selectedOrder.id}
+                </span>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
                   Ubah Status Pembayaran
                 </label>
                 <div className="relative">
-                  <select 
+                  <select
                     value={updateStatusVal}
                     onChange={(e) => setUpdateStatusVal(e.target.value as OrderStatus)}
                     className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-sm appearance-none cursor-pointer"
@@ -418,16 +498,25 @@ export default function OrderList() {
                     <option value="PENDING">Pending</option>
                     <option value="DIBATALKAN">Dibatalkan</option>
                   </select>
-                  <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
+                  <ChevronDown
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
+                    size={16}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="mt-6 flex items-center gap-3">
-              <button onClick={() => setIsUpdateOpen(false)} className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+              <button
+                onClick={() => setIsUpdateOpen(false)}
+                className="flex-1 h-11 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
                 Batal
               </button>
-              <button onClick={handleUpdateStatus} className="flex-1 h-11 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all">
+              <button
+                onClick={handleUpdateStatus}
+                className="flex-1 h-11 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all"
+              >
                 Simpan Perubahan
               </button>
             </div>
@@ -442,17 +531,29 @@ export default function OrderList() {
             <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldAlert size={28} />
             </div>
-            
-            <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-2">Hapus Order?</h3>
+
+            <h3 className="text-lg font-black text-slate-800 dark:text-slate-100 mb-2">
+              Hapus Order?
+            </h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed mb-6">
-              Anda yakin ingin menghapus order <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{selectedOrder.id}</span> secara permanen? Data ini tidak dapat dikembalikan.
+              Anda yakin ingin menghapus order{" "}
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                {selectedOrder.id}
+              </span>{" "}
+              secara permanen? Data ini tidak dapat dikembalikan.
             </p>
 
             <div className="flex flex-col gap-2">
-              <button onClick={handleDelete} className="w-full h-11 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all">
+              <button
+                onClick={handleDelete}
+                className="w-full h-11 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all"
+              >
                 Ya, Hapus Order
               </button>
-              <button onClick={() => setIsDeleteOpen(false)} className="w-full h-11 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              <button
+                onClick={() => setIsDeleteOpen(false)}
+                className="w-full h-11 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
                 Batal
               </button>
             </div>
@@ -462,4 +563,3 @@ export default function OrderList() {
     </div>
   );
 }
-

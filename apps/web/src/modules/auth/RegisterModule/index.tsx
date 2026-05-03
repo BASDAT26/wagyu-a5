@@ -5,12 +5,12 @@ import { Label } from "@wagyu-a5/ui/components/label";
 import { User, Building2, ShieldCheck, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
-
-type Role = "Pelanggan" | "Penyelenggara" | "Administrator" | null;
+import { authClient } from "@/lib/auth-client";
+import type { Role } from "@/data/type";
 
 export default function RegisterModule() {
   const navigate = useNavigate();
-  const [role, setRole] = useState<Role>(null);
+  const [role, setRole] = useState<Role>();
 
   // Form states
   const [namaLengkap, setNamaLengkap] = useState("");
@@ -27,7 +27,7 @@ export default function RegisterModule() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (role === "Pelanggan" || role === "Penyelenggara") {
+    if (role === "CUSTOMER" || role === "ORGANIZER") {
       if (!namaLengkap.trim()) newErrors.namaLengkap = "Nama Lengkap wajib diisi";
       if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email)) newErrors.email = "Email tidak valid";
       if (!nomorTelepon.trim()) newErrors.nomorTelepon = "Nomor Telepon wajib diisi";
@@ -35,24 +35,42 @@ export default function RegisterModule() {
 
     if (!username.trim()) newErrors.username = "Username wajib diisi";
     if (!password || password.length < 6) newErrors.password = "Password minimal 6 karakter";
-    if (password !== konfirmasiPassword) newErrors.konfirmasiPassword = "Konfirmasi password tidak cocok";
+    if (password !== konfirmasiPassword)
+      newErrors.konfirmasiPassword = "Konfirmasi password tidak cocok";
     if (!terms) newErrors.terms = "Anda harus menyetujui Syarat & Ketentuan";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validate()) {
-      toast.success("Akun berhasil dibuat! Silakan login.", {
-        icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
-      });
-      // Simulasi redirect ke login
-      navigate("/login");
-    } else {
+    if (!validate() || !role) {
       toast.error("Terdapat field yang kosong atau tidak valid.");
+      return;
     }
+
+    await authClient.signUp(
+      {
+        username,
+        password,
+        role,
+        fullName: namaLengkap || undefined,
+        email: email || undefined,
+        phoneNumber: nomorTelepon || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success("Akun berhasil dibuat!", {
+            icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
+          });
+          navigate("/dashboard");
+        },
+        onError: (error) => {
+          toast.error(error.error.message || "Registrasi gagal");
+        },
+      },
+    );
   };
 
   return (
@@ -63,12 +81,15 @@ export default function RegisterModule() {
           <div className="w-14 h-14 bg-linear-to-br from-blue-600 to-indigo-600 shadow-xl shadow-blue-500/20 rounded-2xl mx-auto flex items-center justify-center mb-6 transform rotate-3 hover:rotate-0 transition-transform">
             <span className="text-white font-black text-2xl tracking-tighter">TT</span>
           </div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">TikTakTuk</h1>
-          <p className="text-base text-slate-500 dark:text-slate-400 font-medium">Daftar untuk Memulai Perjalanan Anda</p>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-3">
+            TikTakTuk
+          </h1>
+          <p className="text-base text-slate-500 dark:text-slate-400 font-medium">
+            Daftar untuk Memulai Perjalanan Anda
+          </p>
         </div>
 
         <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.2)] border border-white/20 dark:border-slate-800 p-8 sm:p-10 relative overflow-hidden">
-          
           {/* Subtle decorative blob */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -76,7 +97,9 @@ export default function RegisterModule() {
             /* ------------------- ROLE SELECTION ------------------- */
             <div className="space-y-8 animate-in fade-in zoom-in-95 duration-300 relative z-10">
               <div>
-                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Jenis Pengguna</h2>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
+                  Jenis Pengguna
+                </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mt-1.5">
                   Pilih jenis akun yang paling sesuai dengan kebutuhan Anda di platform kami.
                 </p>
@@ -85,14 +108,16 @@ export default function RegisterModule() {
               <div className="space-y-4">
                 {/* Customer */}
                 <button
-                  onClick={() => setRole("Pelanggan")}
+                  onClick={() => setRole("CUSTOMER")}
                   className="group w-full flex flex-col items-start p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md hover:shadow-blue-500/10 transition-all text-left"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl group-hover:scale-110 transition-transform">
                       <User className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Pelanggan</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      Pelanggan
+                    </span>
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-13">
                     Beli, temukan, dan kelola tiket untuk berbagai acara favorit Anda.
@@ -101,14 +126,16 @@ export default function RegisterModule() {
 
                 {/* Organizer */}
                 <button
-                  onClick={() => setRole("Penyelenggara")}
+                  onClick={() => setRole("ORGANIZER")}
                   className="group w-full flex flex-col items-start p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl hover:border-orange-500 dark:hover:border-orange-500 hover:shadow-md hover:shadow-orange-500/10 transition-all text-left"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2.5 bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 rounded-xl group-hover:scale-110 transition-transform">
                       <Building2 className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">Penyelenggara</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                      Penyelenggara
+                    </span>
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-13">
                     Buat acara, kelola venue, dan pantau penjualan tiket Anda.
@@ -117,14 +144,16 @@ export default function RegisterModule() {
 
                 {/* Admin */}
                 <button
-                  onClick={() => setRole("Administrator")}
+                  onClick={() => setRole("ADMIN")}
                   className="group w-full flex flex-col items-start p-5 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-2xl hover:border-emerald-500 dark:hover:border-emerald-500 hover:shadow-md hover:shadow-emerald-500/10 transition-all text-left"
                 >
                   <div className="flex items-center gap-3 mb-2">
                     <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
                       <ShieldCheck className="w-5 h-5" />
                     </div>
-                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">Administrator</span>
+                    <span className="font-bold text-slate-900 dark:text-slate-100 text-lg group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                      Administrator
+                    </span>
                   </div>
                   <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed pl-13">
                     Kelola sistem, verifikasi entitas, dan pantau aktivitas platform secara penuh.
@@ -137,7 +166,7 @@ export default function RegisterModule() {
             <div className="animate-in slide-in-from-right-8 duration-500 relative z-10">
               <button
                 onClick={() => {
-                  setRole(null);
+                  setRole(undefined);
                   setErrors({});
                 }}
                 className="group flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white font-medium mb-8 transition-colors w-fit"
@@ -158,21 +187,29 @@ export default function RegisterModule() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
-                {(role === "Pelanggan" || role === "Penyelenggara") && (
+                {(role === "CUSTOMER" || role === "ORGANIZER") && (
                   <>
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Nama Lengkap</Label>
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Nama Lengkap
+                      </Label>
                       <Input
                         value={namaLengkap}
                         onChange={(e) => setNamaLengkap(e.target.value)}
                         placeholder="Masukkan nama lengkap"
                         className="rounded-xl h-11 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-sm focus-visible:ring-blue-500 focus-visible:border-blue-500 transition-all"
                       />
-                      {errors.namaLengkap && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.namaLengkap}</p>}
+                      {errors.namaLengkap && (
+                        <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                          {errors.namaLengkap}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Email</Label>
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Email
+                      </Label>
                       <Input
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -180,11 +217,17 @@ export default function RegisterModule() {
                         type="email"
                         className="rounded-xl h-11 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-sm focus-visible:ring-blue-500 focus-visible:border-blue-500 transition-all"
                       />
-                      {errors.email && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.email}</p>}
+                      {errors.email && (
+                        <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Nomor Telepon</Label>
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                        Nomor Telepon
+                      </Label>
                       <Input
                         value={nomorTelepon}
                         onChange={(e) => setNomorTelepon(e.target.value)}
@@ -192,25 +235,37 @@ export default function RegisterModule() {
                         type="tel"
                         className="rounded-xl h-11 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-sm focus-visible:ring-blue-500 focus-visible:border-blue-500 transition-all"
                       />
-                      {errors.nomorTelepon && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.nomorTelepon}</p>}
+                      {errors.nomorTelepon && (
+                        <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                          {errors.nomorTelepon}
+                        </p>
+                      )}
                     </div>
                   </>
                 )}
 
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Username</Label>
+                  <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Username
+                  </Label>
                   <Input
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Pilih username unik"
                     className="rounded-xl h-11 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-sm focus-visible:ring-blue-500 focus-visible:border-blue-500 transition-all"
                   />
-                  {errors.username && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.username}</p>}
+                  {errors.username && (
+                    <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                      {errors.username}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Password</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Password
+                    </Label>
                     <Input
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -218,11 +273,17 @@ export default function RegisterModule() {
                       type="password"
                       className="rounded-xl h-11 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-sm focus-visible:ring-blue-500 focus-visible:border-blue-500 transition-all"
                     />
-                    {errors.password && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.password}</p>}
+                    {errors.password && (
+                      <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                        {errors.password}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Konfirmasi</Label>
+                    <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      Konfirmasi
+                    </Label>
                     <Input
                       value={konfirmasiPassword}
                       onChange={(e) => setKonfirmasiPassword(e.target.value)}
@@ -230,7 +291,11 @@ export default function RegisterModule() {
                       type="password"
                       className="rounded-xl h-11 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50 text-sm focus-visible:ring-blue-500 focus-visible:border-blue-500 transition-all"
                     />
-                    {errors.konfirmasiPassword && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.konfirmasiPassword}</p>}
+                    {errors.konfirmasiPassword && (
+                      <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                        {errors.konfirmasiPassword}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -245,14 +310,38 @@ export default function RegisterModule() {
                     />
                   </div>
                   <div className="space-y-1.5 flex-1">
-                    <Label htmlFor="terms" className="text-sm text-slate-600 dark:text-slate-400 font-normal leading-snug block cursor-pointer">
-                      Saya menyetujui <a href="#" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">Syarat & Ketentuan</a> serta <a href="#" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">Kebijakan Privasi</a> yang berlaku.
+                    <Label
+                      htmlFor="terms"
+                      className="text-sm text-slate-600 dark:text-slate-400 font-normal leading-snug block cursor-pointer"
+                    >
+                      Saya menyetujui{" "}
+                      <a
+                        href="#"
+                        className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                      >
+                        Syarat & Ketentuan
+                      </a>{" "}
+                      serta{" "}
+                      <a
+                        href="#"
+                        className="text-blue-600 dark:text-blue-400 font-medium hover:underline"
+                      >
+                        Kebijakan Privasi
+                      </a>{" "}
+                      yang berlaku.
                     </Label>
-                    {errors.terms && <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">{errors.terms}</p>}
+                    {errors.terms && (
+                      <p className="text-xs text-red-500 font-medium animate-in slide-in-from-top-1">
+                        {errors.terms}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 font-bold text-base mt-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]">
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 font-bold text-base mt-2 shadow-lg shadow-blue-500/20 transition-all hover:scale-[1.01] active:scale-[0.99]"
+                >
                   Daftar Sekarang
                 </Button>
               </form>
@@ -262,10 +351,14 @@ export default function RegisterModule() {
 
         <p className="mt-8 text-sm font-medium text-slate-600 dark:text-slate-400">
           Sudah memiliki akun?{" "}
-          <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors">
+          <Link
+            to="/login"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors"
+          >
             Masuk di sini
           </Link>
         </p>
       </div>
     </div>
-)}
+  );
+}

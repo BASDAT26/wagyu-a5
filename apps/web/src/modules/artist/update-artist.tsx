@@ -44,9 +44,7 @@ export default function UpdateArtist({
       <ModalPopup>
         <ModalHeader>
           <ModalTitle>Edit Artis</ModalTitle>
-          <ModalDescription>
-            Ubah data artis yang sudah terdaftar.
-          </ModalDescription>
+          <ModalDescription>Ubah data artis yang sudah terdaftar.</ModalDescription>
         </ModalHeader>
         <ModalBody>
           <div className="space-y-2">

@@ -51,8 +51,8 @@ export default function DeleteArtist({
         </ModalHeader>
         <ModalBody>
           <p className="text-sm text-muted-foreground">
-            Data artis yang dihapus tidak dapat dikembalikan. Semua data terkait
-            artis ini juga akan ikut terhapus.
+            Data artis yang dihapus tidak dapat dikembalikan. Semua data terkait artis ini juga akan
+            ikut terhapus.
           </p>
         </ModalBody>
         <ModalFooter>

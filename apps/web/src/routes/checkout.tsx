@@ -42,8 +42,7 @@ export default function CheckoutPage() {
     },
   ];
 
-  const currentCat =
-    categories.find((c) => c.id === selectedCategory) || categories[0];
+  const currentCat = categories.find((c) => c.id === selectedCategory) || categories[0];
   const subtotal = currentCat.price * ticketCount;
   const adminFee = 25000;
   const total = subtotal + adminFee;
@@ -81,10 +80,7 @@ export default function CheckoutPage() {
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8">
             Terima kasih telah memesan tiket. ID Order Anda adalah{" "}
-            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
-              ORD-006
-            </span>
-            .
+            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">ORD-006</span>.
           </p>
           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-left space-y-2 mb-8">
             <div className="flex justify-between text-sm">
@@ -111,7 +107,7 @@ export default function CheckoutPage() {
   return (
     <div className="w-full min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
       {/* Navbar Minimalist */}
-      <Navbar role="customer" />
+      <Navbar role="CUSTOMER" />
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center gap-4">
           <Link
@@ -120,9 +116,7 @@ export default function CheckoutPage() {
           >
             <ChevronLeft size={20} />
           </Link>
-          <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">
-            Checkout Tiket
-          </h1>
+          <h1 className="text-lg font-bold text-slate-800 dark:text-slate-100">Checkout Tiket</h1>
         </div>
       </div>
 
@@ -148,8 +142,7 @@ export default function CheckoutPage() {
                   <Clock size={14} className="text-amber-500" /> {event.time}
                 </div>
                 <div className="flex items-center justify-center sm:justify-start gap-2">
-                  <MapPin size={14} className="text-rose-500" />{" "}
-                  {event.location}
+                  <MapPin size={14} className="text-rose-500" /> {event.location}
                 </div>
               </div>
             </div>
@@ -158,8 +151,7 @@ export default function CheckoutPage() {
           {/* Ticket Selection */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
-              <Ticket className="text-blue-500" size={20} /> Pilih Kategori
-              Tiket
+              <Ticket className="text-blue-500" size={20} /> Pilih Kategori Tiket
             </h3>
 
             <div className="space-y-3">
@@ -199,9 +191,7 @@ export default function CheckoutPage() {
 
             {/* Quantity */}
             <div className="mt-8 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-              <span className="font-bold text-slate-700 dark:text-slate-200">
-                Jumlah Tiket
-              </span>
+              <span className="font-bold text-slate-700 dark:text-slate-200">Jumlah Tiket</span>
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setTicketCount(Math.max(1, ticketCount - 1))}
@@ -230,8 +220,7 @@ export default function CheckoutPage() {
         <div className="lg:col-span-5">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl sticky top-24">
             <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-6 flex items-center gap-2">
-              <CreditCard className="text-blue-500" size={20} /> Ringkasan
-              Pesanan
+              <CreditCard className="text-blue-500" size={20} /> Ringkasan Pesanan
             </h3>
 
             <div className="space-y-4 mb-6">
@@ -257,9 +246,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="pt-4 border-t border-slate-200 dark:border-slate-700 mb-8 flex justify-between items-center">
-              <span className="text-slate-500 font-medium">
-                Total Pembayaran
-              </span>
+              <span className="text-slate-500 font-medium">Total Pembayaran</span>
               <span className="text-2xl font-black text-blue-600 dark:text-blue-400">
                 {formatRupiah(total)}
               </span>

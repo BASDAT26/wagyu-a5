@@ -13,7 +13,10 @@
   "dependencies": {
     "@wagyu-a5/db": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
+    "bcrypt": "^6.0.0",
     "dotenv": "catalog:",
+    "drizzle-orm": "^0.45.1",
+    "jsonwebtoken": "^9.0.3",
     "zod": "catalog:"
   },
   "devDependencies": {

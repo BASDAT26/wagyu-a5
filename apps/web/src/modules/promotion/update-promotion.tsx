@@ -1,5 +1,3 @@
 export default function UpdatePromotion() {
-  return (
-    <div>ini update-promotion</div>
-  );
+  return <div>ini update-promotion</div>;
 }

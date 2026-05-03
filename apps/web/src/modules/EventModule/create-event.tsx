@@ -50,7 +50,10 @@ export default function CreateEvent() {
               <div className="space-y-4">
                 {/* Event Title */}
                 <div>
-                  <Label htmlFor="input-event-title" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <Label
+                    htmlFor="input-event-title"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
                     Judul Acara (EVENT_TITLE)
                   </Label>
                   <Input
@@ -63,13 +66,19 @@ export default function CreateEvent() {
                 {/* Date & Time */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="input-date" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <Label
+                      htmlFor="input-date"
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
                       Tanggal (DATE)
                     </Label>
                     <Input id="input-date" type="date" />
                   </div>
                   <div>
-                    <Label htmlFor="input-time" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <Label
+                      htmlFor="input-time"
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
                       Waktu (TIME)
                     </Label>
                     <Input id="input-time" type="time" />
@@ -78,7 +87,10 @@ export default function CreateEvent() {
 
                 {/* Venue Select */}
                 <div>
-                  <Label htmlFor="select-venue" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <Label
+                    htmlFor="select-venue"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
                     Venue (VENUE_ID)
                   </Label>
                   <div className="relative">
@@ -122,7 +134,10 @@ export default function CreateEvent() {
 
                 {/* Description */}
                 <div>
-                  <Label htmlFor="input-description" className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <Label
+                    htmlFor="input-description"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
                     Deskripsi
                   </Label>
                   <Textarea

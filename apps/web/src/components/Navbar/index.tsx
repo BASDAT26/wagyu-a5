@@ -4,14 +4,13 @@ import { Menu, X, ChevronDown } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { ModeToggle } from "@/components/mode-toggle";
-import { ADMIN_LINKS, CUSTOMER_LINKS, GUEST_LINKS, ORGANIZER_LINKS, type NavItem, type Role } from "./const";
+import { ADMIN_LINKS, CUSTOMER_LINKS, GUEST_LINKS, ORGANIZER_LINKS, type NavItem } from "./const";
+import type { Role } from "@/data/type";
 
-function getLinks(role: Role, isLoggedIn: boolean): NavItem[] {
-  if (role === "admin") return ADMIN_LINKS;
-  if (role === "organizer") return ORGANIZER_LINKS;
-  if (role === "customer") return CUSTOMER_LINKS;
-  if (role === "guest") return GUEST_LINKS;
-  if (isLoggedIn) return CUSTOMER_LINKS;
+function getLinks(role?: Role): NavItem[] {
+  if (role === "ADMIN") return ADMIN_LINKS;
+  if (role === "ORGANIZER") return ORGANIZER_LINKS;
+  if (role === "CUSTOMER") return CUSTOMER_LINKS;
   return GUEST_LINKS;
 }
 
@@ -48,7 +47,7 @@ export default function Navbar({ role: propRole }: NavbarProps) {
 
   const isLoggedIn = !!session;
   const role = propRole || (session?.user as { role?: Role })?.role;
-  const links = getLinks(role, isLoggedIn);
+  const links = getLinks(role);
 
   const handleSignOut = async () => {
     await authClient.signOut({
@@ -109,7 +108,7 @@ export default function Navbar({ role: propRole }: NavbarProps) {
                 <div className="absolute right-0 mt-2 w-52 rounded-lg border border-border bg-card shadow-lg py-1 z-50 animate-in fade-in-0 zoom-in-95">
                   <div className="px-3 py-2 border-b border-border">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      {role ?? "user"}
+                      {role?.toLowerCase() ?? "user"}
                     </p>
                     <p className="text-sm font-medium truncate">{session.user.name}</p>
                     <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>

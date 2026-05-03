@@ -10,12 +10,16 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
+  useNavigate,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import { ThemeProvider } from "./components/theme-provider";
 import { queryClient } from "./utils/trpc";
 import Navbar from "./components/Navbar";
+import { authClient } from "./lib/auth-client";
+import { useEffect } from "react";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -54,14 +58,35 @@ export default function App() {
         storageKey="vite-ui-theme"
       >
         <div className="grid grid-rows-[auto_1fr] h-svh">
-          <Navbar/>
-          <Outlet />
+          <Navbar />
+          <AuthGate>
+            <Outlet />
+          </AuthGate>
         </div>
         <Toaster richColors />
       </ThemeProvider>
       <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
     </QueryClientProvider>
   );
+}
+
+function AuthGate({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { data: session, isPending } = authClient.useSession();
+  const publicPaths = new Set(["/login", "/register"]);
+
+  useEffect(() => {
+    if (isPending) {
+      return;
+    }
+
+    if (!session && !publicPaths.has(location.pathname)) {
+      navigate("/login", { replace: true });
+    }
+  }, [isPending, session, location.pathname, navigate]);
+
+  return <>{children}</>;
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
