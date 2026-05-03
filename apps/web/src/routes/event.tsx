@@ -1,11 +1,5 @@
-import ReadEvent from "@/modules/event/read-event";
-import Navbar from "@/components/Navbar";
+import EventModule from "@/modules/EventModule";
 
 export default function EventPage() {
-  return (
-    <>
-      <Navbar role="organizer" />
-      <ReadEvent />
-    </>
-  );
+  return <EventModule />;
 }

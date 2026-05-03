@@ -85,7 +85,7 @@ function EventIcon({ type }: { type: "music" | "palette" | "guitar" }) {
   }
 }
 
-export default function ReadEvent() {
+export default function EventModule() {
   return (
     <div className="w-full max-w-4xl mx-auto py-8 px-4 space-y-6">
       {/* Header */}
