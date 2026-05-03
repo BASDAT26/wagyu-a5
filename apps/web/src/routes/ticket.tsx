@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReadTicket from "@/components/ticket/read-ticket";
+import ReadTicket from "@/modules/ticket/read-ticket";
 import Navbar from "@/components/Navbar";
 
 type Role = "admin" | "customer";

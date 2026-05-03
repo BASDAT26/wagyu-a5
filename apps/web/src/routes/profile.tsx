@@ -126,7 +126,7 @@ export default function ProfilePage() {
           </div>
 
           {/* ── Profile Information Card ── */}
-          <div className="bg-white dark:bg-slate-900 rounded-[20px] p-8 border border-slate-200 dark:border-slate-800 shadow-sm animate-in fade-in duration-300">
+          <div className="bg-white dark:bg-slate-900 rounded-4xl8 border border-slate-200 dark:border-slate-800 shadow-sm animate-in fade-in duration-300">
             <div className="flex justify-between items-start mb-8 border-b border-slate-100 dark:border-slate-800 pb-8">
               <div className="flex items-center gap-6">
                 <div className="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center text-white text-3xl font-black shadow-inner">
@@ -299,7 +299,7 @@ export default function ProfilePage() {
           </div>
 
           {/* ── Update Password Modal/Card ── */}
-          <div className="bg-white dark:bg-slate-900 rounded-[20px] p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-4xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
             <div className="mb-6">
               <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 <Lock size={18} /> Update Password
@@ -337,7 +337,7 @@ export default function ProfilePage() {
                     setPasswords({ ...passwords, old: e.target.value })
                   }
                   placeholder="Password Lama"
-                  className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
+                  className="w-full h-10.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-1.5">
@@ -351,7 +351,7 @@ export default function ProfilePage() {
                     setPasswords({ ...passwords, new: e.target.value })
                   }
                   placeholder="Password Baru"
-                  className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
+                  className="w-full h-10.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
                 />
               </div>
               <div className="space-y-1.5">
@@ -365,7 +365,7 @@ export default function ProfilePage() {
                     setPasswords({ ...passwords, confirm: e.target.value })
                   }
                   placeholder="Konfirmasi Password Baru"
-                  className="w-full h-[42px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
+                  className="w-full h-10.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-sm font-medium focus:outline-none focus:border-slate-400 transition-colors bg-transparent placeholder:text-slate-400"
                 />
               </div>
             </div>
@@ -373,13 +373,13 @@ export default function ProfilePage() {
             <div className="mt-8 flex justify-end gap-3 border-t border-slate-100 dark:border-slate-800 pt-6">
               <button
                 onClick={handleCancelPassword}
-                className="px-6 h-[42px] rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+                className="px-6 h-10.5 rounded-xl border border-slate-200 dark:border-slate-700 font-bold text-[13px] text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdatePassword}
-                className="px-6 h-[42px] rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[13px] hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
+                className="px-6 h-10.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[13px] hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors shadow-sm"
               >
                 Update Password
               </button>

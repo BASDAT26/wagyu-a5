@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReadSeat from "@/components/seat/read-seat";
+import ReadSeat from "@/modules/seat/read-seat";
 import Navbar from "@/components/Navbar";
 
 type Role = "customer" | "admin" | "organizer";

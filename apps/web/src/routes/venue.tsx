@@ -1,4 +1,4 @@
-import ReadVenue from "@/components/venue/read-venue";
+import ReadVenue from "@/modules/venue/read-venue";
 import Navbar from "@/components/Navbar";
 
 export default function Venue() {

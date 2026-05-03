@@ -1,4 +1,4 @@
-import CreatePromotion from "@/components/promotion/create-promotion";
+import CreatePromotion from "@/modules/promotion/create-promotion";
 import Navbar from "@/components/Navbar";
 
 export default function PromosiPage() {

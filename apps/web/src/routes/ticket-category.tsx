@@ -1,5 +1,5 @@
 import { useState } from "react";
-import ReadTicketCategory from "@/components/ticket-category/read-ticket-category";
+import ReadTicketCategory from "@/modules/ticket-category/read-ticket-category";
 import Navbar from "@/components/Navbar";
 
 export default function TicketCategory() {
