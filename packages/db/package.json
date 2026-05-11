@@ -9,22 +9,16 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {
-    "db:push": "drizzle-kit push",
-    "db:generate": "drizzle-kit generate",
-    "db:studio": "drizzle-kit studio",
-    "db:migrate": "drizzle-kit migrate"
-  },
+  "scripts": {},
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.2",
     "@wagyu-a5/env": "workspace:*",
     "dotenv": "catalog:",
-    "drizzle-orm": "^0.45.1",
+    "pg": "^8.16.0",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/pg": "^8.15.4",
     "@wagyu-a5/config": "workspace:*",
-    "drizzle-kit": "^0.31.8",
     "typescript": "catalog:"
   }
 }

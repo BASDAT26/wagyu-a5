@@ -14,7 +14,6 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@wagyu-a5/auth": "workspace:*",
-    "@wagyu-a5/db": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
     "dotenv": "catalog:",
     "zod": "catalog:"

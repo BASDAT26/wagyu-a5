@@ -1,14 +1,13 @@
-import { neon } from "@neondatabase/serverless";
+import pg from "pg";
 import { env } from "@wagyu-a5/env/server";
-import { drizzle } from "drizzle-orm/neon-http";
 
-import * as schema from "./schema";
+const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
 
-export * from "./schema";
+export { pool };
 
-export function createDb() {
-  const sql = neon(env.DATABASE_URL);
-  return drizzle(sql, { schema });
+export async function query<T extends pg.QueryResultRow = any>(
+  text: string,
+  params?: any[],
+): Promise<pg.QueryResult<T>> {
+  return pool.query<T>(text, params);
 }
-
-export const db = createDb();

@@ -1,7 +1,6 @@
-import { createDb, accountRole, role, userAccount, customer, organizer } from "@wagyu-a5/db";
+import { query } from "@wagyu-a5/db";
 import { env } from "@wagyu-a5/env/server";
 import bcrypt from "bcrypt";
-import { eq } from "drizzle-orm";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
 
@@ -39,8 +38,6 @@ type SessionTokenPayload = {
 const SESSION_ISSUER = "wagyu-a5";
 const SESSION_AUDIENCE = "wagyu-a5";
 
-const db = createDb();
-
 export class AuthError extends Error {
   code: "USERNAME_TAKEN" | "INVALID_ROLE" | "UNKNOWN";
 
@@ -54,17 +51,15 @@ export async function authenticateUser(
   username: string,
   password: string,
 ): Promise<Session | null> {
-  const user = await db
-    .select({
-      id: userAccount.userId,
-      username: userAccount.username,
-      password: userAccount.password,
-    })
-    .from(userAccount)
-    .where(eq(userAccount.username, username))
-    .limit(1)
-    .then((rows) => rows[0]);
+  const userResult = await query(
+    `SELECT user_id, username, password
+     FROM tiktaktuk.user_account
+     WHERE username = $1
+     LIMIT 1`,
+    [username],
+  );
 
+  const user = userResult.rows[0];
   if (!user) {
     return null;
   }
@@ -74,17 +69,20 @@ export async function authenticateUser(
     return null;
   }
 
-  const userRole = await db
-    .select({ name: role.roleName })
-    .from(accountRole)
-    .innerJoin(role, eq(accountRole.roleId, role.roleId))
-    .where(eq(accountRole.userId, user.id))
-    .limit(1)
-    .then((rows) => rows[0]?.name ?? null);
+  const roleResult = await query(
+    `SELECT r.role_name
+     FROM tiktaktuk.account_role ar
+     INNER JOIN tiktaktuk.role r ON ar.role_id = r.role_id
+     WHERE ar.user_id = $1
+     LIMIT 1`,
+    [user.user_id],
+  );
+
+  const userRole = roleResult.rows[0]?.role_name ?? null;
 
   return {
     user: {
-      id: user.id,
+      id: user.user_id,
       name: user.username,
       email: user.username,
       role: userRole,
@@ -94,14 +92,16 @@ export async function authenticateUser(
 
 export async function registerUser(input: RegisterInput): Promise<Session> {
   const normalizedRole = normalizeRole(input.role);
-  const existingUser = await db
-    .select({ id: userAccount.userId })
-    .from(userAccount)
-    .where(eq(userAccount.username, input.username))
-    .limit(1)
-    .then((rows) => rows[0]);
 
-  if (existingUser) {
+  const existingResult = await query(
+    `SELECT user_id
+     FROM tiktaktuk.user_account
+     WHERE username = $1
+     LIMIT 1`,
+    [input.username],
+  );
+
+  if (existingResult.rows[0]) {
     throw new AuthError("Username already exists", "USERNAME_TAKEN");
   }
 
@@ -109,33 +109,32 @@ export async function registerUser(input: RegisterInput): Promise<Session> {
   const userId = randomUUID();
   const hashedPassword = await bcrypt.hash(input.password, 10);
 
-  await db.insert(userAccount).values({
-    userId,
-    username: input.username,
-    password: hashedPassword,
-  });
+  await query(
+    `INSERT INTO tiktaktuk.user_account (user_id, username, password)
+     VALUES ($1, $2, $3)`,
+    [userId, input.username, hashedPassword],
+  );
 
-  await db.insert(accountRole).values({
-    roleId,
-    userId,
-  });
+  await query(
+    `INSERT INTO tiktaktuk.account_role (role_id, user_id)
+     VALUES ($1, $2)`,
+    [roleId, userId],
+  );
 
   if (normalizedRole === "CUSTOMER") {
-    await db.insert(customer).values({
-      customerId: randomUUID(),
-      fullName: input.fullName ?? input.username,
-      phoneNumber: input.phoneNumber ?? null,
-      userId,
-    });
+    await query(
+      `INSERT INTO tiktaktuk.customer (customer_id, full_name, phone_number, user_id)
+       VALUES ($1, $2, $3, $4)`,
+      [randomUUID(), input.fullName ?? input.username, input.phoneNumber ?? null, userId],
+    );
   }
 
   if (normalizedRole === "ORGANIZER") {
-    await db.insert(organizer).values({
-      organizerId: randomUUID(),
-      organizerName: input.fullName ?? input.username,
-      contactEmail: input.email ?? null,
-      userId,
-    });
+    await query(
+      `INSERT INTO tiktaktuk.organizer (organizer_id, organizer_name, contact_email, user_id)
+       VALUES ($1, $2, $3, $4)`,
+      [randomUUID(), input.fullName ?? input.username, input.email ?? null, userId],
+    );
   }
 
   return {
@@ -223,22 +222,24 @@ function parseCookieHeader(cookieHeader: string) {
 }
 
 async function ensureRole(roleName: RoleName) {
-  const existingRole = await db
-    .select({ id: role.roleId })
-    .from(role)
-    .where(eq(role.roleName, roleName))
-    .limit(1)
-    .then((rows) => rows[0]);
+  const existingResult = await query(
+    `SELECT role_id
+     FROM tiktaktuk.role
+     WHERE role_name = $1
+     LIMIT 1`,
+    [roleName],
+  );
 
-  if (existingRole) {
-    return existingRole.id;
+  if (existingResult.rows[0]) {
+    return existingResult.rows[0].role_id as string;
   }
 
   const roleId = randomUUID();
-  await db.insert(role).values({
-    roleId,
-    roleName,
-  });
+  await query(
+    `INSERT INTO tiktaktuk.role (role_id, role_name)
+     VALUES ($1, $2)`,
+    [roleId, roleName],
+  );
   return roleId;
 }
 

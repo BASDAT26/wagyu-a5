@@ -15,7 +15,6 @@
     "@trpc/server": "catalog:",
     "@wagyu-a5/api": "workspace:*",
     "@wagyu-a5/auth": "workspace:*",
-    "@wagyu-a5/db": "workspace:*",
     "@wagyu-a5/env": "workspace:*",
     "bcrypt": "^6.0.0",
     "dotenv": "catalog:",
