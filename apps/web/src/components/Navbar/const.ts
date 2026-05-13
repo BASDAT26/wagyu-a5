@@ -10,11 +10,11 @@ export const ADMIN_LINKS: NavItem[] = [
   { to: "/event", label: "Event Saya" },
   { to: "/venue", label: "Manajemen Venue" },
   { to: "/seat", label: "Manajemen Kursi" },
-  { to: "/ticket-category", label: "Kategori Tiket" },
+  { to: "/artist", label: "Manajemen Artis" },
   { to: "/ticket", label: "Manajemen Tiket" },
+  { to: "/ticket-category", label: "Kategori Tiket" },
+  { to: "/promotion", label: "Promosi" },
   { to: "/order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
   { to: "/profile", label: "Profile" },
 ];
 
@@ -23,11 +23,11 @@ export const ORGANIZER_LINKS: NavItem[] = [
   { to: "/event", label: "Event Saya" },
   { to: "/venue", label: "Manajemen Venue" },
   { to: "/seat", label: "Manajemen Kursi" },
-  { to: "/ticket-category", label: "Kategori Tiket" },
+  { to: "/artist", label: "Manajemen Artis" },
   { to: "/ticket", label: "Manajemen Tiket" },
+  { to: "/ticket-category", label: "Kategori Tiket" },
+  { to: "/promotion", label: "Promosi" },
   { to: "/order", label: "Semua Order" },
-  { to: "/tiket-aset", label: "Tiket (Aset)" },
-  { to: "/order-aset", label: "Order (Aset)" },
   { to: "/profile", label: "Profile" },
 ];
 
