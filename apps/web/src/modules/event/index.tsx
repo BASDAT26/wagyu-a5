@@ -2,15 +2,7 @@ import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Card, CardContent } from "@wagyu-a5/ui/components/card";
 import { Chip } from "@wagyu-a5/ui/components/chip";
-import {
-  Search,
-  Heart,
-  Calendar,
-  MapPin,
-  ChevronDown,
-  Music,
-  Loader2,
-} from "lucide-react";
+import { Search, Heart, Calendar, MapPin, ChevronDown, Music, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
@@ -54,8 +46,7 @@ export default function EventModule() {
         !q ||
         ev.event_title.toLowerCase().includes(q) ||
         (venue?.venue_name.toLowerCase().includes(q) ?? false);
-      const matchesVenue =
-        venueFilter === "all" || venue?.venue_name === venueFilter;
+      const matchesVenue = venueFilter === "all" || venue?.venue_name === venueFilter;
       return matchesSearch && matchesVenue;
     });
   }, [events, search, venueFilter, venueMap]);
@@ -219,7 +210,7 @@ function EventCard({
 
         {/* Actions */}
         <div className="flex gap-2 items-center justify-center mt-auto">
-          <Button className="w-full">Beli Tiket</Button>
+          {!canModify && <Button className="w-full">Beli Tiket</Button>}
           {canModify && <UpdateEvent event={event} />}
         </div>
       </CardContent>
