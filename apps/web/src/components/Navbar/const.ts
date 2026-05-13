@@ -33,7 +33,9 @@ export const ORGANIZER_LINKS: NavItem[] = [
 
 export const CUSTOMER_LINKS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard" },
+  { to: "/seat", label: "Kursi" },
   { to: "/ticket", label: "Tiket Saya" },
+  { to: "/ticket-category", label: "Kategori Tiket" },
   { to: "/order", label: "Pesanan" },
   { to: "/event", label: "Cari Event" },
   { to: "/promotion", label: "Promosi" },
