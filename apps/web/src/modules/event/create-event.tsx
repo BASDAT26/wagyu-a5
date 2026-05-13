@@ -1,12 +1,5 @@
-// [REFACTOR] Cleaned up:
-// - Removed unused ModalDescription import
-// - Replaced inline TicketCategory interface → shared types.ts
-// - Replaced inline allArtists/dummyVenues → shared data/mock.ts
-// - Replaced inline ticket category form → shared TicketCategoryEditor
-
 import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
-import { Textarea } from "@wagyu-a5/ui/components/textarea";
 import { Label } from "@wagyu-a5/ui/components/label";
 import {
   Modal,
@@ -20,33 +13,73 @@ import {
 } from "@wagyu-a5/ui/components/modal";
 import { useState } from "react";
 import { Chip } from "@wagyu-a5/ui/components/chip";
-import { ChevronDown, Pencil } from "lucide-react";
-import { MOCK_ARTISTS, MOCK_VENUES } from "@/data/mock";
-import type { TicketCategoryForm } from "./types";
-import TicketCategoryEditor from "./ticket-category-editor";
+import { Plus, ChevronDown, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
+import type { VenueOption, Artist } from "./types";
 
-export default function UpdateEvent() {
+export default function CreateEvent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [venueId, setVenueId] = useState("");
+  const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
-  // Pre-filled dummy data for editing
-  const [title, setTitle] = useState("Konser Melodi Senja");
-  const [date, setDate] = useState("2024-05-15");
-  const [time, setTime] = useState("19:00");
-  const [venueId, setVenueId] = useState("1");
-  const [selectedArtists, setSelectedArtists] = useState<string[]>(["Fourtwenty", "Hindia"]);
-  const [ticketCategories, setTicketCategories] = useState<TicketCategoryForm[]>([
-    { name: "WVIP", price: "1500000", quantity: "50" },
-    { name: "VIP", price: "750000", quantity: "150" },
-    { name: "Category 1", price: "450000", quantity: "300" },
-    { name: "Category 2", price: "250000", quantity: "500" },
-  ]);
-  const [description, setDescription] = useState(
-    "Nikmati suasana senja dengan alunan musik indie yang menenangkan.",
-  );
+  // Fetch venues and artists from the backend
+  const { data: venues = [] } = useQuery(trpc.venue.venue.list.queryOptions());
+  const { data: artists = [] } = useQuery(trpc.event.artist.list.queryOptions());
 
-  const toggleArtist = (artist: string) => {
-    setSelectedArtists((prev) =>
-      prev.includes(artist) ? prev.filter((a) => a !== artist) : [...prev, artist],
+  const createEventMutation = useMutation({
+    mutationFn: (data: {
+      eventDatetime: string;
+      eventTitle: string;
+      venueId: string;
+    }) => trpcClient.event.event.create.mutate(data),
+    onSuccess: async (newEvent) => {
+      // Link selected artists to the newly created event
+      for (const artistId of selectedArtistIds) {
+        await trpcClient.event.eventArtist.create.mutate({
+          eventId: newEvent.event_id,
+          artistId,
+        });
+      }
+      queryClient.invalidateQueries(trpc.event.event.list.queryOptions());
+      toast.success("Acara berhasil dibuat");
+      resetForm();
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal membuat acara");
+    },
+  });
+
+  function resetForm() {
+    setTitle("");
+    setDate("");
+    setTime("");
+    setVenueId("");
+    setSelectedArtistIds([]);
+  }
+
+  function handleSubmit() {
+    if (!title || !date || !time || !venueId) {
+      toast.error("Semua field wajib harus diisi");
+      return;
+    }
+    const eventDatetime = new Date(`${date}T${time}:00`).toISOString();
+    createEventMutation.mutate({
+      eventDatetime,
+      eventTitle: title,
+      venueId,
+    });
+  }
+
+  const toggleArtist = (artistId: string) => {
+    setSelectedArtistIds((prev) =>
+      prev.includes(artistId) ? prev.filter((id) => id !== artistId) : [...prev, artistId],
     );
   };
 
@@ -54,14 +87,14 @@ export default function UpdateEvent() {
     <div>
       <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <ModalTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
+          <Button>
+            <Plus className="h-4 w-4" />
+            Buat Acara
           </Button>
         </ModalTrigger>
         <ModalPopup className="max-w-2xl">
           <ModalHeader>
-            <ModalTitle>Edit Acara</ModalTitle>
+            <ModalTitle>Buat Acara Baru</ModalTitle>
           </ModalHeader>
           <ModalBody>
             <div className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -70,13 +103,13 @@ export default function UpdateEvent() {
                 {/* Event Title */}
                 <div>
                   <Label
-                    htmlFor="edit-event-title"
+                    htmlFor="input-event-title"
                     className="text-xs font-semibold uppercase tracking-wider text-slate-500"
                   >
                     Judul Acara (EVENT_TITLE)
                   </Label>
                   <Input
-                    id="edit-event-title"
+                    id="input-event-title"
                     type="text"
                     placeholder="cth. Konser Melodi Senja"
                     value={title}
@@ -88,13 +121,13 @@ export default function UpdateEvent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label
-                      htmlFor="edit-date"
+                      htmlFor="input-date"
                       className="text-xs font-semibold uppercase tracking-wider text-slate-500"
                     >
                       Tanggal (DATE)
                     </Label>
                     <Input
-                      id="edit-date"
+                      id="input-date"
                       type="date"
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
@@ -102,13 +135,13 @@ export default function UpdateEvent() {
                   </div>
                   <div>
                     <Label
-                      htmlFor="edit-time"
+                      htmlFor="input-time"
                       className="text-xs font-semibold uppercase tracking-wider text-slate-500"
                     >
                       Waktu (TIME)
                     </Label>
                     <Input
-                      id="edit-time"
+                      id="input-time"
                       type="time"
                       value={time}
                       onChange={(e) => setTime(e.target.value)}
@@ -119,73 +152,53 @@ export default function UpdateEvent() {
                 {/* Venue Select */}
                 <div>
                   <Label
-                    htmlFor="edit-venue"
+                    htmlFor="select-venue"
                     className="text-xs font-semibold uppercase tracking-wider text-slate-500"
                   >
                     Venue (VENUE_ID)
                   </Label>
                   <div className="relative">
                     <select
-                      id="edit-venue"
+                      id="select-venue"
                       value={venueId}
                       onChange={(e) => setVenueId(e.target.value)}
                       className="w-full appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
                     >
-                      {MOCK_VENUES.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.name}
+                      <option value="">Pilih Venue...</option>
+                      {venues.map((v: VenueOption) => (
+                        <option key={v.venue_id} value={v.venue_id}>
+                          {v.venue_name}
                         </option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+              </div>
 
+              {/* ===== RIGHT COLUMN ===== */}
+              <div className="space-y-4">
                 {/* Artists */}
                 <div>
                   <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Artis (EVENT_ARTIST)
                   </Label>
                   <div className="flex flex-wrap gap-1.5 mt-1">
-                    {MOCK_ARTISTS.map((artist) => (
+                    {artists.map((artist: Artist) => (
                       <Chip
-                        key={artist}
-                        variant={selectedArtists.includes(artist) ? "default" : "outline"}
+                        key={artist.artist_id}
+                        variant={selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"}
                         size="sm"
                         className="cursor-pointer"
-                        onClick={() => toggleArtist(artist)}
+                        onClick={() => toggleArtist(artist.artist_id)}
                       >
-                        {artist}
+                        {artist.name}
                       </Chip>
                     ))}
+                    {artists.length === 0 && (
+                      <p className="text-xs text-slate-400">Belum ada artis terdaftar</p>
+                    )}
                   </div>
-                </div>
-              </div>
-
-              {/* ===== RIGHT COLUMN ===== */}
-              <div className="space-y-4">
-                {/* Ticket Categories — now a shared component */}
-                <TicketCategoryEditor
-                  categories={ticketCategories}
-                  onChange={setTicketCategories}
-                  idPrefix="edit"
-                />
-
-                {/* Description */}
-                <div>
-                  <Label
-                    htmlFor="edit-description"
-                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
-                  >
-                    Deskripsi
-                  </Label>
-                  <Textarea
-                    id="edit-description"
-                    placeholder="Deskripsi acara..."
-                    className="min-h-25"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
                 </div>
               </div>
             </div>
@@ -194,7 +207,10 @@ export default function UpdateEvent() {
             <ModalClose asChild>
               <Button variant="outline">Batal</Button>
             </ModalClose>
-            <Button>Simpan</Button>
+            <Button onClick={handleSubmit} disabled={createEventMutation.isPending}>
+              {createEventMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Buat Acara
+            </Button>
           </ModalFooter>
         </ModalPopup>
       </Modal>

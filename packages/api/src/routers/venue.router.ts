@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { query } from "@wagyu-a5/db";
-import { publicProcedure, protectedProcedure, router } from "../index";
+import { adminOrOrganizerProcedure, publicProcedure, protectedProcedure, router } from "../index";
 import { randomUUID } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 // ─── Venue ───────────────────────────────────────────────────────────────────
 
@@ -34,20 +35,18 @@ const venueRouter_ = router({
     return result.rows;
   }),
 
-  create: protectedProcedure
-    .input(venueSchema)
-    .mutation(async ({ input }) => {
-      const id = randomUUID();
-      const result = await query(
-        `INSERT INTO tiktaktuk.venue (venue_id, venue_name, capacity, address, city)
+  create: adminOrOrganizerProcedure.input(venueSchema).mutation(async ({ input }) => {
+    const id = randomUUID();
+    const result = await query(
+      `INSERT INTO tiktaktuk.venue (venue_id, venue_name, capacity, address, city)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING venue_id, venue_name, capacity, address, city`,
-        [id, input.venueName, input.capacity, input.address, input.city],
-      );
-      return result.rows[0];
-    }),
+      [id, input.venueName, input.capacity, input.address, input.city],
+    );
+    return result.rows[0];
+  }),
 
-  update: protectedProcedure
+  update: adminOrOrganizerProcedure
     .input(
       z.object({
         venueId: z.string().uuid(),
@@ -91,9 +90,18 @@ const venueRouter_ = router({
       return result.rows[0] ?? null;
     }),
 
-  delete: protectedProcedure
+  delete: adminOrOrganizerProcedure
     .input(z.object({ venueId: z.string().uuid() }))
     .mutation(async ({ input }) => {
+      const hasEvents = await query(`SELECT 1 FROM tiktaktuk.event WHERE venue_id = $1 LIMIT 1`, [
+        input.venueId,
+      ]);
+      if (hasEvents.rowCount && hasEvents.rowCount > 0) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "Venue masih memiliki acara terkait",
+        });
+      }
       const result = await query(
         `DELETE FROM tiktaktuk.venue WHERE venue_id = $1 RETURNING venue_id`,
         [input.venueId],
@@ -137,18 +145,16 @@ const seatRouter = router({
       return result.rows;
     }),
 
-  create: protectedProcedure
-    .input(seatSchema)
-    .mutation(async ({ input }) => {
-      const id = randomUUID();
-      const result = await query(
-        `INSERT INTO tiktaktuk.seat (seat_id, section, seat_number, row_number, venue_id)
+  create: protectedProcedure.input(seatSchema).mutation(async ({ input }) => {
+    const id = randomUUID();
+    const result = await query(
+      `INSERT INTO tiktaktuk.seat (seat_id, section, seat_number, row_number, venue_id)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING seat_id, section, seat_number, row_number, venue_id`,
-        [id, input.section, input.seatNumber, input.rowNumber, input.venueId],
-      );
-      return result.rows[0];
-    }),
+      [id, input.section, input.seatNumber, input.rowNumber, input.venueId],
+    );
+    return result.rows[0];
+  }),
 
   update: protectedProcedure
     .input(
