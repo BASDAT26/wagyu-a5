@@ -226,7 +226,7 @@ export default function PromotionList() {
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
       {/* --- Role Simulator --- */}
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-purple-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+      <div className="bg-linear-to-r from-purple-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-purple-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-purple-600 text-white rounded-lg shadow-sm">
             {role === "ADMIN" ? <ShieldAlert size={18} /> : <User size={18} />}
@@ -335,7 +335,7 @@ export default function PromotionList() {
       {/* --- Table --- */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[900px]">
+          <div className="min-w-225">
             <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr_1fr_1fr_auto] gap-4 px-6 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20">
               {[
                 "KODE PROMO",
@@ -399,7 +399,7 @@ export default function PromotionList() {
                       </span>
                     </div>
 
-                    <div className="w-[80px] flex justify-end">
+                    <div className="w-20 flex justify-end">
                       {role === "ADMIN" && (
                         <div className="flex items-center gap-1.5">
                           <button

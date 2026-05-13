@@ -36,7 +36,7 @@ export const CUSTOMER_LINKS: NavItem[] = [
   { to: "/ticket", label: "Tiket Saya" },
   { to: "/order", label: "Pesanan" },
   { to: "/event", label: "Cari Event" },
-  { to: "/promosi", label: "Promosi" },
+  { to: "/promotion", label: "Promosi" },
   { to: "/venue", label: "Venue" },
   { to: "/artist", label: "Artis" },
 ];
