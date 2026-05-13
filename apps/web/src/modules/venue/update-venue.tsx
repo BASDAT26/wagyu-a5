@@ -12,21 +12,65 @@ import {
   ModalHeader,
   ModalTitle,
 } from "@wagyu-a5/ui/components/modal";
-import { useState } from "react";
-import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
-import { Pencil } from "lucide-react";
-import type { Venue } from "../interface";
+import { useState, useEffect } from "react";
+import { Pencil, Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
+import type { Venue } from "./types";
 
-export default function UpdateVenue() {
+interface UpdateVenueProps {
+  venue: Venue;
+}
+
+export default function UpdateVenue({ venue }: UpdateVenueProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const dummyVenue: Venue = {
-    id: "1",
-    name: "Stadion GBK",
-    capacity: 1000,
-    city: "Jakarta",
-    address: "Jl. Merdeka Barat",
-    hasReservedSeating: true,
-  };
+  const [venueName, setVenueName] = useState(venue.venue_name);
+  const [capacity, setCapacity] = useState(String(venue.capacity));
+  const [city, setCity] = useState(venue.city);
+  const [address, setAddress] = useState(venue.address);
+  const queryClient = useQueryClient();
+
+  // Sync form when venue prop changes
+  useEffect(() => {
+    setVenueName(venue.venue_name);
+    setCapacity(String(venue.capacity));
+    setCity(venue.city);
+    setAddress(venue.address);
+  }, [venue]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: {
+      venueId: string;
+      venueName?: string;
+      capacity?: number;
+      address?: string;
+      city?: string;
+    }) => trpcClient.venue.venue.update.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.venue.venue.list.queryOptions());
+      toast.success("Venue berhasil diperbarui");
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal memperbarui venue");
+    },
+  });
+
+  function handleSubmit() {
+    if (!venueName || !capacity || !city || !address) {
+      toast.error("Semua field harus diisi");
+      return;
+    }
+    updateMutation.mutate({
+      venueId: venue.venue_id,
+      venueName,
+      capacity: Number(capacity),
+      address,
+      city,
+    });
+  }
+
   return (
     <div>
       <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -48,7 +92,8 @@ export default function UpdateVenue() {
                   id="input-venue-name"
                   type="text"
                   placeholder="cth. Jakarta Convention Center"
-                  value={dummyVenue.name}
+                  value={venueName}
+                  onChange={(e) => setVenueName(e.target.value)}
                 />
               </div>
               <div className="grid w-full gap-4 grid-cols-2">
@@ -58,7 +103,8 @@ export default function UpdateVenue() {
                     id="input-capacity"
                     type="number"
                     placeholder="1000"
-                    value={dummyVenue.capacity}
+                    value={capacity}
+                    onChange={(e) => setCapacity(e.target.value)}
                   />
                 </div>
                 <div>
@@ -67,7 +113,8 @@ export default function UpdateVenue() {
                     id="input-city"
                     type="text"
                     placeholder="Jakarta"
-                    value={dummyVenue.city}
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
                   />
                 </div>
               </div>
@@ -76,12 +123,9 @@ export default function UpdateVenue() {
                 <Textarea
                   id="input-address"
                   placeholder="Jl. Gatot Subroto No.1"
-                  value={dummyVenue.address}
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
                 />
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="check-seat" checked={dummyVenue.hasReservedSeating} />
-                <Label htmlFor="check-seat">Has Reserved Seating</Label>
               </div>
             </div>
           </ModalBody>
@@ -89,7 +133,10 @@ export default function UpdateVenue() {
             <ModalClose asChild>
               <Button variant="outline">Batal</Button>
             </ModalClose>
-            <Button>Simpan</Button>
+            <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
+              {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Simpan
+            </Button>
           </ModalFooter>
         </ModalPopup>
       </Modal>
