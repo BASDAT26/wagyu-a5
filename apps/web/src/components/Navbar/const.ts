@@ -7,6 +7,7 @@ export const GUEST_LINKS: NavItem[] = [
 
 export const ADMIN_LINKS: NavItem[] = [
   { to: "/dashboard", label: "Dashboard" },
+  { to: "/event", label: "Event Saya" },
   { to: "/venue", label: "Manajemen Venue" },
   { to: "/seat", label: "Manajemen Kursi" },
   { to: "/ticket-category", label: "Kategori Tiket" },
