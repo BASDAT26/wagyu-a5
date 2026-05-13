@@ -28,6 +28,17 @@ const ticketCategoryRouter = router({
       return result.rows;
     }),
 
+  listAll: publicProcedure.query(async () => {
+    const result = await query(
+      `SELECT tc.category_id, tc.category_name, tc.quota, tc.price, tc.tevent_id,
+              e.event_title AS event_name
+       FROM tiktaktuk.ticket_category tc
+       JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+       ORDER BY e.event_title, tc.category_name`,
+    );
+    return result.rows;
+  }),
+
   create: protectedProcedure
     .input(z.object({
       categoryName: z.string().min(1).max(50),
@@ -88,7 +99,7 @@ const ticketRouter_ = router({
     .input(z.object({ ticketId: z.string().uuid() }))
     .query(async ({ input }) => {
       const result = await query(
-        `SELECT ticket_id, ticket_code, tcategory_id, torder_id
+        `SELECT ticket_id, ticket_code, tcategory_id, torder_id, status
          FROM tiktaktuk.ticket WHERE ticket_id = $1`,
         [input.ticketId],
       );
@@ -99,7 +110,7 @@ const ticketRouter_ = router({
     .input(z.object({ orderId: z.string().uuid() }))
     .query(async ({ input }) => {
       const result = await query(
-        `SELECT ticket_id, ticket_code, tcategory_id, torder_id
+        `SELECT ticket_id, ticket_code, tcategory_id, torder_id, status
          FROM tiktaktuk.ticket WHERE torder_id = $1 ORDER BY ticket_code`,
         [input.orderId],
       );
@@ -110,27 +121,202 @@ const ticketRouter_ = router({
     .input(z.object({ categoryId: z.string().uuid() }))
     .query(async ({ input }) => {
       const result = await query(
-        `SELECT ticket_id, ticket_code, tcategory_id, torder_id
+        `SELECT ticket_id, ticket_code, tcategory_id, torder_id, status
          FROM tiktaktuk.ticket WHERE tcategory_id = $1 ORDER BY ticket_code`,
         [input.categoryId],
       );
       return result.rows;
     }),
 
+  listEnriched: publicProcedure.query(async () => {
+    const result = await query(
+      `SELECT t.ticket_id, t.ticket_code, t.tcategory_id, t.torder_id, t.status,
+              tc.category_name, tc.price,
+              e.event_title, e.event_datetime, e.event_id,
+              v.venue_name,
+              o.order_id, o.payment_status,
+              c.full_name AS customer_name, c.customer_id,
+              s.section, s.seat_number, s.row_number
+       FROM tiktaktuk.ticket t
+       JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+       JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+       JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id
+       JOIN tiktaktuk.orders o ON t.torder_id = o.order_id
+       JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+       LEFT JOIN tiktaktuk.has_relationship hr ON t.ticket_id = hr.ticket_id
+       LEFT JOIN tiktaktuk.seat s ON hr.seat_id = s.seat_id
+       ORDER BY t.ticket_code`,
+    );
+    return result.rows;
+  }),
+
+  listByCustomer: publicProcedure
+    .input(z.object({ customerId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const result = await query(
+        `SELECT t.ticket_id, t.ticket_code, t.tcategory_id, t.torder_id, t.status,
+                tc.category_name, tc.price,
+                e.event_title, e.event_datetime, e.event_id,
+                v.venue_name,
+                o.order_id, o.payment_status,
+                c.full_name AS customer_name, c.customer_id,
+                s.section, s.seat_number, s.row_number
+         FROM tiktaktuk.ticket t
+         JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+         JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+         JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id
+         JOIN tiktaktuk.orders o ON t.torder_id = o.order_id
+         JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+         LEFT JOIN tiktaktuk.has_relationship hr ON t.ticket_id = hr.ticket_id
+         LEFT JOIN tiktaktuk.seat s ON hr.seat_id = s.seat_id
+         WHERE c.customer_id = $1
+         ORDER BY t.ticket_code`,
+        [input.customerId],
+      );
+      return result.rows;
+    }),
+
+  listByOrganizer: publicProcedure
+    .input(z.object({ organizerId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const result = await query(
+        `SELECT t.ticket_id, t.ticket_code, t.tcategory_id, t.torder_id, t.status,
+                tc.category_name, tc.price,
+                e.event_title, e.event_datetime, e.event_id,
+                v.venue_name,
+                o.order_id, o.payment_status,
+                c.full_name AS customer_name, c.customer_id,
+                s.section, s.seat_number, s.row_number
+         FROM tiktaktuk.ticket t
+         JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+         JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+         JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id
+         JOIN tiktaktuk.orders o ON t.torder_id = o.order_id
+         JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+         LEFT JOIN tiktaktuk.has_relationship hr ON t.ticket_id = hr.ticket_id
+         LEFT JOIN tiktaktuk.seat s ON hr.seat_id = s.seat_id
+         WHERE e.organizer_id = $1
+         ORDER BY t.ticket_code`,
+        [input.organizerId],
+      );
+      return result.rows;
+    }),
+
+  listForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const role = ctx.session.user.role;
+
+    if (role === "ADMIN") {
+      // Admin sees all tickets
+      const result = await query(
+        `SELECT t.ticket_id, t.ticket_code, t.tcategory_id, t.torder_id, t.status,
+                tc.category_name, tc.price,
+                e.event_title, e.event_datetime, e.event_id,
+                v.venue_name,
+                o.order_id, o.payment_status,
+                c.full_name AS customer_name, c.customer_id,
+                s.section, s.seat_number, s.row_number
+         FROM tiktaktuk.ticket t
+         JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+         JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+         JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id
+         JOIN tiktaktuk.orders o ON t.torder_id = o.order_id
+         JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+         LEFT JOIN tiktaktuk.has_relationship hr ON t.ticket_id = hr.ticket_id
+         LEFT JOIN tiktaktuk.seat s ON hr.seat_id = s.seat_id
+         ORDER BY t.ticket_code`,
+      );
+      return result.rows;
+    }
+
+    if (role === "ORGANIZER") {
+      // Organizer sees tickets for their events
+      const result = await query(
+        `SELECT t.ticket_id, t.ticket_code, t.tcategory_id, t.torder_id, t.status,
+                tc.category_name, tc.price,
+                e.event_title, e.event_datetime, e.event_id,
+                v.venue_name,
+                o.order_id, o.payment_status,
+                c.full_name AS customer_name, c.customer_id,
+                s.section, s.seat_number, s.row_number
+         FROM tiktaktuk.ticket t
+         JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+         JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+         JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id
+         JOIN tiktaktuk.orders o ON t.torder_id = o.order_id
+         JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+         LEFT JOIN tiktaktuk.has_relationship hr ON t.ticket_id = hr.ticket_id
+         LEFT JOIN tiktaktuk.seat s ON hr.seat_id = s.seat_id
+         WHERE e.organizer_id = (
+           SELECT organizer_id FROM tiktaktuk.organizer WHERE user_id = $1 LIMIT 1
+         )
+         ORDER BY t.ticket_code`,
+        [userId],
+      );
+      return result.rows;
+    }
+
+    // Customer sees only their own tickets
+    const result = await query(
+      `SELECT t.ticket_id, t.ticket_code, t.tcategory_id, t.torder_id, t.status,
+              tc.category_name, tc.price,
+              e.event_title, e.event_datetime, e.event_id,
+              v.venue_name,
+              o.order_id, o.payment_status,
+              c.full_name AS customer_name, c.customer_id,
+              s.section, s.seat_number, s.row_number
+       FROM tiktaktuk.ticket t
+       JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+       JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+       JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id
+       JOIN tiktaktuk.orders o ON t.torder_id = o.order_id
+       JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+       LEFT JOIN tiktaktuk.has_relationship hr ON t.ticket_id = hr.ticket_id
+       LEFT JOIN tiktaktuk.seat s ON hr.seat_id = s.seat_id
+       WHERE c.user_id = $1
+       ORDER BY t.ticket_code`,
+      [userId],
+    );
+    return result.rows;
+  }),
+
   create: protectedProcedure
     .input(z.object({
       ticketCode: z.string().min(1).max(100),
       categoryId: z.string().uuid(),
       orderId: z.string().uuid(),
+      seatId: z.string().uuid().optional(),
     }))
     .mutation(async ({ input }) => {
       const result = await query(
         `INSERT INTO tiktaktuk.ticket (ticket_id, ticket_code, tcategory_id, torder_id)
          VALUES (gen_random_uuid(), $1, $2, $3)
-         RETURNING ticket_id, ticket_code, tcategory_id, torder_id`,
+         RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
         [input.ticketCode, input.categoryId, input.orderId],
       );
-      return result.rows[0];
+      const ticket = result.rows[0];
+      // Assign seat if provided
+      if (input.seatId && ticket) {
+        await query(
+          `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
+          [input.seatId, ticket.ticket_id],
+        );
+      }
+      return ticket;
+    }),
+
+  updateStatus: protectedProcedure
+    .input(z.object({
+      ticketId: z.string().uuid(),
+      status: z.enum(["VALID", "TERPAKAI", "BATAL"]),
+    }))
+    .mutation(async ({ input }) => {
+      const result = await query(
+        `UPDATE tiktaktuk.ticket SET status = $1 WHERE ticket_id = $2
+         RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
+        [input.status, input.ticketId],
+      );
+      return result.rows[0] ?? null;
     }),
 
   delete: protectedProcedure

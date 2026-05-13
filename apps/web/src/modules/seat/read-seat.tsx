@@ -5,106 +5,50 @@ import DeleteSeat from "./delete-seat";
 import { Card, CardContent } from "@wagyu-a5/ui/components/card";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Chip } from "@wagyu-a5/ui/components/chip";
-import { Search, XCircle, CheckCircle2 } from "lucide-react";
-import type { Role } from "@/data/type";
+import { Search, XCircle, CheckCircle2, Loader2, ChevronDown } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
+import { authClient } from "@/lib/auth-client";
+import type { Seat } from "./types";
+import type { Venue } from "../venue/types";
 
-// Mock Data
-const MOCK_SEATS = [
-  {
-    id: "s1a2b3c4-0001-4aaa-aaaa-aaaaaaaa0001",
-    section: "WVIP",
-    baris: "A",
-    noKursi: "1",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: true,
-  },
-  {
-    id: "s1a2b3c4-0002-4aaa-aaaa-aaaaaaaa0002",
-    section: "WVIP",
-    baris: "A",
-    noKursi: "2",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: false,
-  },
-  {
-    id: "s1a2b3c4-0003-4aaa-aaaa-aaaaaaaa0003",
-    section: "WVIP",
-    baris: "A",
-    noKursi: "3",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: false,
-  },
-  {
-    id: "s1a2b3c4-0004-4aaa-aaaa-aaaaaaaa0004",
-    section: "VIP",
-    baris: "B",
-    noKursi: "1",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: true,
-  },
-  {
-    id: "s1a2b3c4-0005-4aaa-aaaa-aaaaaaaa0005",
-    section: "VIP",
-    baris: "B",
-    noKursi: "2",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: true,
-  },
-  {
-    id: "s1a2b3c4-0006-4aaa-aaaa-aaaaaaaa0006",
-    section: "VIP",
-    baris: "B",
-    noKursi: "3",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: false,
-  },
-  {
-    id: "s1a2b3c4-0007-4aaa-aaaa-aaaaaaaa0007",
-    section: "Category 1",
-    baris: "C",
-    noKursi: "1",
-    venue: "Jakarta Convention Center",
-    venueId: "v1a2b3c4-d5e6-4a7b-8c9d-000000000001",
-    isAssigned: false,
-  },
-];
-
-export default function ReadSeat({
-  role: propRole,
-  onRoleChange,
-}: { role?: Role; onRoleChange?: (role: Role) => void } = {}) {
+export default function ReadSeat() {
   const [search, setSearch] = useState("");
-  const [internalRole, setInternalRole] = useState<Role>("CUSTOMER");
+  const [selectedVenueId, setSelectedVenueId] = useState<string>("");
 
-  const role = propRole || internalRole;
-  const setRole = onRoleChange || setInternalRole;
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string })?.role;
+  const canModify = role === "ADMIN" || role === "ORGANIZER";
+
+  const { data: venues = [] } = useQuery(trpc.venue.venue.list.queryOptions());
+
+  // Auto-select first venue if none selected
+  const venueId = selectedVenueId || (venues.length > 0 ? (venues[0] as Venue).venue_id : "");
+
+  const { data: seats = [], isLoading } = useQuery({
+    ...trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }),
+    enabled: !!venueId,
+  });
 
   const filteredSeats = useMemo(() => {
-    return MOCK_SEATS.filter((seat) => {
+    return (seats as Seat[]).filter((seat) => {
       const query = search.toLowerCase();
       return (
         seat.section.toLowerCase().includes(query) ||
-        seat.baris.toLowerCase().includes(query) ||
-        seat.noKursi.toLowerCase().includes(query) ||
-        seat.venue.toLowerCase().includes(query)
+        seat.row_number.toLowerCase().includes(query) ||
+        seat.seat_number.toLowerCase().includes(query)
       );
     });
-  }, [search]);
+  }, [seats, search]);
 
-  // For the stat cards, we calculate based on the overall MOCK_SEATS
-  // (In a real app, these stats might come from backend aggregates)
-  const totalKursi = MOCK_SEATS.length;
-  const terisi = MOCK_SEATS.filter((s) => s.isAssigned).length;
+  const totalKursi = (seats as Seat[]).length;
+  const terisi = (seats as Seat[]).filter((s) => s.is_assigned).length;
   const tersedia = totalKursi - terisi;
 
+  const selectedVenueName = venues.find((v: Venue) => v.venue_id === venueId)?.venue_name ?? "";
+
   return (
-    <div className="w-full max-w-6xl mx-auto py-8 space-y-6">
+    <div className="w-full max-w-6xl mx-auto py-8 space-y-6 px-4">
       {/* Header Area */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -116,16 +60,7 @@ export default function ReadSeat({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-            className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="CUSTOMER">View as: Customer</option>
-            <option value="ADMIN">View as: Admin</option>
-            <option value="ORGANIZER">View as: Organizer</option>
-          </select>
-          {role !== "CUSTOMER" && <CreateSeat />}
+          {canModify && venueId && <CreateSeat venueId={venueId} />}
         </div>
       </div>
 
@@ -168,39 +103,89 @@ export default function ReadSeat({
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-48">
-          <option value="">Semua Venue</option>
-          <option value="jcc">Jakarta Convention Center</option>
-        </select>
+        <div className="relative w-full sm:w-64">
+          <select
+            id="filter-venue"
+            value={venueId}
+            onChange={(e) => setSelectedVenueId(e.target.value)}
+            className="appearance-none h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-3 pr-8 py-2 text-sm text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+          >
+            <option value="" disabled>
+              Pilih Venue...
+            </option>
+            {(venues as Venue[]).map((v) => (
+              <option key={v.venue_id} value={v.venue_id}>
+                {v.venue_name}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+        </div>
       </div>
 
       {/* Table */}
-      <Card className="rounded-xl border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                <th className="px-6 py-4 font-bold">Section</th>
-                <th className="px-6 py-4 font-bold">Baris</th>
-                <th className="px-6 py-4 font-bold">No. Kursi</th>
-                <th className="px-6 py-4 font-bold">Venue</th>
-                <th className="px-6 py-4 font-bold">Status</th>
-                {role !== "CUSTOMER" && <th className="px-6 py-4 font-bold text-right">Aksi</th>}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-              {filteredSeats.map((seat) => (
-                <tr
-                  key={seat.id}
-                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
-                >
-                  <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+        </div>
+      ) : !venueId ? (
+        <div className="text-center py-12 text-slate-500 dark:text-slate-400 border border-dashed border-slate-200 dark:border-slate-800 rounded-xl">
+          Pilih venue untuk melihat daftar kursi.
+        </div>
+      ) : (
+        <Card className="rounded-xl border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead>
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                  <th className="px-6 py-4 font-bold">Section</th>
+                  <th className="px-6 py-4 font-bold">Baris</th>
+                  <th className="px-6 py-4 font-bold">No. Kursi</th>
+                  <th className="px-6 py-4 font-bold">Venue</th>
+                  <th className="px-6 py-4 font-bold">Status</th>
+                  {canModify && <th className="px-6 py-4 font-bold text-right">Aksi</th>}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
+                {filteredSeats.map((seat) => (
+                  <tr
+                    key={seat.seat_id}
+                    className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <td className="px-6 py-4 font-medium text-slate-700 dark:text-slate-200">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="12"
+                            height="12"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M4 10v4h16v-4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
+                            <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
+                            <path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path>
+                          </svg>
+                        </div>
+                        {seat.section}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      {seat.row_number}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      {seat.seat_number}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          width="12"
-                          height="12"
+                          width="14"
+                          height="14"
                           viewBox="0 0 24 24"
                           fill="none"
                           stroke="currentColor"
@@ -208,87 +193,65 @@ export default function ReadSeat({
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         >
-                          <path d="M4 10v4h16v-4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2z"></path>
-                          <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"></path>
-                          <path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"></path>
+                          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                          <path d="M9 22v-4h6v4"></path>
+                          <path d="M8 6h.01"></path>
+                          <path d="M16 6h.01"></path>
+                          <path d="M12 6h.01"></path>
+                          <path d="M12 10h.01"></path>
+                          <path d="M12 14h.01"></path>
+                          <path d="M16 10h.01"></path>
+                          <path d="M16 14h.01"></path>
+                          <path d="M8 10h.01"></path>
+                          <path d="M8 14h.01"></path>
                         </svg>
-                      </div>
-                      {seat.section}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{seat.baris}</td>
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{seat.noKursi}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="14"
-                        height="14"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                        <path d="M9 22v-4h6v4"></path>
-                        <path d="M8 6h.01"></path>
-                        <path d="M16 6h.01"></path>
-                        <path d="M12 6h.01"></path>
-                        <path d="M12 10h.01"></path>
-                        <path d="M12 14h.01"></path>
-                        <path d="M16 10h.01"></path>
-                        <path d="M16 14h.01"></path>
-                        <path d="M8 10h.01"></path>
-                        <path d="M8 14h.01"></path>
-                      </svg>
-                      {seat.venue}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {seat.isAssigned ? (
-                      <Chip
-                        variant="warning"
-                        className="bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100 font-bold tracking-wide"
-                        icon={<XCircle className="w-3 h-3" />}
-                      >
-                        TERISI
-                      </Chip>
-                    ) : (
-                      <Chip
-                        variant="success"
-                        className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 font-bold tracking-wide"
-                        icon={<CheckCircle2 className="w-3 h-3" />}
-                      >
-                        TERSEDIA
-                      </Chip>
-                    )}
-                  </td>
-                  {role !== "CUSTOMER" && (
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <UpdateSeat />
-                        <DeleteSeat isAssigned={seat.isAssigned} />
+                        {selectedVenueName}
                       </div>
                     </td>
-                  )}
-                </tr>
-              ))}
-              {filteredSeats.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={role !== "CUSTOMER" ? 6 : 5}
-                    className="px-6 py-12 text-center text-slate-500 dark:text-slate-400"
-                  >
-                    Tidak ada kursi yang ditemukan.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                    <td className="px-6 py-4">
+                      {seat.is_assigned ? (
+                        <Chip
+                          variant="warning"
+                          className="bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-100 font-bold tracking-wide"
+                          icon={<XCircle className="w-3 h-3" />}
+                        >
+                          TERISI
+                        </Chip>
+                      ) : (
+                        <Chip
+                          variant="success"
+                          className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100 font-bold tracking-wide"
+                          icon={<CheckCircle2 className="w-3 h-3" />}
+                        >
+                          TERSEDIA
+                        </Chip>
+                      )}
+                    </td>
+                    {canModify && (
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <UpdateSeat seat={seat} venueId={venueId} />
+                          <DeleteSeat seat={seat} venueId={venueId} />
+                        </div>
+                      </td>
+                    )}
+                  </tr>
+                ))}
+                {filteredSeats.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={canModify ? 6 : 5}
+                      className="px-6 py-12 text-center text-slate-500 dark:text-slate-400"
+                    >
+                      Tidak ada kursi yang ditemukan.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

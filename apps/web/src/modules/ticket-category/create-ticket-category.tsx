@@ -12,19 +12,58 @@ import {
   ModalTitle,
   ModalTrigger,
 } from "@wagyu-a5/ui/components/modal";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
 
-interface Event {
-  event_id: string;
-  event_name: string;
-}
-
-interface CreateTicketCategoryProps {
-  events: Event[];
-}
-
-export default function CreateTicketCategory({ events }: CreateTicketCategoryProps) {
+export default function CreateTicketCategory() {
   const [open, setOpen] = useState(false);
+  const [eventId, setEventId] = useState("");
+  const [categoryName, setCategoryName] = useState("");
+  const [price, setPrice] = useState("");
+  const [quota, setQuota] = useState("");
+  const queryClient = useQueryClient();
+
+  const { data: events = [] } = useQuery(trpc.event.event.list.queryOptions());
+
+  const createMutation = useMutation({
+    mutationFn: (data: {
+      categoryName: string;
+      quota: number;
+      price: number;
+      eventId: string;
+    }) => trpcClient.ticket.category.create.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.ticket.category.listAll.queryOptions());
+      toast.success("Kategori tiket berhasil ditambahkan");
+      resetForm();
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal menambahkan kategori tiket");
+    },
+  });
+
+  function resetForm() {
+    setEventId("");
+    setCategoryName("");
+    setPrice("");
+    setQuota("");
+  }
+
+  function handleSubmit() {
+    if (!eventId || !categoryName || !price || !quota) {
+      toast.error("Semua field harus diisi");
+      return;
+    }
+    createMutation.mutate({
+      categoryName,
+      quota: Number(quota),
+      price: Number(price),
+      eventId,
+    });
+  }
 
   return (
     <Modal open={open} onOpenChange={setOpen}>
@@ -47,14 +86,15 @@ export default function CreateTicketCategory({ events }: CreateTicketCategoryPro
               <select
                 id="create-tc-event"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                defaultValue=""
+                value={eventId}
+                onChange={(e) => setEventId(e.target.value)}
               >
                 <option value="" disabled>
                   Pilih acara...
                 </option>
-                {events.map((event) => (
+                {(events as { event_id: string; event_title: string }[]).map((event) => (
                   <option key={event.event_id} value={event.event_id}>
-                    {event.event_name}
+                    {event.event_title}
                   </option>
                 ))}
               </select>
@@ -63,20 +103,40 @@ export default function CreateTicketCategory({ events }: CreateTicketCategoryPro
               <Label htmlFor="create-tc-name">
                 NAMA KATEGORI <span className="text-destructive">*</span>
               </Label>
-              <Input id="create-tc-name" placeholder="cth. WVIP" maxLength={100} />
+              <Input
+                id="create-tc-name"
+                placeholder="cth. WVIP"
+                maxLength={100}
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="create-tc-price">
                   HARGA (RP) <span className="text-destructive">*</span>
                 </Label>
-                <Input id="create-tc-price" type="number" placeholder="750000" min={0} />
+                <Input
+                  id="create-tc-price"
+                  type="number"
+                  placeholder="750000"
+                  min={0}
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="create-tc-quota">
                   KUOTA <span className="text-destructive">*</span>
                 </Label>
-                <Input id="create-tc-quota" type="number" placeholder="100" min={1} />
+                <Input
+                  id="create-tc-quota"
+                  type="number"
+                  placeholder="100"
+                  min={1}
+                  value={quota}
+                  onChange={(e) => setQuota(e.target.value)}
+                />
               </div>
             </div>
           </div>
@@ -85,7 +145,10 @@ export default function CreateTicketCategory({ events }: CreateTicketCategoryPro
           <ModalClose asChild>
             <Button variant="outline">Batal</Button>
           </ModalClose>
-          <Button>Tambah</Button>
+          <Button onClick={handleSubmit} disabled={createMutation.isPending}>
+            {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Tambah
+          </Button>
         </ModalFooter>
       </ModalPopup>
     </Modal>

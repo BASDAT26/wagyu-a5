@@ -1,15 +1,13 @@
-import { useState } from "react";
 import ReadSeat from "@/modules/seat/read-seat";
-import Navbar from "@/components/Navbar";
-import type { Role } from "@/data/type";
+import { authClient } from "@/lib/auth-client";
 
 export default function SeatPage() {
-  const [role, setRole] = useState<Role>("CUSTOMER");
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string })?.role ?? "CUSTOMER";
 
   return (
     <div className="w-full min-h-screen bg-background">
-      <Navbar role={role} />
-      <ReadSeat role={role} onRoleChange={setRole} />
+      <ReadSeat />
     </div>
   );
 }

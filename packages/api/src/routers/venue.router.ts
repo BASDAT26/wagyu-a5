@@ -137,6 +137,21 @@ const seatRouter = router({
       return result.rows;
     }),
 
+  listByVenueWithStatus: publicProcedure
+    .input(z.object({ venueId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const result = await query(
+        `SELECT s.seat_id, s.section, s.seat_number, s.row_number, s.venue_id,
+                CASE WHEN hr.seat_id IS NOT NULL THEN true ELSE false END AS is_assigned
+         FROM tiktaktuk.seat s
+         LEFT JOIN tiktaktuk.has_relationship hr ON s.seat_id = hr.seat_id
+         WHERE s.venue_id = $1
+         ORDER BY s.section, s.row_number, s.seat_number`,
+        [input.venueId],
+      );
+      return result.rows;
+    }),
+
   create: protectedProcedure
     .input(seatSchema)
     .mutation(async ({ input }) => {

@@ -1,14 +1,13 @@
-import { useState } from "react";
 import ReadTicketCategory from "@/modules/ticket-category/read-ticket-category";
-import Navbar from "@/components/Navbar";
+import { authClient } from "@/lib/auth-client";
 
 export default function TicketCategoryPage() {
-  const [isAdmin, setIsAdmin] = useState(true);
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string })?.role ?? "CUSTOMER";
 
   return (
     <>
-      <Navbar role={isAdmin ? "ADMIN" : "CUSTOMER"} />
-      <ReadTicketCategory isAdmin={isAdmin} onToggleAdmin={setIsAdmin} />
+      <ReadTicketCategory />
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Label } from "@wagyu-a5/ui/components/label";
@@ -11,40 +11,65 @@ import {
   ModalPopup,
   ModalTitle,
 } from "@wagyu-a5/ui/components/modal";
-import { Pencil } from "lucide-react";
+import { Pencil, Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
+import type { TicketCategory } from "./types";
 
 interface UpdateTicketCategoryProps {
-  categoryId?: string;
-  currentName?: string;
-  currentPrice?: number;
-  currentQuota?: number;
-  eventName?: string;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  category: TicketCategory;
 }
 
-export default function UpdateTicketCategory({
-  currentName = "",
-  currentPrice = 0,
-  currentQuota = 0,
-  eventName = "",
-  open: controlledOpen,
-  onOpenChange,
-}: UpdateTicketCategoryProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
+export default function UpdateTicketCategory({ category }: UpdateTicketCategoryProps) {
+  const [open, setOpen] = useState(false);
+  const [categoryName, setCategoryName] = useState(category.category_name);
+  const [price, setPrice] = useState(String(category.price));
+  const [quota, setQuota] = useState(String(category.quota));
+  const queryClient = useQueryClient();
 
-  const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = isControlled ? (onOpenChange ?? (() => {})) : setInternalOpen;
+  useEffect(() => {
+    setCategoryName(category.category_name);
+    setPrice(String(category.price));
+    setQuota(String(category.quota));
+  }, [category]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: {
+      categoryId: string;
+      categoryName?: string;
+      quota?: number;
+      price?: number;
+    }) => trpcClient.ticket.category.update.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.ticket.category.listAll.queryOptions());
+      toast.success("Kategori tiket berhasil diperbarui");
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal memperbarui kategori tiket");
+    },
+  });
+
+  function handleSubmit() {
+    if (!categoryName || !price || !quota) {
+      toast.error("Semua field harus diisi");
+      return;
+    }
+    updateMutation.mutate({
+      categoryId: category.category_id,
+      categoryName,
+      quota: Number(quota),
+      price: Number(price),
+    });
+  }
 
   return (
     <Modal open={open} onOpenChange={setOpen}>
-      {!isControlled && (
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
-          <Pencil className="h-3.5 w-3.5" />
-          Edit
-        </Button>
-      )}
+      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+        <Pencil className="h-3.5 w-3.5" />
+        Edit
+      </Button>
       <ModalPopup>
         <ModalHeader>
           <ModalTitle>Edit Kategori</ModalTitle>
@@ -57,7 +82,7 @@ export default function UpdateTicketCategory({
               </Label>
               <Input
                 id="update-tc-event"
-                value={eventName}
+                value={category.event_name ?? "-"}
                 disabled
                 className="bg-muted cursor-not-allowed opacity-70"
               />
@@ -69,8 +94,9 @@ export default function UpdateTicketCategory({
               <Input
                 id="update-tc-name"
                 placeholder="cth. WVIP"
-                defaultValue={currentName}
                 maxLength={100}
+                value={categoryName}
+                onChange={(e) => setCategoryName(e.target.value)}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -82,8 +108,9 @@ export default function UpdateTicketCategory({
                   id="update-tc-price"
                   type="number"
                   placeholder="750000"
-                  defaultValue={currentPrice}
                   min={0}
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -94,8 +121,9 @@ export default function UpdateTicketCategory({
                   id="update-tc-quota"
                   type="number"
                   placeholder="100"
-                  defaultValue={currentQuota}
                   min={1}
+                  value={quota}
+                  onChange={(e) => setQuota(e.target.value)}
                 />
               </div>
             </div>
@@ -105,7 +133,10 @@ export default function UpdateTicketCategory({
           <ModalClose asChild>
             <Button variant="outline">Batal</Button>
           </ModalClose>
-          <Button>Simpan</Button>
+          <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
+            {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Simpan
+          </Button>
         </ModalFooter>
       </ModalPopup>
     </Modal>

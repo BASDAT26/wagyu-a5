@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Modal,
-  ModalContent,
+  ModalPopup,
   ModalHeader,
   ModalTitle,
   ModalBody,
@@ -10,66 +10,138 @@ import {
   ModalClose,
 } from "@wagyu-a5/ui/components/modal";
 import { Button } from "@wagyu-a5/ui/components/button";
+import { Input } from "@wagyu-a5/ui/components/input";
 import { Label } from "@wagyu-a5/ui/components/label";
+import { Plus, Loader2 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
 
 export default function CreateTicket() {
   const [open, setOpen] = useState(false);
-  const [hasReservedSeating, setHasReservedSeating] = useState(false); // Toggle for demonstration
+  const [orderId, setOrderId] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [ticketCode, setTicketCode] = useState("");
+  const [seatId, setSeatId] = useState("");
+  const queryClient = useQueryClient();
+
+  const { data: orders = [] } = useQuery(trpc.order.order.list.queryOptions());
+  const { data: categories = [] } = useQuery(trpc.ticket.category.listAll.queryOptions());
+
+  // Get available seats from the venue of the selected category's event
+  const selectedCategory = (categories as any[]).find((c: any) => c.category_id === categoryId);
+  const selectedEvent = selectedCategory?.tevent_id;
+
+  const { data: events = [] } = useQuery(trpc.event.event.list.queryOptions());
+  const event = (events as any[]).find((e: any) => e.event_id === selectedEvent);
+  const venueId = event?.venue_id;
+
+  const { data: seats = [] } = useQuery({
+    ...trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId: venueId ?? "" }),
+    enabled: !!venueId,
+  });
+
+  const availableSeats = (seats as any[]).filter((s: any) => !s.is_assigned);
+
+  const createMutation = useMutation({
+    mutationFn: (data: {
+      ticketCode: string;
+      categoryId: string;
+      orderId: string;
+      seatId?: string;
+    }) => trpcClient.ticket.ticket.create.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.ticket.ticket.listForCurrentUser.queryOptions());
+      if (venueId) {
+        queryClient.invalidateQueries(
+          trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }),
+        );
+      }
+      toast.success("Tiket berhasil dibuat");
+      resetForm();
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal membuat tiket");
+    },
+  });
+
+  function resetForm() {
+    setOrderId("");
+    setCategoryId("");
+    setTicketCode("");
+    setSeatId("");
+  }
+
+  function handleSubmit() {
+    if (!orderId || !categoryId || !ticketCode) {
+      toast.error("Order, Kategori, dan Kode Tiket harus diisi");
+      return;
+    }
+    createMutation.mutate({
+      ticketCode,
+      categoryId,
+      orderId,
+      seatId: seatId || undefined,
+    });
+  }
 
   return (
     <Modal open={open} onOpenChange={setOpen}>
       <ModalTrigger asChild>
         <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2 h-auto text-sm font-medium">
-          + Tambah Tiket
+          <Plus className="h-4 w-4" />
+          Tambah Tiket
         </Button>
       </ModalTrigger>
-      <ModalContent className="max-w-md rounded-2xl dark:bg-slate-900 dark:border-slate-800">
+      <ModalPopup>
         <ModalHeader>
           <ModalTitle className="font-bold text-lg dark:text-slate-50">
             Tambah Tiket Baru
           </ModalTitle>
         </ModalHeader>
         <ModalBody className="space-y-4 py-2">
-          {/* Mock toggle for reserved seating demonstration */}
-          <div className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800">
-            <Label htmlFor="mock-reserved" className="text-xs cursor-pointer dark:text-slate-300">
-              [Preview Mode] Use Reserved Seating Venue?
-            </Label>
-            <input
-              type="checkbox"
-              id="mock-reserved"
-              className="rounded text-blue-600"
-              checked={hasReservedSeating}
-              onChange={(e) => setHasReservedSeating(e.target.checked)}
-            />
-          </div>
-
           <div className="space-y-2">
             <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-              Order
+              Order <span className="text-destructive">*</span>
             </Label>
-            <select className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select
+              className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={orderId}
+              onChange={(e) => setOrderId(e.target.value)}
+            >
               <option value="">Pilih Order...</option>
-              <option value="1">ord_001 — Budi Santoso — Konser Melodi Senja</option>
-              <option value="2">ord_002 — Budi Santoso — Festival Seni Budaya</option>
+              {(orders as any[]).map((o: any) => (
+                <option key={o.order_id} value={o.order_id}>
+                  {o.order_id.substring(0, 8)}... — {o.payment_status}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="space-y-2">
             <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-              Kategori Tiket
+              Kategori Tiket <span className="text-destructive">*</span>
             </Label>
-            <select className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select
+              className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={categoryId}
+              onChange={(e) => {
+                setCategoryId(e.target.value);
+                setSeatId("");
+              }}
+            >
               <option value="">Pilih Kategori...</option>
-              <option value="vip">VIP — Rp 750,000 (3/150)</option>
-              <option value="ga">General Admission — Rp 150,000 (1/500)</option>
-              <option value="full" disabled>
-                VVIP — Rp 1,500,000 (50/50) - Penuh
-              </option>
+              {(categories as any[]).map((c: any) => (
+                <option key={c.category_id} value={c.category_id}>
+                  {c.category_name} — {c.event_name} — Rp {Number(c.price).toLocaleString("id-ID")}{" "}
+                  ({c.quota} sisa)
+                </option>
+              ))}
             </select>
           </div>
 
-          {hasReservedSeating && (
+          {venueId && availableSeats.length > 0 && (
             <div className="space-y-2">
               <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
                 Kursi{" "}
@@ -77,20 +149,31 @@ export default function CreateTicket() {
                   (opsional — reserved seating)
                 </span>
               </Label>
-              <select className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Pilih Kursi...</option>
-                <option value="1">Category 1 — Baris C, No. 1</option>
+              <select
+                className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={seatId}
+                onChange={(e) => setSeatId(e.target.value)}
+              >
+                <option value="">Tanpa Kursi</option>
+                {availableSeats.map((s: any) => (
+                  <option key={s.seat_id} value={s.seat_id}>
+                    {s.section} — Baris {s.row_number}, No. {s.seat_number}
+                  </option>
+                ))}
               </select>
             </div>
           )}
 
           <div className="space-y-2">
             <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-              Kode Tiket
+              Kode Tiket <span className="text-destructive">*</span>
             </Label>
-            <div className="flex h-10 w-full items-center rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 px-3 text-sm text-slate-400 dark:text-slate-500 font-mono">
-              Auto-generate saat dibuat
-            </div>
+            <Input
+              placeholder="cth. TCK-VIP-0001"
+              className="rounded-xl h-10"
+              value={ticketCode}
+              onChange={(e) => setTicketCode(e.target.value)}
+            />
           </div>
         </ModalBody>
         <ModalFooter className="flex w-full gap-3 mt-4 sm:space-x-0">
@@ -104,12 +187,14 @@ export default function CreateTicket() {
           </ModalClose>
           <Button
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 font-medium"
-            onClick={() => setOpen(false)}
+            onClick={handleSubmit}
+            disabled={createMutation.isPending}
           >
+            {createMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Buat Tiket
           </Button>
         </ModalFooter>
-      </ModalContent>
+      </ModalPopup>
     </Modal>
   );
 }

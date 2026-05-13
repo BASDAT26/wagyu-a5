@@ -1,60 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
-  ModalContent,
+  ModalPopup,
   ModalHeader,
   ModalTitle,
   ModalBody,
   ModalFooter,
-  ModalTrigger,
   ModalClose,
 } from "@wagyu-a5/ui/components/modal";
 import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Label } from "@wagyu-a5/ui/components/label";
-import { SquarePen } from "lucide-react";
+import { SquarePen, Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
+import type { Seat } from "./types";
 
-export default function UpdateSeat() {
+interface UpdateSeatProps {
+  seat: Seat;
+  venueId: string;
+}
+
+export default function UpdateSeat({ seat, venueId }: UpdateSeatProps) {
   const [open, setOpen] = useState(false);
+  const [section, setSection] = useState(seat.section);
+  const [rowNumber, setRowNumber] = useState(seat.row_number);
+  const [seatNumber, setSeatNumber] = useState(seat.seat_number);
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setSection(seat.section);
+    setRowNumber(seat.row_number);
+    setSeatNumber(seat.seat_number);
+  }, [seat]);
+
+  const updateMutation = useMutation({
+    mutationFn: (data: {
+      seatId: string;
+      section?: string;
+      seatNumber?: string;
+      rowNumber?: string;
+    }) => trpcClient.venue.seat.update.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(
+        trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }),
+      );
+      toast.success("Kursi berhasil diperbarui");
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal memperbarui kursi");
+    },
+  });
+
+  function handleSubmit() {
+    if (!section || !rowNumber || !seatNumber) {
+      toast.error("Semua field harus diisi");
+      return;
+    }
+    updateMutation.mutate({
+      seatId: seat.seat_id,
+      section,
+      seatNumber,
+      rowNumber,
+    });
+  }
 
   return (
     <Modal open={open} onOpenChange={setOpen}>
-      <ModalTrigger asChild>
-        <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-          <SquarePen className="w-4 h-4" />
-        </button>
-      </ModalTrigger>
-      <ModalContent className="max-w-md rounded-2xl">
+      <button
+        className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+        onClick={() => setOpen(true)}
+      >
+        <SquarePen className="w-4 h-4" />
+      </button>
+      <ModalPopup>
         <ModalHeader>
           <ModalTitle className="font-bold text-lg">Edit Kursi</ModalTitle>
         </ModalHeader>
         <ModalBody className="space-y-4 py-2">
           <div className="space-y-2">
             <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-              Venue
-            </Label>
-            <select className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option value="jcc">Jakarta Convention Center</option>
-            </select>
-          </div>
-          <div className="space-y-2">
-            <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
               Section
             </Label>
-            <Input defaultValue="WVIP" className="rounded-xl h-10" />
+            <Input
+              className="rounded-xl h-10"
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+            />
           </div>
           <div className="flex gap-4">
             <div className="space-y-2 flex-1">
               <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                 Baris
               </Label>
-              <Input defaultValue="A" className="rounded-xl h-10" />
+              <Input
+                className="rounded-xl h-10"
+                value={rowNumber}
+                onChange={(e) => setRowNumber(e.target.value)}
+              />
             </div>
             <div className="space-y-2 flex-1">
               <Label className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
                 No. Kursi
               </Label>
-              <Input defaultValue="2" className="rounded-xl h-10" />
+              <Input
+                className="rounded-xl h-10"
+                value={seatNumber}
+                onChange={(e) => setSeatNumber(e.target.value)}
+              />
             </div>
           </div>
         </ModalBody>
@@ -69,12 +124,14 @@ export default function UpdateSeat() {
           </ModalClose>
           <Button
             className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-10 font-medium"
-            onClick={() => setOpen(false)}
+            onClick={handleSubmit}
+            disabled={updateMutation.isPending}
           >
+            {updateMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
             Simpan
           </Button>
         </ModalFooter>
-      </ModalContent>
+      </ModalPopup>
     </Modal>
   );
 }
