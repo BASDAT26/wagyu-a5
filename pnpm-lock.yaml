@@ -236,6 +236,9 @@ importers:
       '@wagyu-a5/auth':
         specifier: workspace:*
         version: link:../auth
+      '@wagyu-a5/db':
+        specifier: workspace:*
+        version: link:../db
       '@wagyu-a5/env':
         specifier: workspace:*
         version: link:../env

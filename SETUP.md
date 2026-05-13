@@ -332,7 +332,7 @@ wagyu-a5/
 │   ├── ui/          # Komponen UI bersama (shadcn/ui)
 │   ├── api/         # Business logic & API layer
 │   ├── auth/        # Konfigurasi authentication
-│   ├── db/          # Database schema & queries (Drizzle ORM)
+│   ├── db/          # Database schema & querie(node-postgres)
 │   ├── env/         # Validasi environment variables
 │   └── config/      # Shared configurations
 ├── .env             # Environment variables (JANGAN di-commit!)
