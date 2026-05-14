@@ -31,16 +31,14 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
 
   // Fetch real data
-  const { data: customerData, isLoading: customerLoading } = useQuery(
-    trpc.user.customer.me.queryOptions({
-      enabled: role === "CUSTOMER",
-    }),
-  );
-  const { data: organizerData, isLoading: organizerLoading } = useQuery(
-    trpc.user.organizer.me.queryOptions({
-      enabled: role === "ORGANIZER",
-    }),
-  );
+  const { data: customerData, isLoading: customerLoading } = useQuery({
+    ...trpc.user.customer.me.queryOptions(),
+    enabled: role === "CUSTOMER",
+  });
+  const { data: organizerData, isLoading: organizerLoading } = useQuery({
+    ...trpc.user.organizer.me.queryOptions(),
+    enabled: role === "ORGANIZER",
+  });
 
   const [editData, setEditData] = useState<{ name: string; phoneEmail: string }>({
     name: "",
@@ -50,13 +48,13 @@ export default function ProfilePage() {
   useEffect(() => {
     if (role === "CUSTOMER" && customerData) {
       setEditData({
-        name: customerData.full_name,
-        phoneEmail: customerData.phone_number || "",
+        name: (customerData as any).full_name,
+        phoneEmail: (customerData as any).phone_number || "",
       });
     } else if (role === "ORGANIZER" && organizerData) {
       setEditData({
-        name: organizerData.organizer_name,
-        phoneEmail: organizerData.contact_email || "",
+        name: (organizerData as any).organizer_name,
+        phoneEmail: (organizerData as any).contact_email || "",
       });
     }
   }, [customerData, organizerData, role]);
@@ -82,13 +80,13 @@ export default function ProfilePage() {
   const handleUpdateProfile = () => {
     if (role === "CUSTOMER") {
       updateCustomer.mutate({
-        customerId: customerData.customer_id,
+        customerId: (customerData as any)?.customer_id,
         fullName: editData.name,
         phoneNumber: editData.phoneEmail,
       });
     } else {
       updateOrganizer.mutate({
-        organizerId: organizerData.organizer_id,
+        organizerId: (organizerData as any)?.organizer_id,
         organizerName: editData.name,
         contactEmail: editData.phoneEmail,
       });

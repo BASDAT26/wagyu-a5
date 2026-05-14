@@ -60,17 +60,15 @@ export default function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("eventId");
 
-  const { data: dbEvent, isLoading: eventLoading } = useQuery(
-    trpc.event.event.getById.queryOptions(
-      { eventId: eventId ?? "" },
-      { enabled: !!eventId && eventId.length === 36 },
-    ),
-  );
+  const { data: dbEvent, isLoading: eventLoading } = useQuery({
+    ...trpc.event.event.getById.queryOptions({ eventId: eventId ?? "" }),
+    enabled: !!eventId && eventId.length === 36,
+  });
 
   const { data: dbCategories, isLoading: categoriesLoading } = useQuery(
     eventId && eventId.length === 36
-      ? trpc.ticket.category.listByEvent.queryOptions({ eventId })
-      : trpc.ticket.category.listAll.queryOptions(),
+      ? { ...trpc.ticket.category.listByEvent.queryOptions({ eventId }) }
+      : { ...trpc.ticket.category.listAll.queryOptions() },
   );
 
   useEffect(() => {
@@ -81,17 +79,17 @@ export default function CheckoutPage() {
 
   // Event Data from DB or fallback to Mock
   const event = {
-    title: dbEvent?.event_title ?? "Memuat Event...",
-    date: dbEvent
-      ? new Date(dbEvent.event_datetime).toLocaleDateString("id-ID", {
+    title: (dbEvent as any)?.event_title ?? "Memuat Event...",
+    date: (dbEvent as any)?.event_datetime
+      ? new Date((dbEvent as any).event_datetime).toLocaleDateString("id-ID", {
           weekday: "long",
           year: "numeric",
           month: "long",
           day: "numeric",
         })
       : "...",
-    time: dbEvent
-      ? new Date(dbEvent.event_datetime).toLocaleTimeString("id-ID", {
+    time: (dbEvent as any)?.event_datetime
+      ? new Date((dbEvent as any).event_datetime).toLocaleTimeString("id-ID", {
           hour: "2-digit",
           minute: "2-digit",
         })
@@ -104,7 +102,7 @@ export default function CheckoutPage() {
   // Real Categories from DB
   const categories = useMemo(() => {
     if (!dbCategories) return [];
-    return dbCategories.map((cat) => ({
+    return (dbCategories as any[]).map((cat) => ({
       id: cat.category_id,
       name: cat.category_name,
       price: Number(cat.price),
@@ -149,29 +147,30 @@ export default function CheckoutPage() {
       }
 
       // Date validations
+      const foundData = found as any;
       const now = new Date();
-      if (new Date(found.start_date) > now) {
+      if (new Date(foundData.start_date) > now) {
         setPromoError("Kode promo belum berlaku.");
         setAppliedPromo(null);
         return;
       }
-      if (new Date(found.end_date) < now) {
+      if (new Date(foundData.end_date) < now) {
         setPromoError("Kode promo sudah kadaluarsa.");
         setAppliedPromo(null);
         return;
       }
-      if (found.usage_count + ticketCount > found.usage_limit) {
+      if (foundData.usage_count + ticketCount > foundData.usage_limit) {
         setPromoError(
-          `Sisa kuota promo tidak mencukupi (Sisa: ${found.usage_limit - found.usage_count}).`,
+          `Sisa kuota promo tidak mencukupi (Sisa: ${foundData.usage_limit - foundData.usage_count}).`,
         );
         setAppliedPromo(null);
         return;
       }
 
       setAppliedPromo({
-        code: found.promo_code,
-        type: found.discount_type === "PERCENTAGE" ? "PERSENTASE" : "NOMINAL",
-        value: found.discount_value,
+        code: foundData.promo_code,
+        type: foundData.discount_type === "PERCENTAGE" ? "PERSENTASE" : "NOMINAL",
+        value: foundData.discount_value,
       });
     } catch (e) {
       setPromoError("Terjadi kesalahan saat memverifikasi promo.");
@@ -219,7 +218,7 @@ export default function CheckoutPage() {
         ticketCount: ticketCount,
         categoryId: selectedCategoryId,
       });
-      setCreatedOrderId(createdOrder.order_id as string);
+      setCreatedOrderId((createdOrder as any).order_id as string);
       await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
       setIsSuccess(true);
       setTimeout(() => {

@@ -74,7 +74,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { data: session, isPending } = authClient.useSession();
-  const publicPaths = new Set(["/login", "/register"]);
+  const publicPaths = new Set(["/", "/login", "/register", "/promotion", "/event"]);
 
   useEffect(() => {
     if (isPending) {
