@@ -23,6 +23,15 @@ const customerRouter = router({
       );
       return result.rows[0] ?? null;
     }),
+  me: protectedProcedure.query(async ({ ctx }) => {
+    const result = await query(
+      `SELECT customer_id, full_name, phone_number, user_id
+       FROM tiktaktuk.customer
+       WHERE user_id = $1`,
+      [ctx.session.user.id],
+    );
+    return result.rows[0] ?? null;
+  }),
 
   list: publicProcedure.query(async () => {
     const result = await query(
@@ -109,6 +118,15 @@ const organizerRouter = router({
       );
       return result.rows[0] ?? null;
     }),
+  me: protectedProcedure.query(async ({ ctx }) => {
+    const result = await query(
+      `SELECT organizer_id, organizer_name, contact_email, user_id
+       FROM tiktaktuk.organizer
+       WHERE user_id = $1`,
+      [ctx.session.user.id],
+    );
+    return result.rows[0] ?? null;
+  }),
 
   list: publicProcedure.query(async () => {
     const result = await query(

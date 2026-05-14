@@ -463,7 +463,7 @@ export default function CheckoutPage() {
               <button
                 onClick={handleApplyPromo}
                 disabled={isCheckingPromo}
-                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center min-w-25"
+                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center min-w-[100px]"
               >
                 {isCheckingPromo ? "Mengecek..." : "Terapkan"}
               </button>

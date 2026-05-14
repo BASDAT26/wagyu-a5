@@ -1,6 +1,8 @@
 export type NavItem = { to: string; label: string };
 
 export const GUEST_LINKS: NavItem[] = [
+  { to: "/event", label: "Cari Event" },
+  { to: "/promotion", label: "Promosi" },
   { to: "/login", label: "Login" },
   { to: "/register", label: "Registrasi" },
 ];

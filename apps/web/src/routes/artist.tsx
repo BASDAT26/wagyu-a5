@@ -5,10 +5,5 @@ import Navbar from "@/components/Navbar";
 export default function ArtistPage() {
   const [isAdmin, setIsAdmin] = useState(true);
 
-  return (
-    <>
-      <Navbar role={isAdmin ? "ADMIN" : "CUSTOMER"} />
-      <ReadArtist isAdmin={isAdmin} onToggleAdmin={setIsAdmin} />
-    </>
-  );
+  return <ReadArtist isAdmin={isAdmin} onToggleAdmin={setIsAdmin} />;
 }
