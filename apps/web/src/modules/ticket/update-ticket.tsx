@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Modal,
   ModalPopup,
@@ -11,7 +11,7 @@ import {
 import { Button } from "@wagyu-a5/ui/components/button";
 import { Label } from "@wagyu-a5/ui/components/label";
 import { Edit, Check, Loader2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import type { TicketEnriched } from "./types";
@@ -25,11 +25,40 @@ export default function UpdateTicket({ ticket }: UpdateTicketProps) {
   const [status, setStatus] = useState(ticket.status);
   const queryClient = useQueryClient();
 
+  const { data: events = [] } = useQuery(trpc.event.event.list.queryOptions());
+  const event = (events as any[]).find((e: any) => e.event_id === ticket.event_id);
+  const venueId = event?.venue_id;
+
+  const { data: seats = [] } = useQuery({
+    ...trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId: venueId ?? "" }),
+    enabled: !!venueId,
+  });
+
+  const { data: currentSeatRelations } = useQuery({
+    ...trpc.ticket.hasRelationship.listByTicket.queryOptions({ ticketId: ticket.ticket_id }),
+  });
+  
+  const currentSeatId = currentSeatRelations?.[0]?.seat_id;
+  const [seatId, setSeatId] = useState<string>("");
+
+  useEffect(() => {
+    if (currentSeatId !== undefined && seatId === "") {
+      setSeatId(currentSeatId || "none");
+    }
+  }, [currentSeatId, seatId]);
+
+  const availableAndCurrentSeats = (seats as any[]).filter(
+    (s: any) => !s.is_assigned || s.seat_id === currentSeatId
+  );
+
   const updateMutation = useMutation({
-    mutationFn: (data: { ticketId: string; status: "VALID" | "TERPAKAI" | "BATAL" }) =>
+    mutationFn: (data: { ticketId: string; status: "VALID" | "TERPAKAI" | "BATAL"; seatId?: string | null }) =>
       trpcClient.ticket.ticket.updateStatus.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.ticket.ticket.listForCurrentUser.queryOptions());
+      if (venueId) {
+        queryClient.invalidateQueries(trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }));
+      }
       toast.success("Status tiket berhasil diperbarui");
       setOpen(false);
     },
@@ -42,6 +71,7 @@ export default function UpdateTicket({ ticket }: UpdateTicketProps) {
     updateMutation.mutate({
       ticketId: ticket.ticket_id,
       status: status as "VALID" | "TERPAKAI" | "BATAL",
+      seatId: seatId === "none" || seatId === "" ? null : seatId,
     });
   }
 
@@ -92,6 +122,29 @@ export default function UpdateTicket({ ticket }: UpdateTicketProps) {
               <option value="BATAL">Batal</option>
             </select>
           </div>
+
+          {venueId && availableAndCurrentSeats.length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+                Kursi{" "}
+                <span className="text-slate-400 dark:text-slate-500 font-normal lowercase">
+                  (opsional — reserved seating)
+                </span>
+              </Label>
+              <select
+                className="flex h-10 w-full items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 px-3 py-2 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={seatId}
+                onChange={(e) => setSeatId(e.target.value)}
+              >
+                <option value="none">Tanpa Kursi</option>
+                {availableAndCurrentSeats.map((s: any) => (
+                  <option key={s.seat_id} value={s.seat_id}>
+                    {s.section} — Baris {s.row_number}, No. {s.seat_number}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </ModalBody>
         <ModalFooter className="flex w-full gap-3 mt-4 sm:space-x-0">
           <ModalClose asChild>
