@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   MapPin,
   Calendar,
@@ -39,7 +40,21 @@ export default function CheckoutPage() {
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
 
-  const { data: dbCategories, isLoading: categoriesLoading } = trpc.ticket.category.listAll.useQuery();
+  const [searchParams] = useSearchParams();
+  const eventId = searchParams.get("eventId");
+
+  const { data: dbEvent, isLoading: eventLoading } = useQuery(
+    trpc.event.event.getById.queryOptions(
+      { eventId: eventId ?? "" }, 
+      { enabled: !!eventId && eventId.length === 36 }
+    )
+  );
+
+  const { data: dbCategories, isLoading: categoriesLoading } = useQuery(
+    eventId && eventId.length === 36
+      ? trpc.ticket.category.listByEvent.queryOptions({ eventId })
+      : trpc.ticket.category.listAll.queryOptions()
+  );
 
   useEffect(() => {
     if (dbCategories && dbCategories.length > 0 && !selectedCategoryId) {
@@ -47,12 +62,20 @@ export default function CheckoutPage() {
     }
   }, [dbCategories, selectedCategoryId]);
 
-  // Mock Event Data
+  // Event Data from DB or fallback to Mock
   const event = {
-    title: "Konser Sheila On 7 - Tunggu Aku Di Jakarta",
-    date: "Sabtu, 24 Agustus 2024",
-    time: "19:00 WIB",
-    location: "Gelora Bung Karno, Jakarta",
+    title: dbEvent?.event_title ?? "Memuat Event...",
+    date: dbEvent ? new Date(dbEvent.event_datetime).toLocaleDateString("id-ID", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    }) : "...",
+    time: dbEvent ? new Date(dbEvent.event_datetime).toLocaleTimeString("id-ID", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }) : "...",
+    location: "Gelora Bung Karno, Jakarta", // Venue details could be fetched too
     image:
       "https://images.unsplash.com/photo-1540039155733-d7696d4eb98b?q=80&w=800&auto=format&fit=crop",
   };
@@ -154,6 +177,11 @@ export default function CheckoutPage() {
       toast.error("Silakan login terlebih dahulu.");
       return;
     }
+    if (!selectedCategoryId) {
+      toast.error("Silakan pilih kategori tiket terlebih dahulu");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const createdOrder = await trpcClient.order.order.createForCurrentUser.mutate({
@@ -222,7 +250,7 @@ export default function CheckoutPage() {
       <div className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 h-16 flex items-center gap-4">
           <Link
-            to="/cari-event"
+            to="/event"
             className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
           >
             <ChevronLeft size={20} />
@@ -298,6 +326,7 @@ export default function CheckoutPage() {
                   </button>
                 ))}
               </div>
+            </div>
 
             {/* Quantity */}
             <div className="mt-8 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">

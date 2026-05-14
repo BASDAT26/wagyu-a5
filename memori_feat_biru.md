@@ -17,7 +17,7 @@ File ini menyimpan rangkuman konteks, arsitektur, dan logika-logika khusus yang 
 - **Aksi Admin**: Admin dapat mengubah status secara manual (melalui tombol Edit) atau menghapus secara permanen (melalui tombol Delete).
 
 ### C. Alur Pemesanan Tiket
-- **Navigasi**: Pengguna memulai dari **Menu Pesanan** -> Klik **"Beli Tiket Baru"** -> Diarahkan ke **Halaman Cari Event** (`/cari-event`).
+- **Navigasi**: Pengguna dapat mencari event melalui **Halaman Cari Event** (`/cari-event`).
 - **Pilihan Event**: Di halaman cari event, pengguna memilih event dan mengklik **"Beli Tiket"** yang mengarahkan ke halaman **Checkout** (`/checkout`).
 - **Validasi Promo & Kategori**:
   1. Validasi Promo: Mengecek `usage_limit` vs `usage_count`.
@@ -40,8 +40,9 @@ Semua *routing* terkait pesanan dan promo digabung ke dalam satu router besar: `
     2. Mengurangi `quota` kategori tiket sesuai jumlah pesanan.
     3. **Mencetak Tiket Fisik**: Membuat baris data baru di tabel `tiktaktuk.ticket` sebanyak `ticketCount` dengan kode unik (format: `TCK-XXXX`).
 - **Penghapusan (`delete`)**:
-  - Mencegah error *Foreign Key* dengan menghapus referensi di `order_promotion` lebih dulu.
-  - **Refund Kuota**: Menurunkan (mengurangi) nilai `usage_count` di tabel promosi sebagai bentuk *refund* kuota. Logika SQL akan otomatis mendeteksi jumlah tiket (`SELECT COUNT(*) FROM tiktaktuk.ticket`) sebagai nominal pengurangan, dan jika belum ada tiket fisik, ia *fallback* dengan mengurangi 1.
+  - Mencegah error *Foreign Key* dengan menghapus referensi di `order_promotion` dan `ticket` fisik lebih dulu.
+  - **Refund Kuota Tiket**: Menambahkan kembali sisa `quota` pada `ticket_category` berdasarkan jumlah tiket yang dihapus.
+  - **Refund Kuota Promo**: Menurunkan (mengurangi) nilai `usage_count` di tabel promosi sebagai bentuk *refund* kuota. Logika SQL akan otomatis mendeteksi jumlah tiket sebagai nominal pengurangan.
 
 ### B. Promotion Router (`promotionRouter`)
 - **Penghapusan (`delete`)**:
