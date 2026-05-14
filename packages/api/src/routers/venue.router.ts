@@ -11,6 +11,7 @@ const venueSchema = z.object({
   capacity: z.number().int().positive(),
   address: z.string().min(1),
   city: z.string().min(1).max(100),
+  reservedSeating: z.boolean().optional(),
 });
 
 const venueRouter_ = router({
@@ -18,7 +19,8 @@ const venueRouter_ = router({
     .input(z.object({ venueId: z.string().uuid() }))
     .query(async ({ input }) => {
       const result = await query(
-        `SELECT venue_id, venue_name, capacity, address, city
+        `SELECT venue_id, venue_name, capacity, address, city,
+                reservedseating AS reserved_seating
          FROM tiktaktuk.venue
          WHERE venue_id = $1`,
         [input.venueId],
@@ -28,7 +30,8 @@ const venueRouter_ = router({
 
   list: publicProcedure.query(async () => {
     const result = await query(
-      `SELECT venue_id, venue_name, capacity, address, city
+      `SELECT venue_id, venue_name, capacity, address, city,
+              reservedseating AS reserved_seating
        FROM tiktaktuk.venue
        ORDER BY venue_name`,
     );
@@ -38,10 +41,18 @@ const venueRouter_ = router({
   create: protectedProcedure.input(venueSchema).mutation(async ({ input }) => {
     const id = randomUUID();
     const result = await query(
-      `INSERT INTO tiktaktuk.venue (venue_id, venue_name, capacity, address, city)
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING venue_id, venue_name, capacity, address, city`,
-      [id, input.venueName, input.capacity, input.address, input.city],
+      `INSERT INTO tiktaktuk.venue (venue_id, venue_name, capacity, address, city, reservedseating)
+         VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING venue_id, venue_name, capacity, address, city,
+               reservedseating AS reserved_seating`,
+      [
+        id,
+        input.venueName,
+        input.capacity,
+        input.address,
+        input.city,
+        input.reservedSeating ?? false,
+      ],
     );
     return result.rows[0];
   }),
@@ -54,6 +65,7 @@ const venueRouter_ = router({
         capacity: z.number().int().positive().optional(),
         address: z.string().min(1).optional(),
         city: z.string().min(1).max(100).optional(),
+        reservedSeating: z.boolean().optional(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -77,6 +89,10 @@ const venueRouter_ = router({
         sets.push(`city = $${idx++}`);
         params.push(input.city);
       }
+      if (input.reservedSeating !== undefined) {
+        sets.push(`reservedseating = $${idx++}`);
+        params.push(input.reservedSeating);
+      }
 
       if (sets.length === 0) return null;
 
@@ -84,7 +100,8 @@ const venueRouter_ = router({
       const result = await query(
         `UPDATE tiktaktuk.venue SET ${sets.join(", ")}
          WHERE venue_id = $${idx}
-         RETURNING venue_id, venue_name, capacity, address, city`,
+         RETURNING venue_id, venue_name, capacity, address, city,
+                   reservedseating AS reserved_seating`,
         params,
       );
       return result.rows[0] ?? null;

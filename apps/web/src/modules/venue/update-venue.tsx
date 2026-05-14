@@ -2,6 +2,7 @@ import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Textarea } from "@wagyu-a5/ui/components/textarea";
 import { Label } from "@wagyu-a5/ui/components/label";
+import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
 import {
   Modal,
   ModalTrigger,
@@ -29,6 +30,7 @@ export default function UpdateVenue({ venue }: UpdateVenueProps) {
   const [capacity, setCapacity] = useState(String(venue.capacity));
   const [city, setCity] = useState(venue.city);
   const [address, setAddress] = useState(venue.address);
+  const [reservedSeating, setReservedSeating] = useState(Boolean(venue.reserved_seating));
   const queryClient = useQueryClient();
 
   // Sync form when venue prop changes
@@ -37,6 +39,7 @@ export default function UpdateVenue({ venue }: UpdateVenueProps) {
     setCapacity(String(venue.capacity));
     setCity(venue.city);
     setAddress(venue.address);
+    setReservedSeating(Boolean(venue.reserved_seating));
   }, [venue]);
 
   const updateMutation = useMutation({
@@ -46,6 +49,7 @@ export default function UpdateVenue({ venue }: UpdateVenueProps) {
       capacity?: number;
       address?: string;
       city?: string;
+      reservedSeating?: boolean;
     }) => trpcClient.venue.venue.update.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.venue.venue.list.queryOptions());
@@ -68,6 +72,7 @@ export default function UpdateVenue({ venue }: UpdateVenueProps) {
       capacity: Number(capacity),
       address,
       city,
+      reservedSeating,
     });
   }
 
@@ -126,6 +131,16 @@ export default function UpdateVenue({ venue }: UpdateVenueProps) {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="input-reserved-seating"
+                  checked={reservedSeating}
+                  onCheckedChange={(value) => setReservedSeating(value === true)}
+                />
+                <Label htmlFor="input-reserved-seating">
+                  Has Reserved Seating
+                </Label>
               </div>
             </div>
           </ModalBody>

@@ -6,4 +6,5 @@ export interface Venue {
   capacity: number;
   address: string;
   city: string;
+  reserved_seating: boolean;
 }

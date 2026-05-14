@@ -2,6 +2,7 @@ import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Textarea } from "@wagyu-a5/ui/components/textarea";
 import { Label } from "@wagyu-a5/ui/components/label";
+import { Checkbox } from "@wagyu-a5/ui/components/checkbox";
 import {
   Modal,
   ModalTrigger,
@@ -24,11 +25,17 @@ export default function CreateVenue() {
   const [capacity, setCapacity] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
+  const [reservedSeating, setReservedSeating] = useState(false);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: (data: { venueName: string; capacity: number; address: string; city: string }) =>
-      trpcClient.venue.venue.create.mutate(data),
+    mutationFn: (data: {
+      venueName: string;
+      capacity: number;
+      address: string;
+      city: string;
+      reservedSeating: boolean;
+    }) => trpcClient.venue.venue.create.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.venue.venue.list.queryOptions());
       toast.success("Venue berhasil ditambahkan");
@@ -45,6 +52,7 @@ export default function CreateVenue() {
     setCapacity("");
     setCity("");
     setAddress("");
+    setReservedSeating(false);
   }
 
   function handleSubmit() {
@@ -57,6 +65,7 @@ export default function CreateVenue() {
       capacity: Number(capacity),
       address,
       city,
+      reservedSeating,
     });
   }
 
@@ -115,6 +124,16 @@ export default function CreateVenue() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="input-reserved-seating"
+                  checked={reservedSeating}
+                  onCheckedChange={(value) => setReservedSeating(value === true)}
+                />
+                <Label htmlFor="input-reserved-seating">
+                  Has Reserved Seating
+                </Label>
               </div>
             </div>
           </ModalBody>
