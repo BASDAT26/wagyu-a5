@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { query } from "@wagyu-a5/db";
 import { publicProcedure, protectedProcedure, router } from "../index";
+import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 
 // ─── Venue ───────────────────────────────────────────────────────────────────
@@ -207,11 +208,19 @@ const seatRouter = router({
   delete: protectedProcedure
     .input(z.object({ seatId: z.string().uuid() }))
     .mutation(async ({ input }) => {
-      const result = await query(
-        `DELETE FROM tiktaktuk.seat WHERE seat_id = $1 RETURNING seat_id`,
-        [input.seatId],
-      );
-      return result.rowCount! > 0;
+      try {
+        const result = await query(
+          `DELETE FROM tiktaktuk.seat WHERE seat_id = $1 RETURNING seat_id`,
+          [input.seatId],
+        );
+        return result.rowCount! > 0;
+      } catch (error: any) {
+        // Forward PostgreSQL trigger error message to the client
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error.message || "Gagal menghapus kursi",
+        });
+      }
     }),
 });
 

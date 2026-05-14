@@ -43,16 +43,9 @@ export default function DeleteSeat({ seat, venueId }: DeleteSeatProps) {
   return (
     <Modal open={open} onOpenChange={setOpen}>
       <button
-        className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed group relative transition-colors"
-        disabled={seat.is_assigned}
-        onClick={() => !seat.is_assigned && setOpen(true)}
+        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+        onClick={() => setOpen(true)}
       >
-        {seat.is_assigned && (
-          <div className="absolute bottom-full right-0 mb-2 hidden group-hover:block w-64 p-2 bg-red-50 text-red-600 text-xs rounded-md shadow-lg z-50 text-left border border-red-100">
-            Kursi ini sudah di-assign ke tiket dan tidak dapat dihapus. Hapus atau ubah tiket
-            terlebih dahulu.
-          </div>
-        )}
         <Trash2 className="w-4 h-4" />
       </button>
       <ModalPopup>
