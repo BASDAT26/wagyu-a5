@@ -21,7 +21,6 @@ export default function CreateTicket() {
   const [open, setOpen] = useState(false);
   const [orderId, setOrderId] = useState("");
   const [categoryId, setCategoryId] = useState("");
-  const [ticketCode, setTicketCode] = useState("");
   const [seatId, setSeatId] = useState("");
   const queryClient = useQueryClient();
 
@@ -45,7 +44,6 @@ export default function CreateTicket() {
 
   const createMutation = useMutation({
     mutationFn: (data: {
-      ticketCode: string;
       categoryId: string;
       orderId: string;
       seatId?: string;
@@ -69,17 +67,15 @@ export default function CreateTicket() {
   function resetForm() {
     setOrderId("");
     setCategoryId("");
-    setTicketCode("");
     setSeatId("");
   }
 
   function handleSubmit() {
-    if (!orderId || !categoryId || !ticketCode) {
-      toast.error("Order, Kategori, dan Kode Tiket harus diisi");
+    if (!orderId || !categoryId) {
+      toast.error("Order dan Kategori harus diisi");
       return;
     }
     createMutation.mutate({
-      ticketCode,
       categoryId,
       orderId,
       seatId: seatId || undefined,
@@ -166,13 +162,12 @@ export default function CreateTicket() {
 
           <div className="space-y-2">
             <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
-              Kode Tiket <span className="text-destructive">*</span>
+              Kode Tiket
             </Label>
             <Input
-              placeholder="cth. TCK-VIP-0001"
-              className="rounded-xl h-10"
-              value={ticketCode}
-              onChange={(e) => setTicketCode(e.target.value)}
+              value="Auto-generate saat dibuat"
+              disabled
+              className="rounded-xl h-10 bg-slate-50 dark:bg-slate-900/50 text-slate-500 cursor-not-allowed"
             />
           </div>
         </ModalBody>

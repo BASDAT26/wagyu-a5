@@ -296,18 +296,18 @@ const ticketRouter_ = router({
   create: protectedProcedure
     .input(
       z.object({
-        ticketCode: z.string().min(1).max(100),
         categoryId: z.string().uuid(),
         orderId: z.string().uuid(),
         seatId: z.string().uuid().optional(),
       }),
     )
     .mutation(async ({ input }) => {
+      const generatedCode = `TCK-${randomUUID().substring(0, 8).toUpperCase()}`;
       const result = await query(
         `INSERT INTO tiktaktuk.ticket (ticket_id, ticket_code, tcategory_id, torder_id)
          VALUES (gen_random_uuid(), $1, $2, $3)
          RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
-        [input.ticketCode, input.categoryId, input.orderId],
+        [generatedCode, input.categoryId, input.orderId],
       );
       const ticket = result.rows[0];
       // Assign seat if provided
@@ -325,6 +325,7 @@ const ticketRouter_ = router({
       z.object({
         ticketId: z.string().uuid(),
         status: z.enum(["VALID", "TERPAKAI", "BATAL"]),
+        seatId: z.string().uuid().optional().nullable(),
       }),
     )
     .mutation(async ({ input }) => {
@@ -333,7 +334,25 @@ const ticketRouter_ = router({
          RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
         [input.status, input.ticketId],
       );
-      return result.rows[0] ?? null;
+      
+      const ticket = result.rows[0];
+      if (!ticket) return null;
+
+      // Handle seat updates
+      if (input.seatId !== undefined) {
+        // First delete existing seat relationship
+        await query(`DELETE FROM tiktaktuk.has_relationship WHERE ticket_id = $1`, [input.ticketId]);
+        
+        // Add new if provided
+        if (input.seatId !== null) {
+           await query(`INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`, [
+             input.seatId,
+             input.ticketId,
+           ]);
+        }
+      }
+
+      return ticket;
     }),
 
   delete: protectedProcedure
