@@ -8,24 +8,15 @@ import {
   CardDescription,
 } from "@wagyu-a5/ui/components/card";
 import { Chip } from "@wagyu-a5/ui/components/chip";
-import { Search } from "lucide-react";
+import { Search, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+import { useQuery } from "@tanstack/react-query";
+import { trpc } from "@/utils/trpc";
 
 import CreateArtist from "./create-artist";
 import UpdateArtist from "./update-artist";
 import DeleteArtist from "./delete-artist";
 
-// Data from SQL INSERT — sorted by name ascending
-const ARTISTS = [
-  { artist_id: "c9e3a4f5-b6d7-4c8e-0f1a-2b3c4d5e6f03", name: "Cortis", genre: "K-Hiphop" },
-  { artist_id: "e1a5c6b7-d8f9-4e0a-2b3c-4d5e6f7a8b05", name: "Dewa 19", genre: "Rock" },
-  { artist_id: "d0f4b5a6-c7e8-4d9f-1a2b-3c4d5e6f7a04", name: "Hindia", genre: "Indie Pop" },
-  { artist_id: "a3c7e8d9-f0b1-4a2c-4d5e-6f7a8b9c0d07", name: "Jennie", genre: "K-Pop" },
-  { artist_id: "b8d2f3e4-a5c6-4b7d-9e0f-1a2b3c4d5e02", name: "Lngshot", genre: "K-Hiphop" },
-  { artist_id: "a7c1e2d3-f4b5-4a6c-8d9e-0f1a2b3c4d01", name: "Seventeen", genre: "K-Pop" },
-  { artist_id: "f2b6d7c8-e9a0-4f1b-3c4d-5e6f7a8b9c06", name: "Taylor Swift", genre: "Pop" },
-  { artist_id: "b4d8f9e0-a1c2-4b3d-5e6f-7a8b9c0d1e08", name: "Tenxi", genre: "Hip-dut" },
-];
 
 const GENRE_CHIP_VARIANT: Record<
   string,
@@ -63,15 +54,18 @@ export default function ReadArtist() {
   const [genreFilter, setGenreFilter] = useState("");
   const [view, setView] = useState<"table" | "list">("list");
 
-  const filteredArtists = ARTISTS.filter((artist) => {
+  const { data: artists = [], isLoading } = useQuery(trpc.event.artist.list.queryOptions());
+
+  const filteredArtists = artists.filter((artist) => {
+    const genre = artist.genre || "Lainnya";
     const matchesSearch =
       artist.name.toLowerCase().includes(search.toLowerCase()) ||
-      artist.genre.toLowerCase().includes(search.toLowerCase());
-    const matchesGenre = genreFilter === "" || artist.genre === genreFilter;
+      genre.toLowerCase().includes(search.toLowerCase());
+    const matchesGenre = genreFilter === "" || genre === genreFilter;
     return matchesSearch && matchesGenre;
   });
 
-  const uniqueGenres = Array.from(new Set(ARTISTS.map((a) => a.genre))).sort();
+  const uniqueGenres = Array.from(new Set(artists.map((a) => a.genre || "Lainnya"))).sort();
   const numUniqueGenres = uniqueGenres.length;
 
   return (
@@ -98,7 +92,7 @@ export default function ReadArtist() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Total Artis
             </p>
-            <p className="text-3xl font-bold mt-1">{ARTISTS.length}</p>
+            <p className="text-3xl font-bold mt-1">{artists.length}</p>
           </CardContent>
         </Card>
         <Card>
@@ -114,7 +108,7 @@ export default function ReadArtist() {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Tampil di Event
             </p>
-            <p className="text-3xl font-bold mt-1">{ARTISTS.length}</p>
+            <p className="text-3xl font-bold mt-1">{artists.length}</p>
           </CardContent>
         </Card>
       </div>
@@ -157,7 +151,13 @@ export default function ReadArtist() {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Search, Filter & Count */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
+            </div>
+          ) : (
+            <>
+              {/* Search, Filter & Count */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
             <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
               <div className="relative max-w-sm w-full">
@@ -229,6 +229,8 @@ export default function ReadArtist() {
             <div className="py-8 text-center text-muted-foreground">
               Tidak ada artis yang ditemukan.
             </div>
+          )}
+            </>
           )}
         </CardContent>
       </Card>

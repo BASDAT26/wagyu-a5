@@ -90,6 +90,17 @@ const ticketCategoryRouter = router({
       );
       return result.rowCount! > 0;
     }),
+
+  // Memanggil Stored Procedure: sp_get_ticket_category_quota
+  getQuotaByEvent: publicProcedure
+    .input(z.object({ eventId: z.string().uuid() }))
+    .query(async ({ input }) => {
+      const result = await query(
+        `SELECT * FROM tiktaktuk.sp_get_ticket_category_quota($1)`,
+        [input.eventId],
+      );
+      return result.rows;
+    }),
 });
 
 // ─── Ticket ──────────────────────────────────────────────────────────────────
