@@ -21,7 +21,7 @@ import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 
 // --- Types ---
-type OrderStatus = "PAID" | "PENDING" | "CANCELLED";
+type OrderStatus = "PAID" | "PENDING" | "CANCELLED" | "REFUNDED";
 
 interface Order {
   id: string;
@@ -61,6 +61,11 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: {
       label: "Cancelled",
       className: "text-red-500 bg-red-50 border-red-200 ring-1 ring-red-200",
+      icon: <XCircle size={11} />,
+    },
+    REFUNDED: {
+      label: "Refunded",
+      className: "text-purple-600 bg-purple-50 border-purple-200 ring-1 ring-purple-200",
       icon: <XCircle size={11} />,
     },
   };
@@ -143,7 +148,9 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
   const [statusFilter, setStatusFilter] = useState<string>("Semua");
 
   const queryClient = useQueryClient();
-  const { data: serverOrders = [], isLoading } = useQuery(trpc.order.order.listForCurrentUser.queryOptions());
+  const { data: serverOrders = [], isLoading } = useQuery(
+    trpc.order.order.listForCurrentUser.queryOptions(),
+  );
 
   const orders: Order[] = useMemo(() => {
     return serverOrders.map((o: any) => ({
@@ -196,7 +203,6 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
   // Filter & Sort Logic
   const filteredOrders = useMemo(() => {
     let result = [...orders];
-
 
     // Search Filter
     if (searchQuery) {
@@ -267,7 +273,6 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
 
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
-
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Daftar Order</h1>
@@ -276,7 +281,10 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
           </p>
         </div>
         {role === "CUSTOMER" && (
-          <Link to="/checkout" className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all">
+          <Link
+            to="/checkout"
+            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
+          >
             <ShoppingCart size={16} />
             Beli Tiket Baru
           </Link>
@@ -330,6 +338,7 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
             <option value="Paid">Paid</option>
             <option value="Pending">Pending</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Refunded">Refunded</option>
           </select>
           <ChevronDown
             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -461,6 +470,7 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
                     <option value="PAID">Paid</option>
                     <option value="PENDING">Pending</option>
                     <option value="CANCELLED">Cancelled</option>
+                    <option value="REFUNDED">Refunded</option>
                   </select>
                   <ChevronDown
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"

@@ -65,9 +65,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
     if (!eventArtists) return;
     const nextIds = eventArtists.map((ea: EventArtist) => ea.artist_id);
     setSelectedArtistIds((prev) =>
-      prev.length === nextIds.length && prev.every((id, i) => id === nextIds[i])
-        ? prev
-        : nextIds,
+      prev.length === nextIds.length && prev.every((id, i) => id === nextIds[i]) ? prev : nextIds,
     );
   }, [eventArtists]);
 
@@ -245,7 +243,9 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
                     {artists.map((artist: Artist) => (
                       <Chip
                         key={artist.artist_id}
-                        variant={selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"}
+                        variant={
+                          selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"
+                        }
                         size="sm"
                         className="cursor-pointer"
                         onClick={() => toggleArtist(artist.artist_id)}

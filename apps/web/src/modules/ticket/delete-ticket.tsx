@@ -51,9 +51,8 @@ export default function DeleteTicket({ ticket }: DeleteTicketProps) {
         </ModalHeader>
         <ModalBody className="py-2">
           <p className="text-sm text-gray-600 dark:text-slate-400">
-            Apakah Anda yakin ingin menghapus tiket{" "}
-            <strong>{ticket.ticket_code}</strong> untuk event{" "}
-            <strong>{ticket.event_title}</strong>? Relasi kursi akan dilepaskan. Tindakan ini
+            Apakah Anda yakin ingin menghapus tiket <strong>{ticket.ticket_code}</strong> untuk
+            event <strong>{ticket.event_title}</strong>? Relasi kursi akan dilepaskan. Tindakan ini
             tidak dapat dibatalkan.
           </p>
         </ModalBody>

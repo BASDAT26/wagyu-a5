@@ -28,12 +28,8 @@ export default function CreateTicketCategory() {
   const { data: events = [] } = useQuery(trpc.event.event.list.queryOptions());
 
   const createMutation = useMutation({
-    mutationFn: (data: {
-      categoryName: string;
-      quota: number;
-      price: number;
-      eventId: string;
-    }) => trpcClient.ticket.category.create.mutate(data),
+    mutationFn: (data: { categoryName: string; quota: number; price: number; eventId: string }) =>
+      trpcClient.ticket.category.create.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.ticket.category.listAll.queryOptions());
       toast.success("Kategori tiket berhasil ditambahkan");

@@ -45,6 +45,55 @@ pnpm run dev
 Open [http://localhost:5173](http://localhost:5173) in your browser to see the web application.
 The API is running at [http://localhost:3000](http://localhost:3000).
 
+## Railway Deployment
+
+Deploy as two services (recommended): one for the API server and one for the web app.
+
+### Server service (apps/server)
+
+**Build command**
+
+```bash
+pnpm -F server build
+```
+
+**Start command**
+
+```bash
+pnpm -F server start
+```
+
+**Environment variables**
+
+- `DATABASE_URL` (PostgreSQL connection string)
+- `BETTER_AUTH_SECRET` (min 32 chars)
+- `BETTER_AUTH_URL` (the server's public URL on Railway)
+- `CORS_ORIGIN` (the web app URL; can be a list separated by `;` or `,`)
+- `NODE_ENV=production`
+
+Railway injects `PORT` automatically, so no manual port config is needed.
+
+### Web service (apps/web)
+
+**Build command**
+
+```bash
+pnpm -F web build
+```
+
+**Start command**
+
+```bash
+pnpm -F web start
+```
+
+**Environment variables (build-time)**
+
+- `VITE_SERVER_URL` (the server's public URL on Railway)
+- `NODE_ENV=production`
+
+`VITE_SERVER_URL` is baked into the frontend build, so set it before deploying.
+
 ## UI Customization
 
 React web apps in this stack share shadcn/ui primitives through `packages/ui`.

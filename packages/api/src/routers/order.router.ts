@@ -86,12 +86,14 @@ const orderRouter_ = router({
   }),
 
   create: protectedProcedure
-    .input(z.object({
-      orderDate: z.string().datetime(),
-      paymentStatus: z.string().min(1).max(20),
-      totalAmount: z.number().nonnegative(),
-      customerId: z.string().uuid(),
-    }))
+    .input(
+      z.object({
+        orderDate: z.string().datetime(),
+        paymentStatus: z.string().min(1).max(20),
+        totalAmount: z.number().nonnegative(),
+        customerId: z.string().uuid(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const id = randomUUID();
       const result = await query(
@@ -108,6 +110,8 @@ const orderRouter_ = router({
       totalAmount: z.number().nonnegative(),
       paymentStatus: z.string().min(1).max(20).optional(),
       orderDate: z.string().datetime().optional(),
+      promoCode: z.string().optional(),
+      ticketCount: z.number().positive().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
@@ -127,6 +131,30 @@ const orderRouter_ = router({
         });
       }
 
+      // Validasi promo terlebih dahulu jika ada
+      let promoId: string | null = null;
+      if (input.promoCode && input.ticketCount) {
+        const promoResult = await query(
+          `SELECT promotion_id, usage_limit, usage_count FROM tiktaktuk.promotion WHERE promo_code = $1`,
+          [input.promoCode]
+        );
+        if (promoResult.rows[0]) {
+          const promo = promoResult.rows[0];
+          if (promo.usage_count + input.ticketCount > promo.usage_limit) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Kuota promo tidak mencukupi. Sisa kuota: ${promo.usage_limit - promo.usage_count}, dipesan: ${input.ticketCount}`,
+            });
+          }
+          promoId = promo.promotion_id;
+        } else {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Kode promo tidak valid",
+          });
+        }
+      }
+
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.orders (order_id, order_date, payment_status, total_amount, customer_id)
@@ -140,21 +168,44 @@ const orderRouter_ = router({
           customerId,
         ],
       );
-      return result.rows[0];
+      const createdOrder = result.rows[0];
+
+      if (promoId && input.ticketCount) {
+        await query(
+          `UPDATE tiktaktuk.promotion SET usage_count = usage_count + $1 WHERE promotion_id = $2`,
+          [input.ticketCount, promoId]
+        );
+
+        const opId = randomUUID();
+        await query(
+          `INSERT INTO tiktaktuk.order_promotion (order_promotion_id, order_id, promotion_id) VALUES ($1, $2, $3)`,
+          [opId, createdOrder.order_id, promoId]
+        );
+      }
+
+      return createdOrder;
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      orderId: z.string().uuid(),
-      paymentStatus: z.string().min(1).max(20).optional(),
-      totalAmount: z.number().nonnegative().optional(),
-    }))
+    .input(
+      z.object({
+        orderId: z.string().uuid(),
+        paymentStatus: z.string().min(1).max(20).optional(),
+        totalAmount: z.number().nonnegative().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const sets: string[] = [];
       const params: any[] = [];
       let idx = 1;
-      if (input.paymentStatus !== undefined) { sets.push(`payment_status = $${idx++}`); params.push(input.paymentStatus); }
-      if (input.totalAmount !== undefined) { sets.push(`total_amount = $${idx++}`); params.push(input.totalAmount); }
+      if (input.paymentStatus !== undefined) {
+        sets.push(`payment_status = $${idx++}`);
+        params.push(input.paymentStatus);
+      }
+      if (input.totalAmount !== undefined) {
+        sets.push(`total_amount = $${idx++}`);
+        params.push(input.totalAmount);
+      }
       if (sets.length === 0) return null;
       params.push(input.orderId);
       const result = await query(
@@ -168,6 +219,27 @@ const orderRouter_ = router({
   delete: protectedProcedure
     .input(z.object({ orderId: z.string().uuid() }))
     .mutation(async ({ input }) => {
+      // 1. Kembalikan kuota promo (usage_count) yang terpakai
+      // Kita hitung jumlah tiket dari tabel ticket, atau fallback ke 1 jika belum ada tiket fisik yang terbuat
+      await query(
+        `UPDATE tiktaktuk.promotion
+         SET usage_count = GREATEST(0, usage_count - COALESCE(
+           NULLIF((SELECT COUNT(*) FROM tiktaktuk.ticket WHERE torder_id = $1), 0), 
+           1
+         ))
+         WHERE promotion_id IN (
+           SELECT promotion_id FROM tiktaktuk.order_promotion WHERE order_id = $1
+         )`,
+        [input.orderId]
+      );
+
+      // 2. Hapus relasi di junction table agar tidak error Foreign Key
+      await query(
+        `DELETE FROM tiktaktuk.order_promotion WHERE order_id = $1`,
+        [input.orderId]
+      );
+
+      // 3. Hapus order
       const result = await query(
         `DELETE FROM tiktaktuk.orders WHERE order_id = $1 RETURNING order_id`,
         [input.orderId],
@@ -210,45 +282,75 @@ const promotionRouter = router({
     }),
 
   create: protectedProcedure
-    .input(z.object({
-      promoCode: z.string().min(1).max(50),
-      discountType: z.enum(["NOMINAL", "PERCENTAGE"]),
-      discountValue: z.number().positive(),
-      startDate: z.string(),
-      endDate: z.string(),
-      usageLimit: z.number().int().positive(),
-    }))
+    .input(
+      z.object({
+        promoCode: z.string().min(1).max(50),
+        discountType: z.enum(["NOMINAL", "PERCENTAGE"]),
+        discountValue: z.number().positive(),
+        startDate: z.string(),
+        endDate: z.string(),
+        usageLimit: z.number().int().positive(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.promotion (promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count)
          VALUES ($1, $2, $3, $4, $5, $6, $7, 0)
          RETURNING promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count`,
-        [id, input.promoCode, input.discountType, input.discountValue, input.startDate, input.endDate, input.usageLimit],
+        [
+          id,
+          input.promoCode,
+          input.discountType,
+          input.discountValue,
+          input.startDate,
+          input.endDate,
+          input.usageLimit,
+        ],
       );
       return result.rows[0];
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      promotionId: z.string().uuid(),
-      promoCode: z.string().min(1).max(50).optional(),
-      discountType: z.enum(["NOMINAL", "PERCENTAGE"]).optional(),
-      discountValue: z.number().positive().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
-      usageLimit: z.number().int().positive().optional(),
-    }))
+    .input(
+      z.object({
+        promotionId: z.string().uuid(),
+        promoCode: z.string().min(1).max(50).optional(),
+        discountType: z.enum(["NOMINAL", "PERCENTAGE"]).optional(),
+        discountValue: z.number().positive().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        usageLimit: z.number().int().positive().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const sets: string[] = [];
       const params: any[] = [];
       let idx = 1;
-      if (input.promoCode !== undefined) { sets.push(`promo_code = $${idx++}`); params.push(input.promoCode); }
-      if (input.discountType !== undefined) { sets.push(`discount_type = $${idx++}`); params.push(input.discountType); }
-      if (input.discountValue !== undefined) { sets.push(`discount_value = $${idx++}`); params.push(input.discountValue); }
-      if (input.startDate !== undefined) { sets.push(`start_date = $${idx++}`); params.push(input.startDate); }
-      if (input.endDate !== undefined) { sets.push(`end_date = $${idx++}`); params.push(input.endDate); }
-      if (input.usageLimit !== undefined) { sets.push(`usage_limit = $${idx++}`); params.push(input.usageLimit); }
+      if (input.promoCode !== undefined) {
+        sets.push(`promo_code = $${idx++}`);
+        params.push(input.promoCode);
+      }
+      if (input.discountType !== undefined) {
+        sets.push(`discount_type = $${idx++}`);
+        params.push(input.discountType);
+      }
+      if (input.discountValue !== undefined) {
+        sets.push(`discount_value = $${idx++}`);
+        params.push(input.discountValue);
+      }
+      if (input.startDate !== undefined) {
+        sets.push(`start_date = $${idx++}`);
+        params.push(input.startDate);
+      }
+      if (input.endDate !== undefined) {
+        sets.push(`end_date = $${idx++}`);
+        params.push(input.endDate);
+      }
+      if (input.usageLimit !== undefined) {
+        sets.push(`usage_limit = $${idx++}`);
+        params.push(input.usageLimit);
+      }
       if (sets.length === 0) return null;
       params.push(input.promotionId);
       const result = await query(
@@ -262,6 +364,27 @@ const promotionRouter = router({
   delete: protectedProcedure
     .input(z.object({ promotionId: z.string().uuid() }))
     .mutation(async ({ input }) => {
+      // 1. Ubah status order menjadi CANCELLED atau REFUNDED
+      await query(
+        `UPDATE tiktaktuk.orders
+         SET payment_status = CASE 
+           WHEN payment_status = 'PENDING' THEN 'CANCELLED'
+           WHEN payment_status = 'PAID' THEN 'REFUNDED'
+           ELSE payment_status
+         END
+         WHERE order_id IN (
+           SELECT order_id FROM tiktaktuk.order_promotion WHERE promotion_id = $1
+         )`,
+        [input.promotionId]
+      );
+
+      // 2. Hapus relasi di junction table agar tidak melanggar Foreign Key
+      await query(
+        `DELETE FROM tiktaktuk.order_promotion WHERE promotion_id = $1`,
+        [input.promotionId]
+      );
+
+      // 3. Baru hapus promosinya
       const result = await query(
         `DELETE FROM tiktaktuk.promotion WHERE promotion_id = $1 RETURNING promotion_id`,
         [input.promotionId],

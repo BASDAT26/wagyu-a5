@@ -33,11 +33,8 @@ export default function CreateEvent() {
   const { data: artists = [] } = useQuery(trpc.event.artist.list.queryOptions());
 
   const createEventMutation = useMutation({
-    mutationFn: (data: {
-      eventDatetime: string;
-      eventTitle: string;
-      venueId: string;
-    }) => trpcClient.event.event.create.mutate(data),
+    mutationFn: (data: { eventDatetime: string; eventTitle: string; venueId: string }) =>
+      trpcClient.event.event.create.mutate(data),
     onSuccess: async (newEvent) => {
       // Link selected artists to the newly created event
       for (const artistId of selectedArtistIds) {
@@ -187,7 +184,9 @@ export default function CreateEvent() {
                     {artists.map((artist: Artist) => (
                       <Chip
                         key={artist.artist_id}
-                        variant={selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"}
+                        variant={
+                          selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"
+                        }
                         size="sm"
                         className="cursor-pointer"
                         onClick={() => toggleArtist(artist.artist_id)}
