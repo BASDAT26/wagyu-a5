@@ -78,6 +78,7 @@ export default function DashboardPage() {
 }
 
 function AdminDashboard({ data }: { data?: AdminSummary }) {
+  const displayName = data?.user?.displayName ?? "Administrator";
   const stats = data?.stats ?? {
     totalUsers: 0,
     totalEvents: 0,
@@ -96,7 +97,7 @@ function AdminDashboard({ data }: { data?: AdminSummary }) {
       <div className="bg-[#2A3441] dark:bg-[#1E2530] rounded-[24px] p-8 sm:p-10 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 shadow-xl shadow-slate-200/50 dark:shadow-none">
         <div>
           <p className="text-sm text-slate-400 mb-1 font-semibold tracking-wide">Administrator</p>
-          <h1 className="text-3xl font-black mb-2 tracking-tight">System Console</h1>
+          <h1 className="text-3xl font-black mb-2 tracking-tight">{displayName}</h1>
           <p className="text-sm text-slate-300">Pantau dan kelola platform TikTakTuk</p>
         </div>
         <Link to={"/promotion"}>
