@@ -23,3 +23,24 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+const requireRole = (roles: string[]) =>
+  t.middleware(({ ctx, next }) => {
+    const role = ctx.session?.user?.role ?? null;
+    if (!role || !roles.includes(role)) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: "Insufficient permissions",
+      });
+    }
+    return next({
+      ctx: {
+        ...ctx,
+        session: ctx.session,
+      },
+    });
+  });
+
+export const adminOrOrganizerProcedure = protectedProcedure.use(
+  requireRole(["ADMIN", "ORGANIZER"]),
+);
