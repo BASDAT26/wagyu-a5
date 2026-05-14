@@ -45,7 +45,11 @@ export default function CheckoutPage() {
   const [selectedCategory, setSelectedCategory] = useState("CAT1");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<{code: string, type: "PERSENTASE" | "NOMINAL", value: number} | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{
+    code: string;
+    type: "PERSENTASE" | "NOMINAL";
+    value: number;
+  } | null>(null);
   const [promoError, setPromoError] = useState("");
   const [isCheckingPromo, setIsCheckingPromo] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
@@ -58,15 +62,15 @@ export default function CheckoutPage() {
 
   const { data: dbEvent, isLoading: eventLoading } = useQuery(
     trpc.event.event.getById.queryOptions(
-      { eventId: eventId ?? "" }, 
-      { enabled: !!eventId && eventId.length === 36 }
-    )
+      { eventId: eventId ?? "" },
+      { enabled: !!eventId && eventId.length === 36 },
+    ),
   );
 
   const { data: dbCategories, isLoading: categoriesLoading } = useQuery(
     eventId && eventId.length === 36
       ? trpc.ticket.category.listByEvent.queryOptions({ eventId })
-      : trpc.ticket.category.listAll.queryOptions()
+      : trpc.ticket.category.listAll.queryOptions(),
   );
 
   useEffect(() => {
@@ -78,16 +82,20 @@ export default function CheckoutPage() {
   // Event Data from DB or fallback to Mock
   const event = {
     title: dbEvent?.event_title ?? "Memuat Event...",
-    date: dbEvent ? new Date(dbEvent.event_datetime).toLocaleDateString("id-ID", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }) : "...",
-    time: dbEvent ? new Date(dbEvent.event_datetime).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }) : "...",
+    date: dbEvent
+      ? new Date(dbEvent.event_datetime).toLocaleDateString("id-ID", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "...",
+    time: dbEvent
+      ? new Date(dbEvent.event_datetime).toLocaleTimeString("id-ID", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
+      : "...",
     location: "Gelora Bung Karno, Jakarta", // Venue details could be fetched too
     image:
       "https://images.unsplash.com/photo-1540039155733-d7696d4eb98b?q=80&w=800&auto=format&fit=crop",
@@ -96,17 +104,20 @@ export default function CheckoutPage() {
   // Real Categories from DB
   const categories = useMemo(() => {
     if (!dbCategories) return [];
-    return dbCategories.map(cat => ({
+    return dbCategories.map((cat) => ({
       id: cat.category_id,
       name: cat.category_name,
       price: Number(cat.price),
       available: cat.quota > 0,
-      quota: cat.quota
+      quota: cat.quota,
     }));
   }, [dbCategories]);
 
-  const currentCat = categories.find((c) => c.id === selectedCategoryId) || categories[0] || { id: "", name: "", price: 0, available: false, quota: 0 };
-  const isSeatingCategory = currentCat.name.toLowerCase().includes("seating") || currentCat.name.toUpperCase().includes("CAT");
+  const currentCat = categories.find((c) => c.id === selectedCategoryId) ||
+    categories[0] || { id: "", name: "", price: 0, available: false, quota: 0 };
+  const isSeatingCategory =
+    currentCat.name.toLowerCase().includes("seating") ||
+    currentCat.name.toUpperCase().includes("CAT");
   const subtotal = currentCat.price * ticketCount;
   const adminFee = 25000;
 
@@ -126,17 +137,17 @@ export default function CheckoutPage() {
       setPromoError("Masukkan kode promo.");
       return;
     }
-    
+
     setIsCheckingPromo(true);
     try {
       const found = await trpcClient.order.promotion.getByCode.query({ promoCode: code });
-      
+
       if (!found) {
         setPromoError("Kode promo tidak valid atau tidak ditemukan.");
         setAppliedPromo(null);
         return;
       }
-      
+
       // Date validations
       const now = new Date();
       if (new Date(found.start_date) > now) {
@@ -150,7 +161,9 @@ export default function CheckoutPage() {
         return;
       }
       if (found.usage_count + ticketCount > found.usage_limit) {
-        setPromoError(`Sisa kuota promo tidak mencukupi (Sisa: ${found.usage_limit - found.usage_count}).`);
+        setPromoError(
+          `Sisa kuota promo tidak mencukupi (Sisa: ${found.usage_limit - found.usage_count}).`,
+        );
         setAppliedPromo(null);
         return;
       }
@@ -158,7 +171,7 @@ export default function CheckoutPage() {
       setAppliedPromo({
         code: found.promo_code,
         type: found.discount_type === "PERCENTAGE" ? "PERSENTASE" : "NOMINAL",
-        value: found.discount_value
+        value: found.discount_value,
       });
     } catch (e) {
       setPromoError("Terjadi kesalahan saat memverifikasi promo.");
@@ -312,35 +325,45 @@ export default function CheckoutPage() {
             <div className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {categoriesLoading ? (
-                   <div className="col-span-full py-8 text-center text-slate-400">Memuat kategori tiket...</div>
+                  <div className="col-span-full py-8 text-center text-slate-400">
+                    Memuat kategori tiket...
+                  </div>
                 ) : categories.length === 0 ? (
-                   <div className="col-span-full py-8 text-center text-slate-400">Tidak ada kategori tiket tersedia.</div>
-                ) : categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => cat.available && setSelectedCategoryId(cat.id)}
-                    className={`relative p-4 rounded-xl border-2 text-left transition-all ${
-                      selectedCategoryId === cat.id
-                        ? "border-blue-500 bg-blue-500/10"
-                        : cat.available
-                        ? "border-slate-800 bg-slate-900/50 hover:border-slate-700"
-                        : "border-slate-900 bg-slate-900/20 opacity-60 cursor-not-allowed"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className={`font-bold ${selectedCategoryId === cat.id ? "text-blue-400" : "text-white"}`}>
-                        {cat.name}
-                      </span>
-                      {selectedCategoryId === cat.id && <CheckCircle2 className="w-5 h-5 text-blue-500" />}
-                    </div>
-                    <div className="text-xl font-black text-white mb-1">
-                      {formatRupiah(cat.price)}
-                    </div>
-                    <div className="text-xs text-slate-400">
-                      {cat.available ? `Tersedia: ${cat.quota} tiket` : "Habis Terjual"}
-                    </div>
-                  </button>
-                ))}
+                  <div className="col-span-full py-8 text-center text-slate-400">
+                    Tidak ada kategori tiket tersedia.
+                  </div>
+                ) : (
+                  categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => cat.available && setSelectedCategoryId(cat.id)}
+                      className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                        selectedCategoryId === cat.id
+                          ? "border-blue-500 bg-blue-500/10"
+                          : cat.available
+                            ? "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+                            : "border-slate-900 bg-slate-900/20 opacity-60 cursor-not-allowed"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span
+                          className={`font-bold ${selectedCategoryId === cat.id ? "text-blue-400" : "text-white"}`}
+                        >
+                          {cat.name}
+                        </span>
+                        {selectedCategoryId === cat.id && (
+                          <CheckCircle2 className="w-5 h-5 text-blue-500" />
+                        )}
+                      </div>
+                      <div className="text-xl font-black text-white mb-1">
+                        {formatRupiah(cat.price)}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        {cat.available ? `Tersedia: ${cat.quota} tiket` : "Habis Terjual"}
+                      </div>
+                    </button>
+                  ))
+                )}
               </div>
             </div>
 

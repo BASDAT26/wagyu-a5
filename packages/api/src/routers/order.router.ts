@@ -106,14 +106,16 @@ const orderRouter_ = router({
     }),
 
   createForCurrentUser: protectedProcedure
-    .input(z.object({
-      totalAmount: z.number().nonnegative(),
-      paymentStatus: z.string().min(1).max(20).optional(),
-      orderDate: z.string().datetime().optional(),
-      promoCode: z.string().optional(),
-      ticketCount: z.number().positive().optional(),
-      categoryId: z.string().uuid().optional(),
-    }))
+    .input(
+      z.object({
+        totalAmount: z.number().nonnegative(),
+        paymentStatus: z.string().min(1).max(20).optional(),
+        orderDate: z.string().datetime().optional(),
+        promoCode: z.string().optional(),
+        ticketCount: z.number().positive().optional(),
+        categoryId: z.string().uuid().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       console.log("createForCurrentUser input:", input);
       const userId = ctx.session.user.id;
@@ -133,15 +135,36 @@ const orderRouter_ = router({
         });
       }
 
-      // 1. Validasi kategori tiket dan ambil tanggal event
+      // Validasi promo terlebih dahulu jika ada
+      let promoId: string | null = null;
+      if (input.promoCode && input.ticketCount) {
+        const promoResult = await query(
+          `SELECT promotion_id, usage_limit, usage_count FROM tiktaktuk.promotion WHERE promo_code = $1`,
+          [input.promoCode],
+        );
+        if (promoResult.rows[0]) {
+          const promo = promoResult.rows[0];
+          if (promo.usage_count + input.ticketCount > promo.usage_limit) {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Kuota promo tidak mencukupi. Sisa kuota: ${promo.usage_limit - promo.usage_count}, dipesan: ${input.ticketCount}`,
+            });
+          }
+          promoId = promo.promotion_id;
+        } else {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Kode promo tidak valid",
+          });
+        }
+      }
+
+      // Validasi kategori tiket
       let categoryData: any = null;
       let eventDatetime: string | null = null;
       if (input.categoryId && input.ticketCount) {
         const catResult = await query(
-          `SELECT tc.category_id, tc.quota, e.event_datetime 
-           FROM tiktaktuk.ticket_category tc
-           JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
-           WHERE tc.category_id = $1`,
+          `SELECT category_id, quota FROM tiktaktuk.ticket_category WHERE category_id = $1`,
           [input.categoryId]
         );
         categoryData = catResult.rows[0];
@@ -169,7 +192,7 @@ const orderRouter_ = router({
           [input.promoCode]
         );
         const promo = promoResult.rows[0];
-        
+
         // Validation: Existence
         if (!promo) {
           throw new TRPCError({
@@ -191,7 +214,7 @@ const orderRouter_ = router({
           const eventDate = new Date(eventDatetime);
           const startDate = new Date(promo.start_date);
           const endDate = new Date(promo.end_date);
-          
+
           if (eventDate < startDate || eventDate > endDate) {
             throw new TRPCError({
               code: "BAD_REQUEST",
@@ -199,7 +222,7 @@ const orderRouter_ = router({
             });
           }
         }
-        
+
         promoId = promo.promotion_id;
       }
 
@@ -221,22 +244,24 @@ const orderRouter_ = router({
       if (promoId && input.ticketCount) {
         await query(
           `UPDATE tiktaktuk.promotion SET usage_count = usage_count + $1 WHERE promotion_id = $2`,
-          [input.ticketCount, promoId]
+          [input.ticketCount, promoId],
         );
 
         const opId = randomUUID();
         await query(
           `INSERT INTO tiktaktuk.order_promotion (order_promotion_id, order_id, promotion_id) VALUES ($1, $2, $3)`,
-          [opId, createdOrder.order_id, promoId]
+          [opId, createdOrder.order_id, promoId],
         );
       }
 
       if (categoryData && input.ticketCount) {
-        console.log(`Creating ${input.ticketCount} tickets for category ${categoryData.category_id}...`);
+        console.log(
+          `Creating ${input.ticketCount} tickets for category ${categoryData.category_id}...`,
+        );
         // Kurangi kuota
         await query(
           `UPDATE tiktaktuk.ticket_category SET quota = quota - $1 WHERE category_id = $2`,
-          [input.ticketCount, categoryData.category_id]
+          [input.ticketCount, categoryData.category_id],
         );
 
         // Buat tiket sebanyak ticketCount
@@ -245,23 +270,28 @@ const orderRouter_ = router({
           await query(
             `INSERT INTO tiktaktuk.ticket (ticket_code, tcategory_id, torder_id)
              VALUES ($1, $2, $3)`,
-            [ticketCode, categoryData.category_id, createdOrder.order_id]
+            [ticketCode, categoryData.category_id, createdOrder.order_id],
           );
         }
         console.log("Tickets created successfully.");
       } else {
-        console.warn("Ticket creation skipped: categoryData or ticketCount missing.", { categoryData: !!categoryData, ticketCount: input.ticketCount });
+        console.warn("Ticket creation skipped: categoryData or ticketCount missing.", {
+          categoryData: !!categoryData,
+          ticketCount: input.ticketCount,
+        });
       }
 
       return createdOrder;
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      orderId: z.string().uuid(),
-      paymentStatus: z.string().min(1).max(20).optional(),
-      totalAmount: z.number().nonnegative().optional(),
-    }))
+    .input(
+      z.object({
+        orderId: z.string().uuid(),
+        paymentStatus: z.string().min(1).max(20).optional(),
+        totalAmount: z.number().nonnegative().optional(),
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
       const { id: userId, role } = ctx.session.user;
 
@@ -275,7 +305,7 @@ const orderRouter_ = router({
              WHERE t.torder_id = o.order_id
              AND e.organizer_id = (SELECT organizer_id FROM tiktaktuk.organizer WHERE user_id = $2 LIMIT 1)
            )`,
-          [input.orderId, userId]
+          [input.orderId, userId],
         );
         if (accessCheck.rowCount === 0) {
           throw new TRPCError({
@@ -321,7 +351,7 @@ const orderRouter_ = router({
              WHERE t.torder_id = o.order_id
              AND e.organizer_id = (SELECT organizer_id FROM tiktaktuk.organizer WHERE user_id = $2 LIMIT 1)
            )`,
-          [input.orderId, userId]
+          [input.orderId, userId],
         );
         if (accessCheck.rowCount === 0) {
           throw new TRPCError({
@@ -342,7 +372,7 @@ const orderRouter_ = router({
            GROUP BY tcategory_id
          ) sub
          WHERE tiktaktuk.ticket_category.category_id = sub.tcategory_id`,
-        [input.orderId]
+        [input.orderId],
       );
 
       // 2. Kembalikan kuota promo (usage_count) yang terpakai
@@ -355,7 +385,7 @@ const orderRouter_ = router({
          WHERE promotion_id IN (
            SELECT promotion_id FROM tiktaktuk.order_promotion WHERE order_id = $1
          )`,
-        [input.orderId]
+        [input.orderId],
       );
 
       // 3. Hapus relasi di junction table dan tiket fisik agar tidak error Foreign Key
@@ -498,14 +528,13 @@ const promotionRouter = router({
          WHERE order_id IN (
            SELECT order_id FROM tiktaktuk.order_promotion WHERE promotion_id = $1
          )`,
-        [input.promotionId]
+        [input.promotionId],
       );
 
       // 2. Hapus relasi di junction table agar tidak melanggar Foreign Key
-      await query(
-        `DELETE FROM tiktaktuk.order_promotion WHERE promotion_id = $1`,
-        [input.promotionId]
-      );
+      await query(`DELETE FROM tiktaktuk.order_promotion WHERE promotion_id = $1`, [
+        input.promotionId,
+      ]);
 
       // 3. Baru hapus promosinya
       const result = await query(
