@@ -110,6 +110,7 @@ const orderRouter_ = router({
       orderDate: z.string().datetime().optional(),
       promoCode: z.string().optional(),
       ticketCount: z.number().positive().optional(),
+      categoryId: z.string().uuid().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
@@ -153,6 +154,28 @@ const orderRouter_ = router({
         }
       }
 
+      // Validasi kategori tiket
+      let categoryData: any = null;
+      if (input.categoryId && input.ticketCount) {
+        const catResult = await query(
+          `SELECT category_id, quota FROM tiktaktuk.ticket_category WHERE category_id = $1`,
+          [input.categoryId]
+        );
+        categoryData = catResult.rows[0];
+        if (!categoryData) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Kategori tiket tidak valid",
+          });
+        }
+        if (categoryData.quota < input.ticketCount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Kuota tiket tidak mencukupi. Sisa kuota: ${categoryData.quota}, dipesan: ${input.ticketCount}`,
+          });
+        }
+      }
+
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.orders (order_id, order_date, payment_status, total_amount, customer_id)
@@ -179,6 +202,24 @@ const orderRouter_ = router({
           `INSERT INTO tiktaktuk.order_promotion (order_promotion_id, order_id, promotion_id) VALUES ($1, $2, $3)`,
           [opId, createdOrder.order_id, promoId]
         );
+      }
+
+      if (categoryData && input.ticketCount) {
+        // Kurangi kuota
+        await query(
+          `UPDATE tiktaktuk.ticket_category SET quota = quota - $1 WHERE category_id = $2`,
+          [input.ticketCount, categoryData.category_id]
+        );
+
+        // Buat tiket sebanyak ticketCount
+        for (let i = 0; i < input.ticketCount; i++) {
+          const ticketCode = `TCK-${randomUUID().slice(0, 8).toUpperCase()}`;
+          await query(
+            `INSERT INTO tiktaktuk.ticket (ticket_id, ticket_code, tcategory_id, torder_id)
+             VALUES (gen_random_uuid(), $1, $2, $3)`,
+            [ticketCode, categoryData.category_id, createdOrder.order_id]
+          );
+        }
       }
 
       return createdOrder;

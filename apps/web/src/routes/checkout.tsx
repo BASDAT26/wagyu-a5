@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   MapPin,
@@ -37,6 +37,15 @@ export default function CheckoutPage() {
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+
+  const { data: dbCategories, isLoading: categoriesLoading } = trpc.ticket.category.listAll.useQuery();
+
+  useEffect(() => {
+    if (dbCategories && dbCategories.length > 0 && !selectedCategoryId) {
+      setSelectedCategoryId(dbCategories[0].category_id);
+    }
+  }, [dbCategories, selectedCategoryId]);
 
   // Mock Event Data
   const event = {
@@ -48,21 +57,20 @@ export default function CheckoutPage() {
       "https://images.unsplash.com/photo-1540039155733-d7696d4eb98b?q=80&w=800&auto=format&fit=crop",
   };
 
-  // Mock Categories
-  const categories = [
-    { id: "FEST", name: "Festival (Standing)", price: 500000, available: true },
-    { id: "CAT2", name: "CAT 2 (Seating)", price: 850000, available: true },
-    { id: "CAT1", name: "CAT 1 (Seating)", price: 1200000, available: true },
-    {
-      id: "VIP",
-      name: "VIP (Seating + Merch)",
-      price: 2500000,
-      available: false,
-    },
-  ];
+  // Real Categories from DB
+  const categories = useMemo(() => {
+    if (!dbCategories) return [];
+    return dbCategories.map(cat => ({
+      id: cat.category_id,
+      name: cat.category_name,
+      price: Number(cat.price),
+      available: cat.quota > 0,
+      quota: cat.quota
+    }));
+  }, [dbCategories]);
 
-  const currentCat = categories.find((c) => c.id === selectedCategory) || categories[0];
-  const isSeatingCategory = currentCat.id !== "FEST";
+  const currentCat = categories.find((c) => c.id === selectedCategoryId) || categories[0] || { id: "", name: "", price: 0, available: false, quota: 0 };
+  const isSeatingCategory = currentCat.name.toLowerCase().includes("seating") || currentCat.name.toUpperCase().includes("CAT");
   const subtotal = currentCat.price * ticketCount;
   const adminFee = 25000;
 
@@ -154,6 +162,7 @@ export default function CheckoutPage() {
         totalAmount: total,
         promoCode: appliedPromo?.code,
         ticketCount: ticketCount,
+        categoryId: selectedCategoryId,
       });
       setCreatedOrderId(createdOrder.order_id as string);
       await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
@@ -257,39 +266,38 @@ export default function CheckoutPage() {
             </h3>
 
             <div className="space-y-3">
-              {categories.map((cat) => (
-                <div
-                  key={cat.id}
-                  onClick={() => cat.available && setSelectedCategory(cat.id)}
-                  className={`p-4 rounded-2xl border-2 transition-all flex items-center justify-between
-                    ${
-                      !cat.available
-                        ? "opacity-50 cursor-not-allowed bg-slate-50 dark:bg-slate-900 border-slate-100 dark:border-slate-800"
-                        : selectedCategory === cat.id
-                          ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/10 shadow-md shadow-blue-500/10 cursor-pointer"
-                          : "border-slate-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-800 cursor-pointer"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {categoriesLoading ? (
+                   <div className="col-span-full py-8 text-center text-slate-400">Memuat kategori tiket...</div>
+                ) : categories.length === 0 ? (
+                   <div className="col-span-full py-8 text-center text-slate-400">Tidak ada kategori tiket tersedia.</div>
+                ) : categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => cat.available && setSelectedCategoryId(cat.id)}
+                    className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                      selectedCategoryId === cat.id
+                        ? "border-blue-500 bg-blue-500/10"
+                        : cat.available
+                        ? "border-slate-800 bg-slate-900/50 hover:border-slate-700"
+                        : "border-slate-900 bg-slate-900/20 opacity-60 cursor-not-allowed"
                     }`}
-                >
-                  <div>
-                    <h4
-                      className={`font-bold ${selectedCategory === cat.id ? "text-blue-700 dark:text-blue-400" : "text-slate-700 dark:text-slate-200"}`}
-                    >
-                      {cat.name}
-                    </h4>
-                    <p className="text-sm text-slate-500 mt-0.5">
-                      {cat.available ? "Tersedia" : "Habis Terjual"}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p
-                      className={`font-black ${selectedCategory === cat.id ? "text-blue-700 dark:text-blue-400" : "text-slate-800 dark:text-slate-100"}`}
-                    >
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className={`font-bold ${selectedCategoryId === cat.id ? "text-blue-400" : "text-white"}`}>
+                        {cat.name}
+                      </span>
+                      {selectedCategoryId === cat.id && <CheckCircle2 className="w-5 h-5 text-blue-500" />}
+                    </div>
+                    <div className="text-xl font-black text-white mb-1">
                       {formatRupiah(cat.price)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      {cat.available ? `Tersedia: ${cat.quota} tiket` : "Habis Terjual"}
+                    </div>
+                  </button>
+                ))}
+              </div>
 
             {/* Quantity */}
             <div className="mt-8 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
