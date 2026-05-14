@@ -27,12 +27,8 @@ export default function CreateVenue() {
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: (data: {
-      venueName: string;
-      capacity: number;
-      address: string;
-      city: string;
-    }) => trpcClient.venue.venue.create.mutate(data),
+    mutationFn: (data: { venueName: string; capacity: number; address: string; city: string }) =>
+      trpcClient.venue.venue.create.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.venue.venue.list.queryOptions());
       toast.success("Venue berhasil ditambahkan");

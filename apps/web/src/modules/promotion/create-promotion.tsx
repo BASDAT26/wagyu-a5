@@ -73,8 +73,8 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
       code: p.promo_code,
       type: (p.discount_type === "PERCENTAGE" ? "PERSENTASE" : "NOMINAL") as DiscountType,
       value: p.discount_value,
-      startDate: new Date(p.start_date).toISOString().split('T')[0],
-      endDate: new Date(p.end_date).toISOString().split('T')[0],
+      startDate: new Date(p.start_date).toISOString().split("T")[0],
+      endDate: new Date(p.end_date).toISOString().split("T")[0],
       usageLimit: p.usage_limit,
       usageCount: p.usage_count || 0,
     }));
@@ -236,7 +236,6 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
 
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
-
       {/* --- Header --- */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
@@ -543,7 +542,11 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
                 disabled={createMutation.isPending || updateMutation.isPending}
                 className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center"
               >
-                {createMutation.isPending || updateMutation.isPending ? "Menyimpan..." : modalMode === "create" ? "Buat Promo" : "Simpan Perubahan"}
+                {createMutation.isPending || updateMutation.isPending
+                  ? "Menyimpan..."
+                  : modalMode === "create"
+                    ? "Buat Promo"
+                    : "Simpan Perubahan"}
               </button>
             </div>
           </div>

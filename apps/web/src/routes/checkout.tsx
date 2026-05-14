@@ -27,7 +27,20 @@ const PROMOS = [
 // --- Mock Seats (6x8 grid) ---
 const TOTAL_ROWS = 6;
 const SEATS_PER_ROW = 8;
-const TAKEN_SEATS = new Set(["A3","A4","B2","B5","C1","C6","D3","D4","D7","E2","F5","F6"]);
+const TAKEN_SEATS = new Set([
+  "A3",
+  "A4",
+  "B2",
+  "B5",
+  "C1",
+  "C6",
+  "D3",
+  "D4",
+  "D7",
+  "E2",
+  "F5",
+  "F6",
+]);
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -36,7 +49,7 @@ export default function CheckoutPage() {
   const [selectedCategory, setSelectedCategory] = useState("CAT1");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<typeof PROMOS[0] | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<(typeof PROMOS)[0] | null>(null);
   const [promoError, setPromoError] = useState("");
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -72,7 +85,8 @@ export default function CheckoutPage() {
 
   const discount = useMemo(() => {
     if (!appliedPromo) return 0;
-    if (appliedPromo.type === "PERSENTASE") return Math.floor(subtotal * appliedPromo.value / 100);
+    if (appliedPromo.type === "PERSENTASE")
+      return Math.floor((subtotal * appliedPromo.value) / 100);
     return Math.min(appliedPromo.value, subtotal);
   }, [appliedPromo, subtotal]);
 
@@ -145,10 +159,12 @@ export default function CheckoutPage() {
             Order Berhasil Dibuat!
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8">
-            Terima kasih, <span className="font-semibold">{customerName}</span>! ID Order Anda adalah{" "}
+            Terima kasih, <span className="font-semibold">{customerName}</span>! ID Order Anda
+            adalah{" "}
             <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
               ORD-{orderCode}
-            </span>.
+            </span>
+            .
           </p>
           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-left space-y-2 mb-8">
             <div className="flex justify-between text-sm">
@@ -292,12 +308,16 @@ export default function CheckoutPage() {
                 Pilih hingga {ticketCount} kursi. Abu-abu = terisi.
               </p>
               <div className="flex flex-col items-center gap-2">
-                <div className="w-2/3 h-3 bg-slate-300 dark:bg-slate-700 rounded-b-lg mb-3 text-center text-[9px] font-bold text-slate-500 leading-3">PANGGUNG</div>
+                <div className="w-2/3 h-3 bg-slate-300 dark:bg-slate-700 rounded-b-lg mb-3 text-center text-[9px] font-bold text-slate-500 leading-3">
+                  PANGGUNG
+                </div>
                 {Array.from({ length: TOTAL_ROWS }, (_, r) => {
                   const rowLabel = String.fromCharCode(65 + r);
                   return (
                     <div key={rowLabel} className="flex items-center gap-1.5">
-                      <span className="w-5 text-[10px] font-bold text-slate-400 text-right">{rowLabel}</span>
+                      <span className="w-5 text-[10px] font-bold text-slate-400 text-right">
+                        {rowLabel}
+                      </span>
                       {Array.from({ length: SEATS_PER_ROW }, (_, s) => {
                         const seatId = `${rowLabel}${s + 1}`;
                         const isTaken = TAKEN_SEATS.has(seatId);
@@ -359,7 +379,11 @@ export default function CheckoutPage() {
             )}
             {appliedPromo && !promoError && (
               <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
-                ✓ Promo <span className="font-mono font-bold">{appliedPromo.code}</span> berhasil diterapkan! Diskon {appliedPromo.type === "PERSENTASE" ? `${appliedPromo.value}%` : formatRupiah(appliedPromo.value)}
+                ✓ Promo <span className="font-mono font-bold">{appliedPromo.code}</span> berhasil
+                diterapkan! Diskon{" "}
+                {appliedPromo.type === "PERSENTASE"
+                  ? `${appliedPromo.value}%`
+                  : formatRupiah(appliedPromo.value)}
               </div>
             )}
           </div>
@@ -388,7 +412,9 @@ export default function CheckoutPage() {
               </div>
               {discount > 0 && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">Diskon ({appliedPromo?.code})</span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                    Diskon ({appliedPromo?.code})
+                  </span>
                   <span className="font-bold text-emerald-600 dark:text-emerald-400">
                     -{formatRupiah(discount)}
                   </span>

@@ -33,18 +33,16 @@ const customerRouter = router({
     return result.rows;
   }),
 
-  create: protectedProcedure
-    .input(customerSchema)
-    .mutation(async ({ input }) => {
-      const id = randomUUID();
-      const result = await query(
-        `INSERT INTO tiktaktuk.customer (customer_id, full_name, phone_number, user_id)
+  create: protectedProcedure.input(customerSchema).mutation(async ({ input }) => {
+    const id = randomUUID();
+    const result = await query(
+      `INSERT INTO tiktaktuk.customer (customer_id, full_name, phone_number, user_id)
          VALUES ($1, $2, $3, $4)
          RETURNING customer_id, full_name, phone_number, user_id`,
-        [id, input.fullName, input.phoneNumber ?? null, input.userId],
-      );
-      return result.rows[0];
-    }),
+      [id, input.fullName, input.phoneNumber ?? null, input.userId],
+    );
+    return result.rows[0];
+  }),
 
   update: protectedProcedure
     .input(
@@ -121,18 +119,16 @@ const organizerRouter = router({
     return result.rows;
   }),
 
-  create: protectedProcedure
-    .input(organizerSchema)
-    .mutation(async ({ input }) => {
-      const id = randomUUID();
-      const result = await query(
-        `INSERT INTO tiktaktuk.organizer (organizer_id, organizer_name, contact_email, user_id)
+  create: protectedProcedure.input(organizerSchema).mutation(async ({ input }) => {
+    const id = randomUUID();
+    const result = await query(
+      `INSERT INTO tiktaktuk.organizer (organizer_id, organizer_name, contact_email, user_id)
          VALUES ($1, $2, $3, $4)
          RETURNING organizer_id, organizer_name, contact_email, user_id`,
-        [id, input.organizerName, input.contactEmail ?? null, input.userId],
-      );
-      return result.rows[0];
-    }),
+      [id, input.organizerName, input.contactEmail ?? null, input.userId],
+    );
+    return result.rows[0];
+  }),
 
   update: protectedProcedure
     .input(

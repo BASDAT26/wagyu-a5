@@ -86,12 +86,14 @@ const orderRouter_ = router({
   }),
 
   create: protectedProcedure
-    .input(z.object({
-      orderDate: z.string().datetime(),
-      paymentStatus: z.string().min(1).max(20),
-      totalAmount: z.number().nonnegative(),
-      customerId: z.string().uuid(),
-    }))
+    .input(
+      z.object({
+        orderDate: z.string().datetime(),
+        paymentStatus: z.string().min(1).max(20),
+        totalAmount: z.number().nonnegative(),
+        customerId: z.string().uuid(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const id = randomUUID();
       const result = await query(
@@ -104,11 +106,13 @@ const orderRouter_ = router({
     }),
 
   createForCurrentUser: protectedProcedure
-    .input(z.object({
-      totalAmount: z.number().nonnegative(),
-      paymentStatus: z.string().min(1).max(20).optional(),
-      orderDate: z.string().datetime().optional(),
-    }))
+    .input(
+      z.object({
+        totalAmount: z.number().nonnegative(),
+        paymentStatus: z.string().min(1).max(20).optional(),
+        orderDate: z.string().datetime().optional(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const customerResult = await query(
@@ -144,17 +148,25 @@ const orderRouter_ = router({
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      orderId: z.string().uuid(),
-      paymentStatus: z.string().min(1).max(20).optional(),
-      totalAmount: z.number().nonnegative().optional(),
-    }))
+    .input(
+      z.object({
+        orderId: z.string().uuid(),
+        paymentStatus: z.string().min(1).max(20).optional(),
+        totalAmount: z.number().nonnegative().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const sets: string[] = [];
       const params: any[] = [];
       let idx = 1;
-      if (input.paymentStatus !== undefined) { sets.push(`payment_status = $${idx++}`); params.push(input.paymentStatus); }
-      if (input.totalAmount !== undefined) { sets.push(`total_amount = $${idx++}`); params.push(input.totalAmount); }
+      if (input.paymentStatus !== undefined) {
+        sets.push(`payment_status = $${idx++}`);
+        params.push(input.paymentStatus);
+      }
+      if (input.totalAmount !== undefined) {
+        sets.push(`total_amount = $${idx++}`);
+        params.push(input.totalAmount);
+      }
       if (sets.length === 0) return null;
       params.push(input.orderId);
       const result = await query(
@@ -210,45 +222,75 @@ const promotionRouter = router({
     }),
 
   create: protectedProcedure
-    .input(z.object({
-      promoCode: z.string().min(1).max(50),
-      discountType: z.enum(["NOMINAL", "PERCENTAGE"]),
-      discountValue: z.number().positive(),
-      startDate: z.string(),
-      endDate: z.string(),
-      usageLimit: z.number().int().positive(),
-    }))
+    .input(
+      z.object({
+        promoCode: z.string().min(1).max(50),
+        discountType: z.enum(["NOMINAL", "PERCENTAGE"]),
+        discountValue: z.number().positive(),
+        startDate: z.string(),
+        endDate: z.string(),
+        usageLimit: z.number().int().positive(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.promotion (promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count)
          VALUES ($1, $2, $3, $4, $5, $6, $7, 0)
          RETURNING promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count`,
-        [id, input.promoCode, input.discountType, input.discountValue, input.startDate, input.endDate, input.usageLimit],
+        [
+          id,
+          input.promoCode,
+          input.discountType,
+          input.discountValue,
+          input.startDate,
+          input.endDate,
+          input.usageLimit,
+        ],
       );
       return result.rows[0];
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      promotionId: z.string().uuid(),
-      promoCode: z.string().min(1).max(50).optional(),
-      discountType: z.enum(["NOMINAL", "PERCENTAGE"]).optional(),
-      discountValue: z.number().positive().optional(),
-      startDate: z.string().optional(),
-      endDate: z.string().optional(),
-      usageLimit: z.number().int().positive().optional(),
-    }))
+    .input(
+      z.object({
+        promotionId: z.string().uuid(),
+        promoCode: z.string().min(1).max(50).optional(),
+        discountType: z.enum(["NOMINAL", "PERCENTAGE"]).optional(),
+        discountValue: z.number().positive().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        usageLimit: z.number().int().positive().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const sets: string[] = [];
       const params: any[] = [];
       let idx = 1;
-      if (input.promoCode !== undefined) { sets.push(`promo_code = $${idx++}`); params.push(input.promoCode); }
-      if (input.discountType !== undefined) { sets.push(`discount_type = $${idx++}`); params.push(input.discountType); }
-      if (input.discountValue !== undefined) { sets.push(`discount_value = $${idx++}`); params.push(input.discountValue); }
-      if (input.startDate !== undefined) { sets.push(`start_date = $${idx++}`); params.push(input.startDate); }
-      if (input.endDate !== undefined) { sets.push(`end_date = $${idx++}`); params.push(input.endDate); }
-      if (input.usageLimit !== undefined) { sets.push(`usage_limit = $${idx++}`); params.push(input.usageLimit); }
+      if (input.promoCode !== undefined) {
+        sets.push(`promo_code = $${idx++}`);
+        params.push(input.promoCode);
+      }
+      if (input.discountType !== undefined) {
+        sets.push(`discount_type = $${idx++}`);
+        params.push(input.discountType);
+      }
+      if (input.discountValue !== undefined) {
+        sets.push(`discount_value = $${idx++}`);
+        params.push(input.discountValue);
+      }
+      if (input.startDate !== undefined) {
+        sets.push(`start_date = $${idx++}`);
+        params.push(input.startDate);
+      }
+      if (input.endDate !== undefined) {
+        sets.push(`end_date = $${idx++}`);
+        params.push(input.endDate);
+      }
+      if (input.usageLimit !== undefined) {
+        sets.push(`usage_limit = $${idx++}`);
+        params.push(input.usageLimit);
+      }
       if (sets.length === 0) return null;
       params.push(input.promotionId);
       const result = await query(

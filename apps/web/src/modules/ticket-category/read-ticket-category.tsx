@@ -1,10 +1,6 @@
 import { useState, useMemo } from "react";
 import { Input } from "@wagyu-a5/ui/components/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@wagyu-a5/ui/components/card";
+import { Card, CardContent, CardHeader } from "@wagyu-a5/ui/components/card";
 import { Search, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";

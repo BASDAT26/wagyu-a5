@@ -1,13 +1,6 @@
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Card, CardContent } from "@wagyu-a5/ui/components/card";
-import {
-  Search,
-  MapPin,
-  Armchair,
-  Building2,
-  ChevronDown,
-  Loader2,
-} from "lucide-react";
+import { Search, MapPin, Armchair, Building2, ChevronDown, Loader2 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
@@ -35,9 +28,7 @@ export default function ReadVenue() {
     return venues.filter((v: Venue) => {
       const q = search.toLowerCase();
       const matchesSearch =
-        !q ||
-        v.venue_name.toLowerCase().includes(q) ||
-        v.address.toLowerCase().includes(q);
+        !q || v.venue_name.toLowerCase().includes(q) || v.address.toLowerCase().includes(q);
       const matchesCity = cityFilter === "all" || v.city === cityFilter;
       return matchesSearch && matchesCity;
     });

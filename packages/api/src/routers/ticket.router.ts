@@ -40,12 +40,14 @@ const ticketCategoryRouter = router({
   }),
 
   create: protectedProcedure
-    .input(z.object({
-      categoryName: z.string().min(1).max(50),
-      quota: z.number().int().positive(),
-      price: z.number().nonnegative(),
-      eventId: z.string().uuid(),
-    }))
+    .input(
+      z.object({
+        categoryName: z.string().min(1).max(50),
+        quota: z.number().int().positive(),
+        price: z.number().nonnegative(),
+        eventId: z.string().uuid(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const id = randomUUID();
       const result = await query(
@@ -58,19 +60,30 @@ const ticketCategoryRouter = router({
     }),
 
   update: protectedProcedure
-    .input(z.object({
-      categoryId: z.string().uuid(),
-      categoryName: z.string().min(1).max(50).optional(),
-      quota: z.number().int().positive().optional(),
-      price: z.number().nonnegative().optional(),
-    }))
+    .input(
+      z.object({
+        categoryId: z.string().uuid(),
+        categoryName: z.string().min(1).max(50).optional(),
+        quota: z.number().int().positive().optional(),
+        price: z.number().nonnegative().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const sets: string[] = [];
       const params: any[] = [];
       let idx = 1;
-      if (input.categoryName !== undefined) { sets.push(`category_name = $${idx++}`); params.push(input.categoryName); }
-      if (input.quota !== undefined) { sets.push(`quota = $${idx++}`); params.push(input.quota); }
-      if (input.price !== undefined) { sets.push(`price = $${idx++}`); params.push(input.price); }
+      if (input.categoryName !== undefined) {
+        sets.push(`category_name = $${idx++}`);
+        params.push(input.categoryName);
+      }
+      if (input.quota !== undefined) {
+        sets.push(`quota = $${idx++}`);
+        params.push(input.quota);
+      }
+      if (input.price !== undefined) {
+        sets.push(`price = $${idx++}`);
+        params.push(input.price);
+      }
       if (sets.length === 0) return null;
       params.push(input.categoryId);
       const result = await query(
@@ -281,12 +294,14 @@ const ticketRouter_ = router({
   }),
 
   create: protectedProcedure
-    .input(z.object({
-      ticketCode: z.string().min(1).max(100),
-      categoryId: z.string().uuid(),
-      orderId: z.string().uuid(),
-      seatId: z.string().uuid().optional(),
-    }))
+    .input(
+      z.object({
+        ticketCode: z.string().min(1).max(100),
+        categoryId: z.string().uuid(),
+        orderId: z.string().uuid(),
+        seatId: z.string().uuid().optional(),
+      }),
+    )
     .mutation(async ({ input }) => {
       const result = await query(
         `INSERT INTO tiktaktuk.ticket (ticket_id, ticket_code, tcategory_id, torder_id)
@@ -297,19 +312,21 @@ const ticketRouter_ = router({
       const ticket = result.rows[0];
       // Assign seat if provided
       if (input.seatId && ticket) {
-        await query(
-          `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
-          [input.seatId, ticket.ticket_id],
-        );
+        await query(`INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`, [
+          input.seatId,
+          ticket.ticket_id,
+        ]);
       }
       return ticket;
     }),
 
   updateStatus: protectedProcedure
-    .input(z.object({
-      ticketId: z.string().uuid(),
-      status: z.enum(["VALID", "TERPAKAI", "BATAL"]),
-    }))
+    .input(
+      z.object({
+        ticketId: z.string().uuid(),
+        status: z.enum(["VALID", "TERPAKAI", "BATAL"]),
+      }),
+    )
     .mutation(async ({ input }) => {
       const result = await query(
         `UPDATE tiktaktuk.ticket SET status = $1 WHERE ticket_id = $2
