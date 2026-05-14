@@ -9,6 +9,7 @@ import {
 } from "@wagyu-a5/ui/components/card";
 import { Chip } from "@wagyu-a5/ui/components/chip";
 import { Search } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 import CreateArtist from "./create-artist";
 import UpdateArtist from "./update-artist";
@@ -53,13 +54,11 @@ function ArtistAvatar({ name }: { name: string }) {
   );
 }
 
-export default function ReadArtist({
-  isAdmin: propIsAdmin,
-  onToggleAdmin,
-}: { isAdmin?: boolean; onToggleAdmin?: (v: boolean) => void } = {}) {
-  const [internalIsAdmin, setInternalIsAdmin] = useState(true);
-  const isAdmin = propIsAdmin !== undefined ? propIsAdmin : internalIsAdmin;
-  const setIsAdmin = onToggleAdmin || setInternalIsAdmin;
+export default function ReadArtist() {
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string })?.role;
+  const isAdmin = role === "ADMIN";
+
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("");
   const [view, setView] = useState<"table" | "list">("list");
@@ -86,15 +85,6 @@ export default function ReadArtist({
           </p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Role toggle for demo */}
-          <Chip
-            size="sm"
-            variant={isAdmin ? "destructive" : "default"}
-            className="cursor-pointer select-none"
-            onClick={() => setIsAdmin(!isAdmin)}
-          >
-            {isAdmin ? "Admin" : "Non-Admin"} (klik untuk toggle)
-          </Chip>
 
           {/* Tambah Artist — only visible for Admin */}
           {isAdmin && <CreateArtist />}
