@@ -172,6 +172,12 @@ export default function ReadTicketCategory() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
+                        <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider text-xs text-muted-foreground w-12">
+                          No
+                        </th>
+                        <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider text-xs text-muted-foreground">
+                          ID
+                        </th>
                         <th className="px-4 py-3 text-left font-semibold uppercase tracking-wider text-xs text-muted-foreground">
                           Kategori
                         </th>
@@ -192,11 +198,13 @@ export default function ReadTicketCategory() {
                       </tr>
                     </thead>
                     <tbody>
-                      {filtered.map((tc) => (
+                      {filtered.map((tc, index) => (
                         <tr
                           key={tc.category_id}
                           className="border-b last:border-b-0 hover:bg-muted/30 transition-colors"
                         >
+                          <td className="px-4 py-4 text-muted-foreground font-medium">{index + 1}</td>
+                          <td className="px-4 py-4 font-mono text-xs text-muted-foreground">{tc.category_id}</td>
                           <td className="px-4 py-4 font-semibold">{tc.category_name}</td>
                           <td className="px-4 py-4 text-muted-foreground">
                             {tc.event_name ?? "-"}
@@ -233,9 +241,12 @@ export default function ReadTicketCategory() {
                     <Card key={tc.category_id} className="relative overflow-hidden">
                       <CardContent className="pt-5 pb-5 space-y-3">
                         <div className="flex items-center justify-between">
-                          <div className="min-w-0">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-mono text-muted-foreground truncate mb-0.5" title={tc.category_id}>
+                              {tc.category_id}
+                            </p>
                             <p className="font-semibold truncate">{tc.category_name}</p>
-                            <p className="text-xs text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">
                               {tc.event_name ?? "-"}
                             </p>
                           </div>
