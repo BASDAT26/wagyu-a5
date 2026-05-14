@@ -54,18 +54,18 @@ const orderRouter_ = router({
 
     if (role === "ORGANIZER") {
       const result = await query(
-        `SELECT DISTINCT o.order_id, o.order_date, o.payment_status, o.total_amount, o.customer_id,
-                         c.full_name AS customer_name
+        `SELECT o.order_id, o.order_date, o.payment_status, o.total_amount, o.customer_id,
+                c.full_name AS customer_name
          FROM tiktaktuk.orders o
          JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
-         JOIN tiktaktuk.ticket t ON t.torder_id = o.order_id
-         JOIN tiktaktuk.ticket_category tc ON tc.category_id = t.tcategory_id
-         JOIN tiktaktuk.event e ON e.event_id = tc.tevent_id
-         WHERE e.organizer_id = (
-           SELECT organizer_id
-           FROM tiktaktuk.organizer
-           WHERE user_id = $1
-           LIMIT 1
+         WHERE EXISTS (
+           SELECT 1 FROM tiktaktuk.ticket t
+           JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+           JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+           WHERE t.torder_id = o.order_id
+           AND e.organizer_id = (
+             SELECT organizer_id FROM tiktaktuk.organizer WHERE user_id = $1 LIMIT 1
+           )
          )
          ORDER BY o.order_date DESC`,
         [userId],
@@ -112,8 +112,10 @@ const orderRouter_ = router({
       orderDate: z.string().datetime().optional(),
       promoCode: z.string().optional(),
       ticketCount: z.number().positive().optional(),
+      categoryId: z.string().uuid().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      console.log("createForCurrentUser input:", input);
       const userId = ctx.session.user.id;
       const customerResult = await query(
         `SELECT customer_id
@@ -155,6 +157,28 @@ const orderRouter_ = router({
         }
       }
 
+      // Validasi kategori tiket
+      let categoryData: any = null;
+      if (input.categoryId && input.ticketCount) {
+        const catResult = await query(
+          `SELECT category_id, quota FROM tiktaktuk.ticket_category WHERE category_id = $1`,
+          [input.categoryId]
+        );
+        categoryData = catResult.rows[0];
+        if (!categoryData) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Kategori tiket tidak valid",
+          });
+        }
+        if (categoryData.quota < input.ticketCount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Kuota tiket tidak mencukupi. Sisa kuota: ${categoryData.quota}, dipesan: ${input.ticketCount}`,
+          });
+        }
+      }
+
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.orders (order_id, order_date, payment_status, total_amount, customer_id)
@@ -183,18 +207,60 @@ const orderRouter_ = router({
         );
       }
 
+      if (categoryData && input.ticketCount) {
+        console.log(`Creating ${input.ticketCount} tickets for category ${categoryData.category_id}...`);
+        // Kurangi kuota
+        await query(
+          `UPDATE tiktaktuk.ticket_category SET quota = quota - $1 WHERE category_id = $2`,
+          [input.ticketCount, categoryData.category_id]
+        );
+
+        // Buat tiket sebanyak ticketCount
+        for (let i = 0; i < input.ticketCount; i++) {
+          const ticketCode = `TCK-${randomUUID().slice(0, 8).toUpperCase()}`;
+          await query(
+            `INSERT INTO tiktaktuk.ticket (ticket_code, tcategory_id, torder_id)
+             VALUES ($1, $2, $3)`,
+            [ticketCode, categoryData.category_id, createdOrder.order_id]
+          );
+        }
+        console.log("Tickets created successfully.");
+      } else {
+        console.warn("Ticket creation skipped: categoryData or ticketCount missing.", { categoryData: !!categoryData, ticketCount: input.ticketCount });
+      }
+
       return createdOrder;
     }),
 
   update: protectedProcedure
-    .input(
-      z.object({
-        orderId: z.string().uuid(),
-        paymentStatus: z.string().min(1).max(20).optional(),
-        totalAmount: z.number().nonnegative().optional(),
-      }),
-    )
-    .mutation(async ({ input }) => {
+    .input(z.object({
+      orderId: z.string().uuid(),
+      paymentStatus: z.string().min(1).max(20).optional(),
+      totalAmount: z.number().nonnegative().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { id: userId, role } = ctx.session.user;
+
+      if (role === "ORGANIZER") {
+        const accessCheck = await query(
+          `SELECT 1 FROM tiktaktuk.orders o
+           WHERE o.order_id = $1 AND EXISTS (
+             SELECT 1 FROM tiktaktuk.ticket t
+             JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+             JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+             WHERE t.torder_id = o.order_id
+             AND e.organizer_id = (SELECT organizer_id FROM tiktaktuk.organizer WHERE user_id = $2 LIMIT 1)
+           )`,
+          [input.orderId, userId]
+        );
+        if (accessCheck.rowCount === 0) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Anda tidak memiliki akses untuk mengubah pesanan ini.",
+          });
+        }
+      }
+
       const sets: string[] = [];
       const params: any[] = [];
       let idx = 1;
@@ -218,9 +284,44 @@ const orderRouter_ = router({
 
   delete: protectedProcedure
     .input(z.object({ orderId: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      // 1. Kembalikan kuota promo (usage_count) yang terpakai
-      // Kita hitung jumlah tiket dari tabel ticket, atau fallback ke 1 jika belum ada tiket fisik yang terbuat
+    .mutation(async ({ input, ctx }) => {
+      const { id: userId, role } = ctx.session.user;
+
+      if (role === "ORGANIZER") {
+        const accessCheck = await query(
+          `SELECT 1 FROM tiktaktuk.orders o
+           WHERE o.order_id = $1 AND EXISTS (
+             SELECT 1 FROM tiktaktuk.ticket t
+             JOIN tiktaktuk.ticket_category tc ON t.tcategory_id = tc.category_id
+             JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
+             WHERE t.torder_id = o.order_id
+             AND e.organizer_id = (SELECT organizer_id FROM tiktaktuk.organizer WHERE user_id = $2 LIMIT 1)
+           )`,
+          [input.orderId, userId]
+        );
+        if (accessCheck.rowCount === 0) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Anda tidak memiliki akses untuk menghapus pesanan ini.",
+          });
+        }
+      }
+
+      // 1. Kembalikan kuota kategori tiket (quota) yang terpakai
+      await query(
+        `UPDATE tiktaktuk.ticket_category
+         SET quota = quota + sub.cnt
+         FROM (
+           SELECT tcategory_id, COUNT(*) as cnt
+           FROM tiktaktuk.ticket
+           WHERE torder_id = $1
+           GROUP BY tcategory_id
+         ) sub
+         WHERE tiktaktuk.ticket_category.category_id = sub.tcategory_id`,
+        [input.orderId]
+      );
+
+      // 2. Kembalikan kuota promo (usage_count) yang terpakai
       await query(
         `UPDATE tiktaktuk.promotion
          SET usage_count = GREATEST(0, usage_count - COALESCE(
@@ -233,11 +334,9 @@ const orderRouter_ = router({
         [input.orderId]
       );
 
-      // 2. Hapus relasi di junction table agar tidak error Foreign Key
-      await query(
-        `DELETE FROM tiktaktuk.order_promotion WHERE order_id = $1`,
-        [input.orderId]
-      );
+      // 3. Hapus relasi di junction table dan tiket fisik agar tidak error Foreign Key
+      await query(`DELETE FROM tiktaktuk.order_promotion WHERE order_id = $1`, [input.orderId]);
+      await query(`DELETE FROM tiktaktuk.ticket WHERE torder_id = $1`, [input.orderId]);
 
       // 3. Hapus order
       const result = await query(

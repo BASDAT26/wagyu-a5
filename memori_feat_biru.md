@@ -16,14 +16,14 @@ File ini menyimpan rangkuman konteks, arsitektur, dan logika-logika khusus yang 
   - Warna badge dibedakan: *Hijau* (Paid), *Kuning* (Pending), *Merah* (Cancelled), *Ungu* (Refunded).
 - **Aksi Admin**: Admin dapat mengubah status secara manual (melalui tombol Edit) atau menghapus secara permanen (melalui tombol Delete).
 
-### C. Alur Checkout (`apps/web/src/routes/checkout.tsx`)
-- **Validasi Promo Real-Time**: Kolom input kode promo dikoneksikan ke backend menggunakan endpoint `getByCode`.
-- **Aturan Promo**: Kode promo akan di-*reject* jika:
-  1. Tidak ditemukan.
-  2. Belum memasuki `start_date`.
-  3. Sudah melewati `end_date`.
-  4. Kuota sudah habis (`usage_count >= usage_limit`).
-- **Submit Order**: Ketika order dibuat via `createForCurrentUser`, *payload* juga mengirimkan `promoCode` (kode promo yang berhasil diaplikasikan) beserta `ticketCount` (jumlah tiket) ke *backend*.
+### C. Alur Pemesanan Tiket
+- **Navigasi**: Pengguna dapat mencari event melalui **Halaman Cari Event** (`/cari-event`).
+- **Pilihan Event**: Di halaman cari event, pengguna memilih event dan mengklik **"Beli Tiket"** yang mengarahkan ke halaman **Checkout** (`/checkout`).
+- **Validasi Promo & Kategori**:
+  1. Validasi Promo: Mengecek `usage_limit` vs `usage_count`.
+  2. Validasi Kategori: Mengecek sisa `quota` tiket pada kategori yang dipilih.
+- **Data Aktual**: Menggunakan data kategori tiket asli dari database (`trpc.ticket.category.listAll`) menggantikan data *mock*.
+- **Submit Order**: Mengirimkan `promoCode`, `ticketCount`, dan `categoryId` (UUID) ke backend.
 
 ---
 
@@ -34,12 +34,15 @@ Semua *routing* terkait pesanan dan promo digabung ke dalam satu router besar: `
 ### A. Order Router (`orderRouter_`)
 - **Penciptaan (`createForCurrentUser`)**: 
   - Menyimpan data ke `tiktaktuk.orders`.
-  - Jika ada `promoCode` yang dilampirkan, sistem akan:
-    1. Membuat *record* di tabel junction `tiktaktuk.order_promotion`.
-    2. **Otomatis menambahkan** nilai `usage_count` promosi tersebut sebanyak `ticketCount`.
+  - **Manajemen Promo**: Jika memakai promo, menambah `usage_count` dan mencatat di `order_promotion`.
+  - **Manajemen Tiket & Kuota**:
+    1. Memvalidasi ketersediaan `quota` pada `ticket_category`.
+    2. Mengurangi `quota` kategori tiket sesuai jumlah pesanan.
+    3. **Mencetak Tiket Fisik**: Membuat baris data baru di tabel `tiktaktuk.ticket` sebanyak `ticketCount` dengan kode unik (format: `TCK-XXXX`).
 - **Penghapusan (`delete`)**:
-  - Mencegah error *Foreign Key* dengan menghapus referensi di `order_promotion` lebih dulu.
-  - **Refund Kuota**: Menurunkan (mengurangi) nilai `usage_count` di tabel promosi sebagai bentuk *refund* kuota. Logika SQL akan otomatis mendeteksi jumlah tiket (`SELECT COUNT(*) FROM tiktaktuk.ticket`) sebagai nominal pengurangan, dan jika belum ada tiket fisik, ia *fallback* dengan mengurangi 1.
+  - Mencegah error *Foreign Key* dengan menghapus referensi di `order_promotion` dan `ticket` fisik lebih dulu.
+  - **Refund Kuota Tiket**: Menambahkan kembali sisa `quota` pada `ticket_category` berdasarkan jumlah tiket yang dihapus.
+  - **Refund Kuota Promo**: Menurunkan (mengurangi) nilai `usage_count` di tabel promosi sebagai bentuk *refund* kuota. Logika SQL akan otomatis mendeteksi jumlah tiket sebagai nominal pengurangan.
 
 ### B. Promotion Router (`promotionRouter`)
 - **Penghapusan (`delete`)**:

@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
 import { useState, useMemo } from "react";
+import { Link } from "react-router";
 import CreateEvent from "./create-event";
 import UpdateEvent from "./update-event";
 import type { Event, VenueOption, EventArtist } from "./types";
@@ -210,7 +211,11 @@ function EventCard({
 
         {/* Actions */}
         <div className="flex gap-2 items-center justify-center mt-auto">
-          {!canModify && <Button className="w-full">Beli Tiket</Button>}
+          {!canModify && (
+            <Button className="w-full" asChild>
+              <Link to={`/checkout?eventId=${event.event_id}`}>Beli Tiket</Link>
+            </Button>
+          )}
           {canModify && <UpdateEvent event={event} />}
         </div>
       </CardContent>

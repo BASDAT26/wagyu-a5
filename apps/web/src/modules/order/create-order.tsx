@@ -280,15 +280,7 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
             Kelola dan pantau seluruh transaksi pemesanan tiket.
           </p>
         </div>
-        {role === "CUSTOMER" && (
-          <Link
-            to="/checkout"
-            className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all"
-          >
-            <ShoppingCart size={16} />
-            Beli Tiket Baru
-          </Link>
-        )}
+        {/* Removed Beli Tiket Baru button per user request */}
       </div>
 
       {/* --- Stats cards --- */}
