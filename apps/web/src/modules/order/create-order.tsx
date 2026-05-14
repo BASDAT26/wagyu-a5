@@ -244,13 +244,13 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
       // Hanya Admin & Organizer yang melihat revenue
       ...(role !== "CUSTOMER"
         ? [
-          {
-            label: "Total Revenue",
-            value: formatRupiah(totalRevenue),
-            icon: TrendingUp,
-            color: "text-blue-600 dark:text-blue-400",
-          },
-        ]
+            {
+              label: "Total Revenue",
+              value: formatRupiah(totalRevenue),
+              icon: TrendingUp,
+              color: "text-blue-600 dark:text-blue-400",
+            },
+          ]
         : []),
     ];
   }, [filteredOrders, role]);

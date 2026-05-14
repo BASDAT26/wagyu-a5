@@ -35,18 +35,16 @@ const venueRouter_ = router({
     return result.rows;
   }),
 
-  create: protectedProcedure
-    .input(venueSchema)
-    .mutation(async ({ input }) => {
-      const id = randomUUID();
-      const result = await query(
-        `INSERT INTO tiktaktuk.venue (venue_id, venue_name, capacity, address, city)
+  create: protectedProcedure.input(venueSchema).mutation(async ({ input }) => {
+    const id = randomUUID();
+    const result = await query(
+      `INSERT INTO tiktaktuk.venue (venue_id, venue_name, capacity, address, city)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING venue_id, venue_name, capacity, address, city`,
-        [id, input.venueName, input.capacity, input.address, input.city],
-      );
-      return result.rows[0];
-    }),
+      [id, input.venueName, input.capacity, input.address, input.city],
+    );
+    return result.rows[0];
+  }),
 
   update: protectedProcedure
     .input(
@@ -153,18 +151,16 @@ const seatRouter = router({
       return result.rows;
     }),
 
-  create: protectedProcedure
-    .input(seatSchema)
-    .mutation(async ({ input }) => {
-      const id = randomUUID();
-      const result = await query(
-        `INSERT INTO tiktaktuk.seat (seat_id, section, seat_number, row_number, venue_id)
+  create: protectedProcedure.input(seatSchema).mutation(async ({ input }) => {
+    const id = randomUUID();
+    const result = await query(
+      `INSERT INTO tiktaktuk.seat (seat_id, section, seat_number, row_number, venue_id)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING seat_id, section, seat_number, row_number, venue_id`,
-        [id, input.section, input.seatNumber, input.rowNumber, input.venueId],
-      );
-      return result.rows[0];
-    }),
+      [id, input.section, input.seatNumber, input.rowNumber, input.venueId],
+    );
+    return result.rows[0];
+  }),
 
   update: protectedProcedure
     .input(
