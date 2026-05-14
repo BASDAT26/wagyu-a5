@@ -25,8 +25,7 @@ export default function DeleteVenue({ venue }: DeleteVenueProps) {
   const queryClient = useQueryClient();
 
   const deleteMutation = useMutation({
-    mutationFn: () =>
-      trpcClient.venue.venue.delete.mutate({ venueId: venue.venue_id }),
+    mutationFn: () => trpcClient.venue.venue.delete.mutate({ venueId: venue.venue_id }),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.venue.venue.list.queryOptions());
       toast.success(`Venue "${venue.venue_name}" berhasil dihapus`);
@@ -56,9 +55,8 @@ export default function DeleteVenue({ venue }: DeleteVenueProps) {
           </ModalHeader>
           <ModalBody>
             <p className="text-muted-foreground">
-              Apakah Anda yakin ingin menghapus venue{" "}
-              <strong>{venue.venue_name}</strong>? Tindakan ini tidak dapat
-              dibatalkan.
+              Apakah Anda yakin ingin menghapus venue <strong>{venue.venue_name}</strong>? Tindakan
+              ini tidak dapat dibatalkan.
             </p>
           </ModalBody>
           <ModalFooter>
@@ -70,9 +68,7 @@ export default function DeleteVenue({ venue }: DeleteVenueProps) {
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending && (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              )}
+              {deleteMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Hapus
             </Button>
           </ModalFooter>

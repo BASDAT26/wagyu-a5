@@ -60,9 +60,7 @@ function getStatusChip(status: string) {
         </Chip>
       );
     default:
-      return (
-        <Chip className="font-bold tracking-wide h-5 text-[10px]">{status}</Chip>
-      );
+      return <Chip className="font-bold tracking-wide h-5 text-[10px]">{status}</Chip>;
   }
 }
 

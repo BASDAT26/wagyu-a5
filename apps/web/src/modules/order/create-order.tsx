@@ -148,7 +148,9 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
   const [statusFilter, setStatusFilter] = useState<string>("Semua");
 
   const queryClient = useQueryClient();
-  const { data: serverOrders = [], isLoading } = useQuery(trpc.order.order.listForCurrentUser.queryOptions());
+  const { data: serverOrders = [], isLoading } = useQuery(
+    trpc.order.order.listForCurrentUser.queryOptions(),
+  );
 
   const orders: Order[] = useMemo(() => {
     return serverOrders.map((o: any) => ({
@@ -202,7 +204,6 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
   const filteredOrders = useMemo(() => {
     let result = [...orders];
 
-
     // Search Filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -243,13 +244,13 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
       // Hanya Admin & Organizer yang melihat revenue
       ...(role !== "CUSTOMER"
         ? [
-            {
-              label: "Total Revenue",
-              value: formatRupiah(totalRevenue),
-              icon: TrendingUp,
-              color: "text-blue-600 dark:text-blue-400",
-            },
-          ]
+          {
+            label: "Total Revenue",
+            value: formatRupiah(totalRevenue),
+            icon: TrendingUp,
+            color: "text-blue-600 dark:text-blue-400",
+          },
+        ]
         : []),
     ];
   }, [filteredOrders, role]);
@@ -272,7 +273,6 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
 
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
-
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100">Daftar Order</h1>

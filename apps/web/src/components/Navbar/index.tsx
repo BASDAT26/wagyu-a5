@@ -14,7 +14,7 @@ function getLinks(role?: Role): NavItem[] {
   return GUEST_LINKS;
 }
 
-function NavItem({ to, label, onClick }: NavItem & { onClick?: () => void }) {
+function NavMenu({ to, label, onClick }: NavItem & { onClick?: () => void }) {
   return (
     <NavLink
       to={to}
@@ -78,7 +78,7 @@ export default function Navbar({ role: propRole }: NavbarProps) {
         {/* ── Desktop nav ── */}
         <nav className="hidden lg:flex items-center gap-0.5 overflow-x-auto">
           {links.map((link) => (
-            <NavItem key={`${link.to}-${link.label}`} {...link} />
+            <NavMenu key={`${link.to}-${link.label}`} {...link} />
           ))}
         </nav>
 
@@ -148,7 +148,7 @@ export default function Navbar({ role: propRole }: NavbarProps) {
       {mobileOpen && (
         <nav className="lg:hidden border-t border-border bg-background px-4 py-3 flex flex-col gap-1 animate-in slide-in-from-top-2">
           {links.map((link) => (
-            <NavItem
+            <NavMenu
               key={`mobile-${link.to}-${link.label}`}
               {...link}
               onClick={() => setMobileOpen(false)}
