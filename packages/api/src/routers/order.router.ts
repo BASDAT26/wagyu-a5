@@ -165,7 +165,7 @@ const orderRouter_ = router({
       if (input.categoryId && input.ticketCount) {
         const catResult = await query(
           `SELECT category_id, quota FROM tiktaktuk.ticket_category WHERE category_id = $1`,
-          [input.categoryId]
+          [input.categoryId],
         );
         categoryData = catResult.rows[0];
         eventDatetime = categoryData?.event_datetime ?? null;
@@ -182,48 +182,6 @@ const orderRouter_ = router({
             message: `Kuota tiket tidak mencukupi. Sisa kuota: ${categoryData.quota}, dipesan: ${input.ticketCount}`,
           });
         }
-      }
-
-      // 2. Validasi promo terlebih dahulu jika ada
-      let promoId: string | null = null;
-      if (input.promoCode && input.ticketCount) {
-        const promoResult = await query(
-          `SELECT promotion_id, promo_code, usage_limit, usage_count, start_date, end_date FROM tiktaktuk.promotion WHERE promo_code = $1`,
-          [input.promoCode]
-        );
-        const promo = promoResult.rows[0];
-
-        // Validation: Existence
-        if (!promo) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `ERROR: Promotion dengan ID ${input.promoCode} tidak ditemukan.`,
-          });
-        }
-
-        // Validation: Usage Limit
-        if (promo.usage_count + input.ticketCount > promo.usage_limit) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `ERROR: Promotion "${promo.promo_code}" telah mencapai batas maksimum penggunaan.`,
-          });
-        }
-
-        // Validation: Date Period (start_date <= event_date <= end_date)
-        if (eventDatetime) {
-          const eventDate = new Date(eventDatetime);
-          const startDate = new Date(promo.start_date);
-          const endDate = new Date(promo.end_date);
-
-          if (eventDate < startDate || eventDate > endDate) {
-            throw new TRPCError({
-              code: "BAD_REQUEST",
-              message: `ERROR: Promotion "${promo.promo_code}" tidak berlaku untuk tanggal event ini.`,
-            });
-          }
-        }
-
-        promoId = promo.promotion_id;
       }
 
       const id = randomUUID();
