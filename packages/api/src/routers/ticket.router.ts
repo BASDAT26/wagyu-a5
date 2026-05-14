@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { query } from "@wagyu-a5/db";
 import { publicProcedure, protectedProcedure, router } from "../index";
+import { TRPCError } from "@trpc/server";
 import { randomUUID } from "crypto";
 
 // ─── TicketCategory ──────────────────────────────────────────────────────────
@@ -288,21 +289,29 @@ const ticketRouter_ = router({
       seatId: z.string().uuid().optional(),
     }))
     .mutation(async ({ input }) => {
-      const result = await query(
-        `INSERT INTO tiktaktuk.ticket (ticket_id, ticket_code, tcategory_id, torder_id)
-         VALUES (gen_random_uuid(), $1, $2, $3)
-         RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
-        [input.ticketCode, input.categoryId, input.orderId],
-      );
-      const ticket = result.rows[0];
-      // Assign seat if provided
-      if (input.seatId && ticket) {
-        await query(
-          `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
-          [input.seatId, ticket.ticket_id],
+      try {
+        const result = await query(
+          `INSERT INTO tiktaktuk.ticket (ticket_id, ticket_code, tcategory_id, torder_id)
+           VALUES (gen_random_uuid(), $1, $2, $3)
+           RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
+          [input.ticketCode, input.categoryId, input.orderId],
         );
+        const ticket = result.rows[0];
+        // Assign seat if provided
+        if (input.seatId && ticket) {
+          await query(
+            `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
+            [input.seatId, ticket.ticket_id],
+          );
+        }
+        return ticket;
+      } catch (error: any) {
+        // Forward PostgreSQL trigger error message to the client
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: error.message || "Gagal membuat tiket",
+        });
       }
-      return ticket;
     }),
 
   updateStatus: protectedProcedure
