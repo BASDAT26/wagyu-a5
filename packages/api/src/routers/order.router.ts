@@ -2,6 +2,7 @@ import { z } from "zod";
 import { query } from "@wagyu-a5/db";
 import { publicProcedure, protectedProcedure, router } from "../index";
 import { randomUUID } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 // ─── Order ───────────────────────────────────────────────────────────────────
 
@@ -36,6 +37,54 @@ const orderRouter_ = router({
     return result.rows;
   }),
 
+  listForCurrentUser: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const role = ctx.session.user.role;
+
+    if (role === "ADMIN") {
+      const result = await query(
+        `SELECT o.order_id, o.order_date, o.payment_status, o.total_amount, o.customer_id,
+                c.full_name AS customer_name
+         FROM tiktaktuk.orders o
+         JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+         ORDER BY o.order_date DESC`,
+      );
+      return result.rows;
+    }
+
+    if (role === "ORGANIZER") {
+      const result = await query(
+        `SELECT DISTINCT o.order_id, o.order_date, o.payment_status, o.total_amount, o.customer_id,
+                         c.full_name AS customer_name
+         FROM tiktaktuk.orders o
+         JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+         JOIN tiktaktuk.ticket t ON t.torder_id = o.order_id
+         JOIN tiktaktuk.ticket_category tc ON tc.category_id = t.tcategory_id
+         JOIN tiktaktuk.event e ON e.event_id = tc.tevent_id
+         WHERE e.organizer_id = (
+           SELECT organizer_id
+           FROM tiktaktuk.organizer
+           WHERE user_id = $1
+           LIMIT 1
+         )
+         ORDER BY o.order_date DESC`,
+        [userId],
+      );
+      return result.rows;
+    }
+
+    const result = await query(
+      `SELECT o.order_id, o.order_date, o.payment_status, o.total_amount, o.customer_id,
+              c.full_name AS customer_name
+       FROM tiktaktuk.orders o
+       JOIN tiktaktuk.customer c ON o.customer_id = c.customer_id
+       WHERE c.user_id = $1
+       ORDER BY o.order_date DESC`,
+      [userId],
+    );
+    return result.rows;
+  }),
+
   create: protectedProcedure
     .input(z.object({
       orderDate: z.string().datetime(),
@@ -50,6 +99,46 @@ const orderRouter_ = router({
          VALUES ($1, $2, $3, $4, $5)
          RETURNING order_id, order_date, payment_status, total_amount, customer_id`,
         [id, input.orderDate, input.paymentStatus, input.totalAmount, input.customerId],
+      );
+      return result.rows[0];
+    }),
+
+  createForCurrentUser: protectedProcedure
+    .input(z.object({
+      totalAmount: z.number().nonnegative(),
+      paymentStatus: z.string().min(1).max(20).optional(),
+      orderDate: z.string().datetime().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const customerResult = await query(
+        `SELECT customer_id
+         FROM tiktaktuk.customer
+         WHERE user_id = $1
+         LIMIT 1`,
+        [userId],
+      );
+
+      const customerId = customerResult.rows[0]?.customer_id as string | undefined;
+      if (!customerId) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Customer profile not found for current user",
+        });
+      }
+
+      const id = randomUUID();
+      const result = await query(
+        `INSERT INTO tiktaktuk.orders (order_id, order_date, payment_status, total_amount, customer_id)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING order_id, order_date, payment_status, total_amount, customer_id`,
+        [
+          id,
+          input.orderDate ?? new Date().toISOString(),
+          input.paymentStatus ?? "PENDING",
+          input.totalAmount,
+          customerId,
+        ],
       );
       return result.rows[0];
     }),
@@ -94,7 +183,7 @@ const promotionRouter = router({
     .input(z.object({ promotionId: z.string().uuid() }))
     .query(async ({ input }) => {
       const result = await query(
-        `SELECT promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit
+        `SELECT promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count
          FROM tiktaktuk.promotion WHERE promotion_id = $1`,
         [input.promotionId],
       );
@@ -103,7 +192,7 @@ const promotionRouter = router({
 
   list: publicProcedure.query(async () => {
     const result = await query(
-      `SELECT promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit
+      `SELECT promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count
        FROM tiktaktuk.promotion ORDER BY start_date DESC`,
     );
     return result.rows;
@@ -113,7 +202,7 @@ const promotionRouter = router({
     .input(z.object({ promoCode: z.string().min(1) }))
     .query(async ({ input }) => {
       const result = await query(
-        `SELECT promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit
+        `SELECT promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count
          FROM tiktaktuk.promotion WHERE promo_code = $1`,
         [input.promoCode],
       );
@@ -132,9 +221,9 @@ const promotionRouter = router({
     .mutation(async ({ input }) => {
       const id = randomUUID();
       const result = await query(
-        `INSERT INTO tiktaktuk.promotion (promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         RETURNING promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit`,
+        `INSERT INTO tiktaktuk.promotion (promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 0)
+         RETURNING promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count`,
         [id, input.promoCode, input.discountType, input.discountValue, input.startDate, input.endDate, input.usageLimit],
       );
       return result.rows[0];
@@ -164,7 +253,7 @@ const promotionRouter = router({
       params.push(input.promotionId);
       const result = await query(
         `UPDATE tiktaktuk.promotion SET ${sets.join(", ")} WHERE promotion_id = $${idx}
-         RETURNING promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit`,
+         RETURNING promotion_id, promo_code, discount_type, discount_value, start_date, end_date, usage_limit, usage_count`,
         params,
       );
       return result.rows[0] ?? null;

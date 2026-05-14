@@ -15,6 +15,9 @@ import {
   User,
   AlertCircle,
 } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
 
 // --- Types ---
 type Role = "ADMIN" | "CUSTOMER";
@@ -32,38 +35,7 @@ interface Promotion {
 }
 
 // --- Mock Data ---
-const INITIAL_PROMOS: Promotion[] = [
-  {
-    id: "p1",
-    code: "TIKTAK20",
-    type: "PERSENTASE",
-    value: 20,
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    usageLimit: 100,
-    usageCount: 45,
-  },
-  {
-    id: "p2",
-    code: "HEMAT50K",
-    type: "NOMINAL",
-    value: 50000,
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    usageLimit: 50,
-    usageCount: 12,
-  },
-  {
-    id: "p3",
-    code: "NEWUSER30",
-    type: "PERSENTASE",
-    value: 30,
-    startDate: "2024-03-01",
-    endDate: "2024-06-30",
-    usageLimit: 200,
-    usageCount: 87,
-  },
-];
+const INITIAL_PROMOS: Promotion[] = [];
 
 // --- Helper Components ---
 function TypeBadge({ type }: { type: DiscountType }) {
@@ -91,9 +63,23 @@ function formatValue(type: DiscountType, value: number) {
 }
 
 // --- Main Component ---
-export default function PromotionList() {
-  const [promos, setPromos] = useState<Promotion[]>(INITIAL_PROMOS);
-  const [role, setRole] = useState<Role>("ADMIN");
+export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
+  const queryClient = useQueryClient();
+  const { data: serverPromos = [], isLoading } = useQuery(trpc.order.promotion.list.queryOptions());
+
+  const promos: Promotion[] = useMemo(() => {
+    return serverPromos.map((p: any) => ({
+      id: p.promotion_id,
+      code: p.promo_code,
+      type: (p.discount_type === "PERCENTAGE" ? "PERSENTASE" : "NOMINAL") as DiscountType,
+      value: p.discount_value,
+      startDate: new Date(p.start_date).toISOString().split('T')[0],
+      endDate: new Date(p.end_date).toISOString().split('T')[0],
+      usageLimit: p.usage_limit,
+      usageCount: p.usage_count || 0,
+    }));
+  }, [serverPromos]);
+
   const [searchQuery, setSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("Semua");
 
@@ -106,6 +92,42 @@ export default function PromotionList() {
   // Form States & Validation
   const [formData, setFormData] = useState<Partial<Promotion>>({});
   const [errorMsg, setErrorMsg] = useState("");
+
+  const createMutation = useMutation({
+    mutationFn: (data: any) => trpcClient.order.promotion.create.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.order.promotion.list.queryOptions());
+      toast.success("Promo berhasil dibuat");
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      setErrorMsg(error.message || "Gagal membuat promo");
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: (data: any) => trpcClient.order.promotion.update.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.order.promotion.list.queryOptions());
+      toast.success("Promo berhasil diupdate");
+      setIsModalOpen(false);
+    },
+    onError: (error) => {
+      setErrorMsg(error.message || "Gagal mengupdate promo");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => trpcClient.order.promotion.delete.mutate({ promotionId: id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.order.promotion.list.queryOptions());
+      toast.success("Promo berhasil dihapus");
+      setIsDeleteOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal menghapus promo");
+    },
+  });
 
   // Derived Filters
   const filteredPromos = useMemo(() => {
@@ -185,77 +207,35 @@ export default function PromotionList() {
     }
 
     if (modalMode === "create") {
-      const newPromo: Promotion = {
-        id: `p_${Date.now()}`,
-        code: formData.code.toUpperCase(),
-        type: formData.type as DiscountType,
-        value: Number(formData.value),
+      createMutation.mutate({
+        promoCode: formData.code.toUpperCase(),
+        discountType: formData.type === "PERSENTASE" ? "PERCENTAGE" : "NOMINAL",
+        discountValue: Number(formData.value),
         startDate: formData.startDate,
         endDate: formData.endDate,
         usageLimit: Number(formData.usageLimit),
-        usageCount: 0,
-      };
-      setPromos((prev) => [newPromo, ...prev]);
+      });
     } else {
-      setPromos((prev) =>
-        prev.map((p) =>
-          p.id === selectedPromo?.id
-            ? {
-                ...p,
-                code: formData.code!.toUpperCase(),
-                type: formData.type as DiscountType,
-                value: Number(formData.value),
-                startDate: formData.startDate!,
-                endDate: formData.endDate!,
-                usageLimit: Number(formData.usageLimit),
-              }
-            : p,
-        ),
-      );
+      updateMutation.mutate({
+        promotionId: selectedPromo!.id,
+        promoCode: formData.code!.toUpperCase(),
+        discountType: formData.type === "PERSENTASE" ? "PERCENTAGE" : "NOMINAL",
+        discountValue: Number(formData.value),
+        startDate: formData.startDate!,
+        endDate: formData.endDate!,
+        usageLimit: Number(formData.usageLimit),
+      });
     }
-    setIsModalOpen(false);
   };
 
   const handleDelete = () => {
     if (selectedPromo) {
-      setPromos((prev) => prev.filter((p) => p.id !== selectedPromo.id));
+      deleteMutation.mutate(selectedPromo.id);
     }
-    setIsDeleteOpen(false);
   };
 
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
-      {/* --- Role Simulator --- */}
-      <div className="bg-linear-to-r from-purple-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-purple-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-600 text-white rounded-lg shadow-sm">
-            {role === "ADMIN" ? <ShieldAlert size={18} /> : <User size={18} />}
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Simulasi Tampilan Hak Akses
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Pilih role untuk melihat perbedaan tombol aksi (CUD khusus Admin).
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-          {(["ADMIN", "CUSTOMER"] as Role[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                role === r
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* --- Header --- */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -355,7 +335,11 @@ export default function PromotionList() {
               ))}
             </div>
             <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {filteredPromos.length > 0 ? (
+              {isLoading ? (
+                <div className="px-6 py-12 flex items-center justify-center text-slate-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : filteredPromos.length > 0 ? (
                 filteredPromos.map((row) => (
                   <div
                     key={row.id}
@@ -556,9 +540,10 @@ export default function PromotionList() {
               </button>
               <button
                 onClick={handleSavePromo}
-                className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-500/30 transition-all"
+                disabled={createMutation.isPending || updateMutation.isPending}
+                className="flex-1 h-11 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center"
               >
-                {modalMode === "create" ? "Buat Promo" : "Simpan Perubahan"}
+                {createMutation.isPending || updateMutation.isPending ? "Menyimpan..." : modalMode === "create" ? "Buat Promo" : "Simpan Perubahan"}
               </button>
             </div>
           </div>
@@ -587,9 +572,10 @@ export default function PromotionList() {
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleDelete}
-                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold shadow-lg shadow-red-500/30 transition-all"
+                disabled={deleteMutation.isPending}
+                className="w-full h-11 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-bold shadow-lg shadow-red-500/30 transition-all flex items-center justify-center"
               >
-                Ya, Hapus Promo
+                {deleteMutation.isPending ? "Menghapus..." : "Ya, Hapus Promo"}
               </button>
               <button
                 onClick={() => setIsDeleteOpen(false)}
