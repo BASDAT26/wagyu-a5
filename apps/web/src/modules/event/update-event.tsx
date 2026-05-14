@@ -17,11 +17,20 @@ import { ChevronDown, Pencil, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
-import type { Event, VenueOption, Artist, EventArtist } from "./types";
+import TicketCategoryEditor from "./ticket-category-editor";
+import type { Event, VenueOption, Artist, EventArtist, TicketCategoryForm } from "./types";
 
 interface UpdateEventProps {
   event: Event;
 }
+
+type TicketCategoryFormWithId = TicketCategoryForm & { id?: string };
+type TicketCategoryRow = {
+  category_id: string;
+  category_name: string;
+  price: number;
+  quota: number;
+};
 
 export default function UpdateEvent({ event }: UpdateEventProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,6 +39,9 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
   const [time, setTime] = useState("");
   const [venueId, setVenueId] = useState(event.venue_id);
   const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
+  const [ticketCategories, setTicketCategories] = useState<TicketCategoryFormWithId[]>([
+    { name: "", price: "", quantity: "" },
+  ]);
   const queryClient = useQueryClient();
 
   const pad2 = (value: number) => String(value).padStart(2, "0");
@@ -60,6 +72,12 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
   });
   const eventArtists = eventArtistsQuery.data;
 
+  const eventCategoriesQuery = useQuery({
+    ...trpc.ticket.category.listByEvent.queryOptions({ eventId: event.event_id }),
+    enabled: isValidEventId,
+  });
+  const eventCategories = eventCategoriesQuery.data as TicketCategoryRow[] | undefined;
+
   // Sync selected artists when eventArtists data arrives
   useEffect(() => {
     if (!eventArtists) return;
@@ -69,22 +87,43 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
     );
   }, [eventArtists]);
 
+  useEffect(() => {
+    if (!isModalOpen) return;
+    if (!eventCategories) {
+      setTicketCategories([{ name: "", price: "", quantity: "" }]);
+      return;
+    }
+    const mapped = eventCategories.map((category) => ({
+      id: category.category_id,
+      name: category.category_name ?? "",
+      price: category.price != null ? String(category.price) : "",
+      quantity: category.quota != null ? String(category.quota) : "",
+    }));
+    setTicketCategories(mapped.length > 0 ? mapped : [{ name: "", price: "", quantity: "" }]);
+  }, [eventCategories, isModalOpen, event.event_id]);
+
   const updateEventMutation = useMutation({
     mutationFn: async (data: {
       eventId: string;
       eventDatetime?: string;
       eventTitle?: string;
       venueId?: string;
+      categories: TicketCategoryFormWithId[];
     }) => {
-      await trpcClient.event.event.update.mutate(data);
+      await trpcClient.event.event.update.mutate({
+        eventId: data.eventId,
+        eventDatetime: data.eventDatetime,
+        eventTitle: data.eventTitle,
+        venueId: data.venueId,
+      });
 
       // Sync event artists: remove deselected, add newly selected
       const currentEventArtists = await trpcClient.event.eventArtist.listByEvent.query({
         eventId: data.eventId,
       });
-      const currentIds = currentEventArtists.map((ea: EventArtist) => ea.artist_id);
-      const toRemove = currentIds.filter((id: string) => !selectedArtistIds.includes(id));
-      const toAdd = selectedArtistIds.filter((id) => !currentIds.includes(id));
+      const currentArtistIds = currentEventArtists.map((ea: EventArtist) => ea.artist_id);
+      const toRemove = currentArtistIds.filter((id: string) => !selectedArtistIds.includes(id));
+      const toAdd = selectedArtistIds.filter((id) => !currentArtistIds.includes(id));
 
       await Promise.all(
         toRemove.map((artistId) =>
@@ -102,12 +141,79 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
           }),
         ),
       );
+
+      const currentCategories = (await trpcClient.ticket.category.listByEvent.query({
+        eventId: data.eventId,
+      })) as TicketCategoryRow[];
+      const currentCategoryIds = new Set(currentCategories.map((cat) => cat.category_id));
+      const nextIds = new Set(
+        data.categories.map((cat) => cat.id).filter((id): id is string => Boolean(id)),
+      );
+
+      const toDelete = currentCategories.filter((cat) => !nextIds.has(cat.category_id));
+      const toUpdate = data.categories.filter((cat) => cat.id && currentCategoryIds.has(cat.id));
+      const toCreate = data.categories.filter((cat) => !cat.id);
+
+      let deletableCategories = toDelete;
+      if (toDelete.length > 0) {
+        const deletionChecks = await Promise.all(
+          toDelete.map(async (cat) => {
+            const tickets = await trpcClient.ticket.ticket.listByCategory.query({
+              categoryId: cat.category_id,
+            });
+            return { cat, ticketCount: tickets.length };
+          }),
+        );
+
+        const blocked = deletionChecks.filter((result) => result.ticketCount > 0);
+        deletableCategories = deletionChecks
+          .filter((result) => result.ticketCount === 0)
+          .map((result) => result.cat);
+
+        if (blocked.length > 0) {
+          const blockedNames = blocked
+            .map((result) => result.cat.category_name)
+            .filter((name) => Boolean(name));
+          const detail = blockedNames.length > 0 ? `: ${blockedNames.join(", ")}` : ".";
+          toast.warning(`Kategori tiket yang sudah memiliki tiket tidak bisa dihapus${detail}`);
+        }
+      }
+
+      await Promise.all(
+        deletableCategories.map((cat) =>
+          trpcClient.ticket.category.delete.mutate({ categoryId: cat.category_id }),
+        ),
+      );
+      await Promise.all(
+        toUpdate.map((cat) =>
+          trpcClient.ticket.category.update.mutate({
+            categoryId: cat.id!,
+            categoryName: cat.name.trim(),
+            quota: Number(cat.quantity),
+            price: Number(cat.price),
+          }),
+        ),
+      );
+      await Promise.all(
+        toCreate.map((cat) =>
+          trpcClient.ticket.category.create.mutate({
+            categoryName: cat.name.trim(),
+            quota: Number(cat.quantity),
+            price: Number(cat.price),
+            eventId: data.eventId,
+          }),
+        ),
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.event.event.list.queryOptions());
       queryClient.invalidateQueries(
         trpc.event.eventArtist.listByEvent.queryOptions({ eventId: event.event_id }),
       );
+      queryClient.invalidateQueries(
+        trpc.ticket.category.listByEvent.queryOptions({ eventId: event.event_id }),
+      );
+      queryClient.invalidateQueries(trpc.ticket.category.listAll.queryOptions());
       toast.success("Acara berhasil diperbarui");
       setIsModalOpen(false);
     },
@@ -125,12 +231,46 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
       toast.error("Event ID tidak valid");
       return;
     }
+
+    const normalizedCategories = ticketCategories
+      .map((cat) => ({
+        id: cat.id,
+        name: cat.name.trim(),
+        price: cat.price.trim(),
+        quantity: cat.quantity.trim(),
+      }))
+      .filter((cat) => cat.name || cat.price || cat.quantity);
+
+    if (normalizedCategories.length === 0) {
+      toast.error("Minimal 1 kategori tiket harus diisi");
+      return;
+    }
+
+    const hasIncompleteCategory = normalizedCategories.some(
+      (cat) => !cat.name || !cat.price || !cat.quantity,
+    );
+    if (hasIncompleteCategory) {
+      toast.error("Lengkapi semua field kategori tiket");
+      return;
+    }
+
+    const hasInvalidNumbers = normalizedCategories.some((cat) => {
+      const price = Number(cat.price);
+      const quota = Number(cat.quantity);
+      return Number.isNaN(price) || Number.isNaN(quota) || price < 0 || quota <= 0;
+    });
+    if (hasInvalidNumbers) {
+      toast.error("Harga atau kuota tidak valid");
+      return;
+    }
+
     const eventDatetime = new Date(`${date}T${time}:00`).toISOString();
     updateEventMutation.mutate({
       eventId: event.event_id,
       eventDatetime,
       eventTitle: title,
       venueId,
+      categories: normalizedCategories,
     });
   }
 
@@ -231,10 +371,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
-              </div>
 
-              {/* ===== RIGHT COLUMN ===== */}
-              <div className="space-y-4">
                 {/* Artists */}
                 <div>
                   <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -259,6 +396,15 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
                     )}
                   </div>
                 </div>
+              </div>
+
+              {/* ===== RIGHT COLUMN ===== */}
+              <div className="space-y-4">
+                <TicketCategoryEditor
+                  categories={ticketCategories}
+                  onChange={setTicketCategories}
+                  idPrefix={`edit-event-${event.event_id}`}
+                />
               </div>
             </div>
           </ModalBody>
