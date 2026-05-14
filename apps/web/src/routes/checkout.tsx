@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   MapPin,
@@ -9,15 +9,38 @@ import {
   ChevronLeft,
   ShieldCheck,
   CreditCard,
+  Tag,
+  Armchair,
+  AlertCircle,
 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { authClient } from "@/lib/auth-client";
+import { trpc, trpcClient, queryClient } from "@/utils/trpc";
+import { toast } from "sonner";
+
+// --- Mock Promo Data ---
+const PROMOS = [
+  { code: "TIKTAK20", type: "PERSENTASE" as const, value: 20 },
+  { code: "HEMAT50K", type: "NOMINAL" as const, value: 50000 },
+  { code: "NEWUSER30", type: "PERSENTASE" as const, value: 30 },
+];
+
+// --- Mock Seats (6x8 grid) ---
+const TOTAL_ROWS = 6;
+const SEATS_PER_ROW = 8;
+const TAKEN_SEATS = new Set(["A3","A4","B2","B5","C1","C6","D3","D4","D7","E2","F5","F6"]);
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
   const [ticketCount, setTicketCount] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState("CAT1");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<typeof PROMOS[0] | null>(null);
+  const [promoError, setPromoError] = useState("");
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
 
   // Mock Event Data
   const event = {
@@ -43,9 +66,37 @@ export default function CheckoutPage() {
   ];
 
   const currentCat = categories.find((c) => c.id === selectedCategory) || categories[0];
+  const isSeatingCategory = currentCat.id !== "FEST";
   const subtotal = currentCat.price * ticketCount;
   const adminFee = 25000;
-  const total = subtotal + adminFee;
+
+  const discount = useMemo(() => {
+    if (!appliedPromo) return 0;
+    if (appliedPromo.type === "PERSENTASE") return Math.floor(subtotal * appliedPromo.value / 100);
+    return Math.min(appliedPromo.value, subtotal);
+  }, [appliedPromo, subtotal]);
+
+  const total = subtotal - discount + adminFee;
+
+  const handleApplyPromo = () => {
+    setPromoError("");
+    const found = PROMOS.find((p) => p.code === promoCode.toUpperCase().trim());
+    if (!found) {
+      setPromoError("Kode promo tidak valid atau sudah kadaluarsa.");
+      setAppliedPromo(null);
+      return;
+    }
+    setAppliedPromo(found);
+  };
+
+  const handleToggleSeat = (seatId: string) => {
+    if (TAKEN_SEATS.has(seatId)) return;
+    setSelectedSeats((prev) => {
+      if (prev.includes(seatId)) return prev.filter((s) => s !== seatId);
+      if (prev.length >= ticketCount) return prev;
+      return [...prev, seatId];
+    });
+  };
 
   function formatRupiah(amount: number) {
     return new Intl.NumberFormat("id-ID", {
@@ -55,17 +106,32 @@ export default function CheckoutPage() {
     }).format(amount);
   }
 
-  const handleCheckout = () => {
+  const orderCode = createdOrderId?.slice(0, 8).toUpperCase() ?? "--------";
+  const customerName = session?.user?.name ?? "Customer";
+  const handleCheckout = async () => {
+    if (!session?.user?.id) {
+      toast.error("Silakan login terlebih dahulu.");
+      return;
+    }
     setIsSubmitting(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const createdOrder = await trpcClient.order.order.createForCurrentUser.mutate({
+        orderDate: new Date().toISOString(),
+        paymentStatus: "PENDING",
+        totalAmount: total,
+      });
+      setCreatedOrderId(createdOrder.order_id as string);
+      await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
       setIsSuccess(true);
-      // Simulate redirect to order list after 3s
       setTimeout(() => {
         navigate("/order");
       }, 3000);
-    }, 1500);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Gagal membuat order";
+      toast.error(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {
@@ -79,8 +145,10 @@ export default function CheckoutPage() {
             Order Berhasil Dibuat!
           </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-8">
-            Terima kasih telah memesan tiket. ID Order Anda adalah{" "}
-            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">ORD-006</span>.
+            Terima kasih, <span className="font-semibold">{customerName}</span>! ID Order Anda adalah{" "}
+            <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+              ORD-{orderCode}
+            </span>.
           </p>
           <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl text-left space-y-2 mb-8">
             <div className="flex justify-between text-sm">
@@ -202,7 +270,7 @@ export default function CheckoutPage() {
                   {ticketCount}
                 </span>
                 <button
-                  onClick={() => setTicketCount(Math.min(5, ticketCount + 1))}
+                  onClick={() => setTicketCount(Math.min(10, ticketCount + 1))}
                   className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center justify-center"
                 >
                   +
@@ -210,8 +278,90 @@ export default function CheckoutPage() {
               </div>
             </div>
             <p className="text-xs text-slate-400 mt-3 text-right">
-              Maksimal 5 tiket per transaksi.
+              Maksimal 10 tiket per transaksi.
             </p>
+          </div>
+
+          {/* Seat Selection (Optional) */}
+          {isSeatingCategory && (
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
+                <Armchair className="text-blue-500" size={20} /> Pilih Kursi (Opsional)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                Pilih hingga {ticketCount} kursi. Abu-abu = terisi.
+              </p>
+              <div className="flex flex-col items-center gap-2">
+                <div className="w-2/3 h-3 bg-slate-300 dark:bg-slate-700 rounded-b-lg mb-3 text-center text-[9px] font-bold text-slate-500 leading-3">PANGGUNG</div>
+                {Array.from({ length: TOTAL_ROWS }, (_, r) => {
+                  const rowLabel = String.fromCharCode(65 + r);
+                  return (
+                    <div key={rowLabel} className="flex items-center gap-1.5">
+                      <span className="w-5 text-[10px] font-bold text-slate-400 text-right">{rowLabel}</span>
+                      {Array.from({ length: SEATS_PER_ROW }, (_, s) => {
+                        const seatId = `${rowLabel}${s + 1}`;
+                        const isTaken = TAKEN_SEATS.has(seatId);
+                        const isSelected = selectedSeats.includes(seatId);
+                        return (
+                          <button
+                            key={seatId}
+                            onClick={() => handleToggleSeat(seatId)}
+                            disabled={isTaken}
+                            title={seatId}
+                            className={`w-8 h-8 rounded-md text-[10px] font-bold transition-all border ${
+                              isTaken
+                                ? "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed border-transparent"
+                                : isSelected
+                                  ? "bg-blue-600 text-white border-blue-700 shadow-md shadow-blue-500/30"
+                                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400"
+                            }`}
+                          >
+                            {s + 1}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+                {selectedSeats.length > 0 && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-2">
+                    Kursi dipilih: {selectedSeats.sort().join(", ")}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Promo Code */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+              <Tag className="text-emerald-500" size={20} /> Kode Promo (Opsional)
+            </h3>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                placeholder="Masukkan kode promo"
+                className="flex-1 h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm font-mono uppercase focus:outline-none focus:ring-2 focus:ring-blue-500/30 transition-all"
+              />
+              <button
+                onClick={handleApplyPromo}
+                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all"
+              >
+                Terapkan
+              </button>
+            </div>
+            {promoError && (
+              <div className="mt-3 flex items-center gap-2 text-red-500 text-sm">
+                <AlertCircle size={14} /> {promoError}
+              </div>
+            )}
+            {appliedPromo && !promoError && (
+              <div className="mt-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl text-emerald-700 dark:text-emerald-400 text-sm font-medium">
+                ✓ Promo <span className="font-mono font-bold">{appliedPromo.code}</span> berhasil diterapkan! Diskon {appliedPromo.type === "PERSENTASE" ? `${appliedPromo.value}%` : formatRupiah(appliedPromo.value)}
+              </div>
+            )}
           </div>
         </div>
 
@@ -236,6 +386,14 @@ export default function CheckoutPage() {
                   {formatRupiah(subtotal)}
                 </span>
               </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-emerald-600 dark:text-emerald-400 font-medium">Diskon ({appliedPromo?.code})</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    -{formatRupiah(discount)}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Biaya Layanan</span>
                 <span className="font-bold text-slate-800 dark:text-slate-100">

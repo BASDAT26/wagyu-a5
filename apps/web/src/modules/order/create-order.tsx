@@ -15,9 +15,13 @@ import {
   Building2,
 } from "lucide-react";
 import type { Role } from "@/data/type";
+import { Link } from "react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trpcClient, trpc } from "@/utils/trpc";
+import { toast } from "sonner";
 
 // --- Types ---
-type OrderStatus = "LUNAS" | "PENDING" | "DIBATALKAN";
+type OrderStatus = "PAID" | "PENDING" | "CANCELLED";
 
 interface Order {
   id: string;
@@ -28,49 +32,8 @@ interface Order {
   total: number;
 }
 
-// --- Mock Data Initial ---
-const INITIAL_ORDERS: Order[] = [
-  {
-    id: "ORD-001",
-    customer: "Budi Santoso",
-    initial: "B",
-    date: "2024-04-10 14:32",
-    status: "LUNAS",
-    total: 1200000,
-  },
-  {
-    id: "ORD-002",
-    customer: "Budi Santoso",
-    initial: "B",
-    date: "2024-04-11 09:15",
-    status: "LUNAS",
-    total: 150000,
-  },
-  {
-    id: "ORD-003",
-    customer: "Siti Rahayu",
-    initial: "S",
-    date: "2024-04-12 18:44",
-    status: "PENDING",
-    total: 1500000,
-  },
-  {
-    id: "ORD-004",
-    customer: "Siti Rahayu",
-    initial: "S",
-    date: "2024-04-13 11:00",
-    status: "DIBATALKAN",
-    total: 700000,
-  },
-  {
-    id: "ORD-005",
-    customer: "Andi Wijaya",
-    initial: "A",
-    date: "2024-04-14 10:00",
-    status: "PENDING",
-    total: 450000,
-  },
-];
+// --- Empty Data Init ---
+const INITIAL_ORDERS: Order[] = [];
 
 // --- Helper Functions ---
 function formatRupiah(amount: number) {
@@ -85,8 +48,8 @@ function formatRupiah(amount: number) {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
-    LUNAS: {
-      label: "Lunas",
+    PAID: {
+      label: "Paid",
       className: "text-green-600 bg-green-50 border-green-200 ring-1 ring-green-200",
       icon: <CheckCircle size={11} />,
     },
@@ -95,8 +58,8 @@ function StatusBadge({ status }: { status: string }) {
       className: "text-amber-600 bg-amber-50 border-amber-200 ring-1 ring-amber-200",
       icon: <Clock size={11} />,
     },
-    DIBATALKAN: {
-      label: "Dibatalkan",
+    CANCELLED: {
+      label: "Cancelled",
       className: "text-red-500 bg-red-50 border-red-200 ring-1 ring-red-200",
       icon: <XCircle size={11} />,
     },
@@ -174,18 +137,61 @@ function ActionButtons({ onEdit, onDelete }: { onEdit: () => void; onDelete: () 
 }
 
 // --- Main Component ---
-export default function OrderList() {
+export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
   // Visual CRUD States
-  const [orders, setOrders] = useState<Order[]>(INITIAL_ORDERS);
-  const [role, setRole] = useState<Role>("ADMIN");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("Semua");
+
+  const queryClient = useQueryClient();
+  const { data: serverOrders = [], isLoading } = useQuery(trpc.order.order.listForCurrentUser.queryOptions());
+
+  const orders: Order[] = useMemo(() => {
+    return serverOrders.map((o: any) => ({
+      id: o.order_id,
+      customer: o.customer_name || "Unknown",
+      initial: (o.customer_name || "U")[0].toUpperCase(),
+      date: new Date(o.order_date).toLocaleString("id-ID", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      status: (o.payment_status?.toUpperCase() || "PENDING") as OrderStatus,
+      total: o.total_amount,
+    }));
+  }, [serverOrders]);
 
   // Modal States
   const [isUpdateOpen, setIsUpdateOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [updateStatusVal, setUpdateStatusVal] = useState<OrderStatus>("LUNAS");
+  const [updateStatusVal, setUpdateStatusVal] = useState<OrderStatus>("PAID");
+
+  const updateMutation = useMutation({
+    mutationFn: (data: { orderId: string; paymentStatus: string }) =>
+      trpcClient.order.order.update.mutate(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
+      toast.success("Status order berhasil diupdate");
+      setIsUpdateOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal mengupdate order");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (orderId: string) => trpcClient.order.order.delete.mutate({ orderId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
+      toast.success("Order berhasil dihapus");
+      setIsDeleteOpen(false);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Gagal menghapus order");
+    },
+  });
 
   // Filter & Sort Logic
   const filteredOrders = useMemo(() => {
@@ -222,10 +228,10 @@ export default function OrderList() {
   // Derived Stats
   const stats = useMemo(() => {
     const totalOrder = filteredOrders.length;
-    const lunasCount = filteredOrders.filter((o) => o.status === "LUNAS").length;
+    const lunasCount = filteredOrders.filter((o) => o.status === "PAID").length;
     const pendingCount = filteredOrders.filter((o) => o.status === "PENDING").length;
     const totalRevenue = filteredOrders
-      .filter((o) => o.status === "LUNAS")
+      .filter((o) => o.status === "PAID")
       .reduce((sum, o) => sum + o.total, 0);
 
     return [
@@ -235,7 +241,7 @@ export default function OrderList() {
         icon: ShoppingCart,
         color: "text-slate-600 dark:text-slate-300",
       },
-      { label: "Lunas", value: lunasCount.toString(), icon: CheckCircle, color: "text-green-500" },
+      { label: "Paid", value: lunasCount.toString(), icon: CheckCircle, color: "text-green-500" },
       { label: "Pending", value: pendingCount.toString(), icon: Clock, color: "text-amber-500" },
       // Hanya Admin & Organizer yang melihat revenue
       ...(role !== "CUSTOMER"
@@ -254,59 +260,21 @@ export default function OrderList() {
   // Actions
   const handleUpdateStatus = () => {
     if (selectedOrder) {
-      setOrders((prev) =>
-        prev.map((o) => (o.id === selectedOrder.id ? { ...o, status: updateStatusVal } : o)),
-      );
+      updateMutation.mutate({
+        orderId: selectedOrder.id,
+        paymentStatus: updateStatusVal,
+      });
     }
-    setIsUpdateOpen(false);
   };
 
   const handleDelete = () => {
     if (selectedOrder) {
-      setOrders((prev) => prev.filter((o) => o.id !== selectedOrder.id));
+      deleteMutation.mutate(selectedOrder.id);
     }
-    setIsDeleteOpen(false);
   };
 
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
-      {/* --- Role Simulator Bar (For Testing Visual Logic) --- */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-blue-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-600 text-white rounded-lg shadow-sm">
-            {role === "ADMIN" ? (
-              <ShieldAlert size={18} />
-            ) : role === "ORGANIZER" ? (
-              <Building2 size={18} />
-            ) : (
-              <User size={18} />
-            )}
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Simulasi Tampilan Berdasarkan Peran
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Pilih role untuk melihat perbedaan Hak Akses (Data Scope & Action).
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-          {(["ADMIN", "ORGANIZER", "CUSTOMER"] as Role[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${
-                role === r
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
@@ -316,10 +284,10 @@ export default function OrderList() {
           </p>
         </div>
         {role === "CUSTOMER" && (
-          <button className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all">
+          <Link to="/checkout" className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/20 transition-all">
             <ShoppingCart size={16} />
             Beli Tiket Baru
-          </button>
+          </Link>
         )}
       </div>
 
@@ -367,9 +335,9 @@ export default function OrderList() {
             className="h-10 pl-9 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium text-slate-700 dark:text-slate-200 appearance-none shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 cursor-pointer w-full"
           >
             <option value="Semua">Semua Status</option>
-            <option value="Lunas">Lunas</option>
+            <option value="Paid">Paid</option>
             <option value="Pending">Pending</option>
-            <option value="Dibatalkan">Dibatalkan</option>
+            <option value="Cancelled">Cancelled</option>
           </select>
           <ChevronDown
             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -403,14 +371,18 @@ export default function OrderList() {
 
             {/* Table rows */}
             <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {filteredOrders.length > 0 ? (
+              {isLoading ? (
+                <div className="px-6 py-12 flex items-center justify-center text-slate-400">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : filteredOrders.length > 0 ? (
                 filteredOrders.map((row) => (
                   <div
                     key={row.id}
                     className="grid grid-cols-[1.2fr_2fr_1.5fr_1fr_1.5fr_auto] gap-4 items-center px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
                   >
                     <span className="text-sm font-mono font-medium text-slate-600 dark:text-slate-300">
-                      {row.id}
+                      {row.id.slice(0, 13)}...
                     </span>
 
                     <div className="flex items-center gap-3">
@@ -494,9 +466,9 @@ export default function OrderList() {
                     onChange={(e) => setUpdateStatusVal(e.target.value as OrderStatus)}
                     className="w-full h-11 pl-4 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/30 shadow-sm appearance-none cursor-pointer"
                   >
-                    <option value="LUNAS">Lunas</option>
+                    <option value="PAID">Paid</option>
                     <option value="PENDING">Pending</option>
-                    <option value="DIBATALKAN">Dibatalkan</option>
+                    <option value="CANCELLED">Cancelled</option>
                   </select>
                   <ChevronDown
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
@@ -515,9 +487,10 @@ export default function OrderList() {
               </button>
               <button
                 onClick={handleUpdateStatus}
-                className="flex-1 h-11 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all"
+                disabled={updateMutation.isPending}
+                className="flex-1 h-11 rounded-xl bg-blue-600 text-white text-sm font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center"
               >
-                Simpan Perubahan
+                {updateMutation.isPending ? "Menyimpan..." : "Simpan Perubahan"}
               </button>
             </div>
           </div>
@@ -546,9 +519,10 @@ export default function OrderList() {
             <div className="flex flex-col gap-2">
               <button
                 onClick={handleDelete}
-                className="w-full h-11 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all"
+                disabled={deleteMutation.isPending}
+                className="w-full h-11 rounded-xl bg-red-600 text-white text-sm font-bold hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all flex items-center justify-center"
               >
-                Ya, Hapus Order
+                {deleteMutation.isPending ? "Menghapus..." : "Ya, Hapus Order"}
               </button>
               <button
                 onClick={() => setIsDeleteOpen(false)}
