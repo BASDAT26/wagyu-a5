@@ -66,6 +66,7 @@ function getStatusChip(status: string) {
 
 export default function ReadTicket() {
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
 
   const { data: session } = authClient.useSession();
   const role = (session?.user as { role?: string })?.role;
@@ -80,6 +81,11 @@ export default function ReadTicket() {
 
   const visibleTickets = useMemo(() => {
     let filtered = tickets as TicketEnriched[];
+    
+    if (statusFilter !== "ALL") {
+      filtered = filtered.filter((t) => t.status === statusFilter);
+    }
+    
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(
@@ -90,7 +96,7 @@ export default function ReadTicket() {
       );
     }
     return filtered;
-  }, [tickets, search]);
+  }, [tickets, search, statusFilter]);
 
   const total = visibleTickets.length;
   const validCount = visibleTickets.filter((t) => t.status === "VALID").length;
@@ -142,8 +148,8 @@ export default function ReadTicket() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-        <div className="relative w-full sm:w-80">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative w-full sm:w-80 shrink-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
           <Input
             placeholder="Cari kode tiket, acara, atau pelanggan..."
@@ -151,6 +157,21 @@ export default function ReadTicket() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+        </div>
+        <div className="flex p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl w-full sm:w-auto overflow-x-auto shrink-0">
+          {["ALL", "VALID", "TERPAKAI", "BATAL"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all whitespace-nowrap flex-1 sm:flex-none ${
+                statusFilter === status
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-50 shadow-sm"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
+            >
+              {status === "ALL" ? "Semua" : status}
+            </button>
+          ))}
         </div>
       </div>
 
