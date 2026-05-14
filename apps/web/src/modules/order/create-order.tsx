@@ -197,14 +197,6 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
   const filteredOrders = useMemo(() => {
     let result = [...orders];
 
-    // Simulate Role Filtering
-    if (role === "CUSTOMER") {
-      // Hanya lihat order Budi
-      result = result.filter((o) => o.customer.includes("Budi"));
-    } else if (role === "ORGANIZER") {
-      // Simulate organizer seeing only partial orders
-      result = result.filter((o) => o.total > 500000);
-    }
 
     // Search Filter
     if (searchQuery) {

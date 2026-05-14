@@ -236,36 +236,6 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
 
   return (
     <div className="w-full space-y-6 p-6 max-w-7xl mx-auto">
-      {/* --- Role Simulator --- */}
-      <div className="bg-linear-to-r from-purple-50 to-pink-50 dark:from-slate-800 dark:to-slate-800/50 p-4 rounded-2xl border border-purple-100 dark:border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-600 text-white rounded-lg shadow-sm">
-            {role === "ADMIN" ? <ShieldAlert size={18} /> : <User size={18} />}
-          </div>
-          <div>
-            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              Simulasi Tampilan Hak Akses
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Pilih role untuk melihat perbedaan tombol aksi (CUD khusus Admin).
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2 bg-white dark:bg-slate-900 p-1 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
-          {(["ADMIN", "CUSTOMER"] as Role[]).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-4 py-1.5 rounded-lg text-sm font-semibold transition-all ${role === r
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-            >
-              {r}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* --- Header --- */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
