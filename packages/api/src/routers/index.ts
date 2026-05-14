@@ -4,6 +4,7 @@ import { venueRouter } from "./venue.router";
 import { eventRouter } from "./event.router";
 import { ticketRouter } from "./ticket.router";
 import { orderRouter } from "./order.router";
+import { dashboardRouter } from "./dashboard.router";
 
 export const appRouter = router({
   healthCheck: publicProcedure.query(() => {
@@ -20,5 +21,6 @@ export const appRouter = router({
   event: eventRouter,
   ticket: ticketRouter,
   order: orderRouter,
+  dashboard: dashboardRouter,
 });
 export type AppRouter = typeof appRouter;

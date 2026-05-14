@@ -141,7 +141,6 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
   };
 
   return (
-    <div>
       <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
         <ModalTrigger asChild>
           <Button variant="outline" size="sm" className="gap-1.5">
@@ -273,6 +272,5 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
           </ModalFooter>
         </ModalPopup>
       </Modal>
-    </div>
   );
 }
