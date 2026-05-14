@@ -23,25 +23,23 @@ export default function DashboardPage() {
   const [role, setRole] = useState<Role>("ADMIN");
 
   return (
-    <>
-      <Navbar role={role} />
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* --- Role Simulator --- */}
-          <div className="bg-white dark:bg-slate-900 p-4 rounded-[20px] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm mb-8">
-            <div className="flex items-center gap-3 pl-2">
-              <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
-                <ShieldAlert size={18} />
-              </div>
-              <div>
-                <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                  Simulasi Role Dashboard
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Pilih role untuk melihat tampilan spesifik.
-                </p>
-              </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 p-6 font-sans">
+      <div className="max-w-6xl mx-auto space-y-8">
+        {/* --- Role Simulator --- */}
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-[20px] border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm mb-8">
+          <div className="flex items-center gap-3 pl-2">
+            <div className="p-2.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-xl">
+              <ShieldAlert size={18} />
             </div>
+            <div>
+              <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                Simulasi Role Dashboard
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Pilih role untuk melihat tampilan spesifik.
+              </p>
+            </div>
+          </div>
             <div className="flex gap-2 bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded-xl shadow-inner border border-slate-200 dark:border-slate-700">
               {(["ADMIN", "ORGANIZER", "CUSTOMER"] as Role[]).map((r) => (
                 <button
