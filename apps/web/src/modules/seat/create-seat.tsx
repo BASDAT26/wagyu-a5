@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Modal,
   ModalPopup,
@@ -12,10 +12,11 @@ import {
 import { Button } from "@wagyu-a5/ui/components/button";
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Label } from "@wagyu-a5/ui/components/label";
-import { Plus, Loader2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Loader2, ChevronDown } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
+import type { Venue } from "../venue/types";
 
 interface CreateSeatProps {
   venueId: string;
@@ -23,10 +24,27 @@ interface CreateSeatProps {
 
 export default function CreateSeat({ venueId }: CreateSeatProps) {
   const [open, setOpen] = useState(false);
+  const [selectedVenueId, setSelectedVenueId] = useState("");
   const [section, setSection] = useState("");
   const [rowNumber, setRowNumber] = useState("");
   const [seatNumber, setSeatNumber] = useState("");
   const queryClient = useQueryClient();
+
+  const { data: venueList = [] } = useQuery(trpc.venue.venue.list.queryOptions());
+
+  const reservedVenues = useMemo(
+    () => (venueList as Venue[]).filter((v) => v.reserved_seating),
+    [venueList],
+  );
+
+  useEffect(() => {
+    if (selectedVenueId) return;
+    const initial =
+      reservedVenues.find((v) => v.venue_id === venueId) ?? reservedVenues[0];
+    if (initial) {
+      setSelectedVenueId(initial.venue_id);
+    }
+  }, [reservedVenues, selectedVenueId, venueId]);
 
   const createMutation = useMutation({
     mutationFn: (data: {
@@ -37,7 +55,7 @@ export default function CreateSeat({ venueId }: CreateSeatProps) {
     }) => trpcClient.venue.seat.create.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(
-        trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }),
+        trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId: selectedVenueId }),
       );
       toast.success("Kursi berhasil ditambahkan");
       resetForm();
@@ -59,11 +77,15 @@ export default function CreateSeat({ venueId }: CreateSeatProps) {
       toast.error("Semua field harus diisi");
       return;
     }
+    if (!selectedVenueId) {
+      toast.error("Pilih venue reserved seating terlebih dahulu");
+      return;
+    }
     createMutation.mutate({
       section,
       seatNumber,
       rowNumber,
-      venueId,
+      venueId: selectedVenueId,
     });
   }
 
@@ -80,6 +102,31 @@ export default function CreateSeat({ venueId }: CreateSeatProps) {
           <ModalTitle className="font-bold text-lg">Tambah Kursi Baru</ModalTitle>
         </ModalHeader>
         <ModalBody className="space-y-4 py-2">
+          <div className="space-y-2">
+            <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
+              Venue (Reserved Seating)
+            </Label>
+            <div className="relative">
+              <select
+                value={selectedVenueId}
+                onChange={(e) => setSelectedVenueId(e.target.value)}
+                className="w-full appearance-none h-10 rounded-xl border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+              >
+                <option value="" disabled>
+                  Pilih venue...
+                </option>
+                {reservedVenues.map((venue) => (
+                  <option key={venue.venue_id} value={venue.venue_id}>
+                    {venue.venue_name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+            </div>
+            {reservedVenues.length === 0 && (
+              <p className="text-xs text-slate-400">Belum ada venue dengan reserved seating.</p>
+            )}
+          </div>
           <div className="space-y-2">
             <Label className="text-[11px] font-bold text-gray-500 dark:text-slate-400 uppercase tracking-wider">
               Section

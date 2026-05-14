@@ -169,6 +169,18 @@ const seatRouter = router({
     }),
 
   create: protectedProcedure.input(seatSchema).mutation(async ({ input }) => {
+    const venueResult = await query(
+      `SELECT reservedseating FROM tiktaktuk.venue WHERE venue_id = $1`,
+      [input.venueId],
+    );
+    const reservedSeating = venueResult.rows[0]?.reservedseating;
+    if (!reservedSeating) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message: "Venue ini tidak mendukung reserved seating",
+      });
+    }
+
     const id = randomUUID();
     const result = await query(
       `INSERT INTO tiktaktuk.seat (seat_id, section, seat_number, row_number, venue_id)
