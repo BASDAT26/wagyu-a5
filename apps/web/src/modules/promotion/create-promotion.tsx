@@ -20,7 +20,7 @@ import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 
 // --- Types ---
-type Role = "ADMIN" | "CUSTOMER";
+import type { Role } from "@/data/type";
 type DiscountType = "PERSENTASE" | "NOMINAL";
 
 interface Promotion {
@@ -420,7 +420,7 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
 
       {/* --- CUD Modal (Admin Only) --- */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">
@@ -555,7 +555,7 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
 
       {/* --- Delete Confirm Modal --- */}
       {isDeleteOpen && selectedPromo && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
           <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-slate-900 p-6 shadow-2xl border border-slate-200 dark:border-slate-800 text-center animate-in zoom-in-95 duration-200">
             <div className="w-14 h-14 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
               <ShieldAlert size={28} />

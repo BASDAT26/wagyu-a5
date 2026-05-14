@@ -312,10 +312,10 @@ const ticketRouter_ = router({
       const ticket = result.rows[0];
       // Assign seat if provided
       if (input.seatId && ticket) {
-        await query(`INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`, [
-          input.seatId,
-          ticket.ticket_id,
-        ]);
+        await query(
+          `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
+          [input.seatId, ticket.ticket_id],
+        );
       }
       return ticket;
     }),

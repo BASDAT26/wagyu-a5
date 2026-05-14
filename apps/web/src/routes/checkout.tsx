@@ -17,12 +17,7 @@ import { authClient } from "@/lib/auth-client";
 import { trpc, trpcClient, queryClient } from "@/utils/trpc";
 import { toast } from "sonner";
 
-// --- Mock Promo Data ---
-const PROMOS = [
-  { code: "TIKTAK20", type: "PERSENTASE" as const, value: 20 },
-  { code: "HEMAT50K", type: "NOMINAL" as const, value: 50000 },
-  { code: "NEWUSER30", type: "PERSENTASE" as const, value: 30 },
-];
+// Removed mock PROMOS
 
 // --- Mock Seats (6x8 grid) ---
 const TOTAL_ROWS = 6;
@@ -49,8 +44,9 @@ export default function CheckoutPage() {
   const [selectedCategory, setSelectedCategory] = useState("CAT1");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<(typeof PROMOS)[0] | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<{code: string, type: "PERSENTASE" | "NOMINAL", value: number} | null>(null);
   const [promoError, setPromoError] = useState("");
+  const [isCheckingPromo, setIsCheckingPromo] = useState(false);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [createdOrderId, setCreatedOrderId] = useState<string | null>(null);
@@ -92,15 +88,52 @@ export default function CheckoutPage() {
 
   const total = subtotal - discount + adminFee;
 
-  const handleApplyPromo = () => {
+  const handleApplyPromo = async () => {
     setPromoError("");
-    const found = PROMOS.find((p) => p.code === promoCode.toUpperCase().trim());
-    if (!found) {
-      setPromoError("Kode promo tidak valid atau sudah kadaluarsa.");
-      setAppliedPromo(null);
+    const code = promoCode.toUpperCase().trim();
+    if (!code) {
+      setPromoError("Masukkan kode promo.");
       return;
     }
-    setAppliedPromo(found);
+    
+    setIsCheckingPromo(true);
+    try {
+      const found = await trpcClient.order.promotion.getByCode.query({ promoCode: code });
+      
+      if (!found) {
+        setPromoError("Kode promo tidak valid atau tidak ditemukan.");
+        setAppliedPromo(null);
+        return;
+      }
+      
+      // Date validations
+      const now = new Date();
+      if (new Date(found.start_date) > now) {
+        setPromoError("Kode promo belum berlaku.");
+        setAppliedPromo(null);
+        return;
+      }
+      if (new Date(found.end_date) < now) {
+        setPromoError("Kode promo sudah kadaluarsa.");
+        setAppliedPromo(null);
+        return;
+      }
+      if (found.usage_count + ticketCount > found.usage_limit) {
+        setPromoError(`Sisa kuota promo tidak mencukupi (Sisa: ${found.usage_limit - found.usage_count}).`);
+        setAppliedPromo(null);
+        return;
+      }
+
+      setAppliedPromo({
+        code: found.promo_code,
+        type: found.discount_type === "PERCENTAGE" ? "PERSENTASE" : "NOMINAL",
+        value: found.discount_value
+      });
+    } catch (e) {
+      setPromoError("Terjadi kesalahan saat memverifikasi promo.");
+    } finally {
+      setIsCheckingPromo(false);
+    }
   };
 
   const handleToggleSeat = (seatId: string) => {
@@ -133,6 +166,8 @@ export default function CheckoutPage() {
         orderDate: new Date().toISOString(),
         paymentStatus: "PENDING",
         totalAmount: total,
+        promoCode: appliedPromo?.code,
+        ticketCount: ticketCount,
       });
       setCreatedOrderId(createdOrder.order_id as string);
       await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
@@ -367,9 +402,10 @@ export default function CheckoutPage() {
               />
               <button
                 onClick={handleApplyPromo}
-                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all"
+                disabled={isCheckingPromo}
+                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center min-w-[100px]"
               >
-                Terapkan
+                {isCheckingPromo ? "Mengecek..." : "Terapkan"}
               </button>
             </div>
             {promoError && (
