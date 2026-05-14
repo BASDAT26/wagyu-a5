@@ -17,7 +17,8 @@ import { Plus, ChevronDown, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
-import type { VenueOption, Artist } from "./types";
+import TicketCategoryEditor from "./ticket-category-editor";
+import type { VenueOption, Artist, TicketCategoryForm } from "./types";
 
 export default function CreateEvent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,6 +27,9 @@ export default function CreateEvent() {
   const [time, setTime] = useState("");
   const [venueId, setVenueId] = useState("");
   const [selectedArtistIds, setSelectedArtistIds] = useState<string[]>([]);
+  const [ticketCategories, setTicketCategories] = useState<TicketCategoryForm[]>([
+    { name: "", price: "", quantity: "" },
+  ]);
   const queryClient = useQueryClient();
 
   // Fetch venues and artists from the backend
@@ -33,17 +37,37 @@ export default function CreateEvent() {
   const { data: artists = [] } = useQuery(trpc.event.artist.list.queryOptions());
 
   const createEventMutation = useMutation({
-    mutationFn: (data: { eventDatetime: string; eventTitle: string; venueId: string }) =>
-      trpcClient.event.event.create.mutate(data),
-    onSuccess: async (newEvent) => {
-      // Link selected artists to the newly created event
-      for (const artistId of selectedArtistIds) {
+    mutationFn: (data: {
+      eventDatetime: string;
+      eventTitle: string;
+      venueId: string;
+      artistIds: string[];
+      categories: TicketCategoryForm[];
+    }) =>
+      trpcClient.event.event.create.mutate({
+        eventDatetime: data.eventDatetime,
+        eventTitle: data.eventTitle,
+        venueId: data.venueId,
+      }),
+    onSuccess: async (newEvent, variables) => {
+      for (const artistId of variables.artistIds) {
         await trpcClient.event.eventArtist.create.mutate({
           eventId: newEvent.event_id,
           artistId,
         });
       }
+
+      for (const category of variables.categories) {
+        await trpcClient.ticket.category.create.mutate({
+          categoryName: category.name.trim(),
+          quota: Number(category.quantity),
+          price: Number(category.price),
+          eventId: newEvent.event_id,
+        });
+      }
+
       queryClient.invalidateQueries(trpc.event.event.list.queryOptions());
+      queryClient.invalidateQueries(trpc.ticket.category.listAll.queryOptions());
       toast.success("Acara berhasil dibuat");
       resetForm();
       setIsModalOpen(false);
@@ -59,6 +83,7 @@ export default function CreateEvent() {
     setTime("");
     setVenueId("");
     setSelectedArtistIds([]);
+    setTicketCategories([{ name: "", price: "", quantity: "" }]);
   }
 
   function handleSubmit() {
@@ -66,11 +91,40 @@ export default function CreateEvent() {
       toast.error("Semua field wajib harus diisi");
       return;
     }
+
+    const normalizedCategories = ticketCategories
+      .map((cat) => ({
+        name: cat.name.trim(),
+        price: cat.price.trim(),
+        quantity: cat.quantity.trim(),
+      }))
+      .filter((cat) => cat.name || cat.price || cat.quantity);
+
+    const hasIncompleteCategory = normalizedCategories.some(
+      (cat) => !cat.name || !cat.price || !cat.quantity,
+    );
+    if (hasIncompleteCategory) {
+      toast.error("Lengkapi semua field kategori tiket");
+      return;
+    }
+
+    const hasInvalidNumbers = normalizedCategories.some((cat) => {
+      const price = Number(cat.price);
+      const quota = Number(cat.quantity);
+      return Number.isNaN(price) || Number.isNaN(quota) || price < 0 || quota <= 0;
+    });
+    if (hasInvalidNumbers) {
+      toast.error("Harga atau kuota tidak valid");
+      return;
+    }
+
     const eventDatetime = new Date(`${date}T${time}:00`).toISOString();
     createEventMutation.mutate({
       eventDatetime,
       eventTitle: title,
       venueId,
+      artistIds: selectedArtistIds,
+      categories: normalizedCategories,
     });
   }
 
@@ -171,34 +225,41 @@ export default function CreateEvent() {
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+                <div className="space-y-4">
+                  {/* Artists */}
+                  <div>
+                    <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Artis (EVENT_ARTIST)
+                    </Label>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {artists.map((artist: Artist) => (
+                        <Chip
+                          key={artist.artist_id}
+                          variant={
+                            selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"
+                          }
+                          size="sm"
+                          className="cursor-pointer"
+                          onClick={() => toggleArtist(artist.artist_id)}
+                        >
+                          {artist.name}
+                        </Chip>
+                      ))}
+                      {artists.length === 0 && (
+                        <p className="text-xs text-slate-400">Belum ada artis terdaftar</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* ===== RIGHT COLUMN ===== */}
               <div className="space-y-4">
-                {/* Artists */}
-                <div>
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Artis (EVENT_ARTIST)
-                  </Label>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {artists.map((artist: Artist) => (
-                      <Chip
-                        key={artist.artist_id}
-                        variant={
-                          selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"
-                        }
-                        size="sm"
-                        className="cursor-pointer"
-                        onClick={() => toggleArtist(artist.artist_id)}
-                      >
-                        {artist.name}
-                      </Chip>
-                    ))}
-                    {artists.length === 0 && (
-                      <p className="text-xs text-slate-400">Belum ada artis terdaftar</p>
-                    )}
-                  </div>
-                </div>
+                <TicketCategoryEditor
+                  categories={ticketCategories}
+                  onChange={setTicketCategories}
+                  idPrefix="create-event"
+                />
               </div>
             </div>
           </ModalBody>
