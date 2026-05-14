@@ -21,7 +21,7 @@ import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 
 // --- Types ---
-type OrderStatus = "PAID" | "PENDING" | "CANCELLED";
+type OrderStatus = "PAID" | "PENDING" | "CANCELLED" | "REFUNDED";
 
 interface Order {
   id: string;
@@ -61,6 +61,11 @@ function StatusBadge({ status }: { status: string }) {
     CANCELLED: {
       label: "Cancelled",
       className: "text-red-500 bg-red-50 border-red-200 ring-1 ring-red-200",
+      icon: <XCircle size={11} />,
+    },
+    REFUNDED: {
+      label: "Refunded",
+      className: "text-purple-600 bg-purple-50 border-purple-200 ring-1 ring-purple-200",
       icon: <XCircle size={11} />,
     },
   };
@@ -330,6 +335,7 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
             <option value="Paid">Paid</option>
             <option value="Pending">Pending</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Refunded">Refunded</option>
           </select>
           <ChevronDown
             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
@@ -461,6 +467,7 @@ export default function OrderList({ role = "CUSTOMER" }: { role?: Role }) {
                     <option value="PAID">Paid</option>
                     <option value="PENDING">Pending</option>
                     <option value="CANCELLED">Cancelled</option>
+                    <option value="REFUNDED">Refunded</option>
                   </select>
                   <ChevronDown
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"
