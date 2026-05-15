@@ -162,7 +162,7 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
   // Actions
   const handleOpenCreate = () => {
     setModalMode("create");
-    setFormData({ type: "PERSENTASE", usageCount: 0 });
+    setFormData({ type: "PERSENTASE", usageCount: 0, usageLimit: 1 });
     setErrorMsg("");
     setIsModalOpen(true);
   };
@@ -522,8 +522,12 @@ export default function PromotionList({ role = "CUSTOMER" }: { role?: Role }) {
                 </label>
                 <input
                   type="number"
-                  value={formData.usageLimit || ""}
-                  onChange={(e) => setFormData({ ...formData, usageLimit: Number(e.target.value) })}
+                  min="1"
+                  value={formData.usageLimit ?? ""}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setFormData({ ...formData, usageLimit: isNaN(val) ? 1 : Math.max(1, val) });
+                  }}
                   placeholder="Jumlah kuota promo"
                   className="w-full h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
                 />
