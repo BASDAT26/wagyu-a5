@@ -1,6 +1,6 @@
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Card, CardContent } from "@wagyu-a5/ui/components/card";
-import { Search, MapPin, Armchair, Building2, ChevronDown, Loader2 } from "lucide-react";
+import { Search, MapPin, Armchair, Building2, ChevronDown, Loader2, LucideCheck, LucideXCircle, LucideCheckCircle } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
@@ -137,8 +137,14 @@ export default function ReadVenue() {
                     </div>
                   </div>
 
-                  <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                    {venue.city}
+                  <span
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${venue.reserved_seating
+                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                      : "bg-neutral-200 text-neutral-500 dark:bg-neutral-900/30 dark:text-neutral-400"
+                      }`}
+                  >
+                    {venue.reserved_seating ? <LucideCheckCircle className="w-3.5 h-3.5" /> : <LucideXCircle className="w-3.5 h-3.5" />}
+                    {venue.reserved_seating ? "RESERVED SEATING" : "FREE SEATING"}
                   </span>
                 </div>
 
