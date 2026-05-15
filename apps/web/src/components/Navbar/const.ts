@@ -44,4 +44,5 @@ export const CUSTOMER_LINKS: NavItem[] = [
   { to: "/promotion", label: "Promosi" },
   { to: "/venue", label: "Venue" },
   { to: "/artist", label: "Artis" },
+  { to: "/profile", label: "Profile" },
 ];
