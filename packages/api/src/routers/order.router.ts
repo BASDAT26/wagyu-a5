@@ -114,7 +114,7 @@ const orderRouter_ = router({
         promoCode: z.string().optional(),
         ticketCount: z.number().positive().optional(),
         categoryId: z.string().uuid().optional(),
-        seatIds: z.array(z.string().uuid()).optional(),
+        selectedSeats: z.array(z.string().uuid()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -303,23 +303,17 @@ const orderRouter_ = router({
         // Buat tiket sebanyak ticketCount
         for (let i = 0; i < input.ticketCount; i++) {
           const ticketCode = `TCK-${randomUUID().slice(0, 8).toUpperCase()}`;
-          const ticketResult = await query(
+          const insertRes = await query(
             `INSERT INTO tiktaktuk.ticket (ticket_code, tcategory_id, torder_id)
-             VALUES ($1, $2, $3)
-             RETURNING ticket_id`,
+             VALUES ($1, $2, $3) RETURNING ticket_id`,
             [ticketCode, categoryData.category_id, createdOrder.order_id],
           );
-          if (ticketResult.rows[0]?.ticket_id) {
-            createdTicketIds.push(ticketResult.rows[0].ticket_id);
-          }
-        }
-
-        if (seatIds.length > 0 && createdTicketIds.length === seatIds.length) {
-          for (let i = 0; i < seatIds.length; i++) {
-            await query(
-              `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
-              [seatIds[i], createdTicketIds[i]],
-            );
+          
+          if (input.selectedSeats && input.selectedSeats[i]) {
+            await query(`INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`, [
+              input.selectedSeats[i],
+              insertRes.rows[0].ticket_id,
+            ]);
           }
         }
         console.log("Tickets created successfully.");
