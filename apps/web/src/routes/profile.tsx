@@ -151,7 +151,7 @@ export default function ProfilePage() {
 
               <div className="relative z-10 flex flex-col items-center text-center">
                 <div className="relative mb-6">
-                  <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-blue-500/40 ring-4 ring-white dark:ring-slate-800 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                  <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-4xl font-black shadow-2xl shadow-blue-500/40 ring-4 ring-white dark:ring-slate-800 rotate-3 group-hover:rotate-0 transition-transform duration-500">
                     {initial}
                   </div>
                   <div

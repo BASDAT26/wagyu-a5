@@ -19,7 +19,14 @@ import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth-client";
 import TicketCategoryEditor from "./ticket-category-editor";
-import type { Event, VenueOption, Artist, EventArtist, TicketCategoryForm, Organizer } from "./types";
+import type {
+  Event,
+  VenueOption,
+  Artist,
+  EventArtist,
+  TicketCategoryForm,
+  Organizer,
+} from "./types";
 
 interface UpdateEventProps {
   event: Event;
@@ -296,171 +303,167 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
   };
 
   return (
-    <div>
-      <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <ModalTrigger asChild>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <Pencil className="h-3.5 w-3.5" />
-            Edit
-          </Button>
-        </ModalTrigger>
-        <ModalPopup className="max-w-2xl">
-          <ModalHeader>
-            <ModalTitle>Edit Acara</ModalTitle>
-          </ModalHeader>
-          <ModalBody>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-              {/* ===== LEFT COLUMN ===== */}
-              <div className="space-y-4">
-                {/* Event Title */}
+    <Modal open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <ModalTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-1.5 w-full">
+          <Pencil className="h-3.5 w-3.5" />
+          Edit
+        </Button>
+      </ModalTrigger>
+      <ModalPopup className="max-w-2xl">
+        <ModalHeader>
+          <ModalTitle>Edit Acara</ModalTitle>
+        </ModalHeader>
+        <ModalBody>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+            {/* ===== LEFT COLUMN ===== */}
+            <div className="space-y-4">
+              {/* Event Title */}
+              <div>
+                <Label
+                  htmlFor="edit-event-title"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                >
+                  Judul Acara (EVENT_TITLE)
+                </Label>
+                <Input
+                  id="edit-event-title"
+                  type="text"
+                  placeholder="cth. Konser Melodi Senja"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
+              </div>
+
+              {/* Date & Time */}
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label
-                    htmlFor="edit-event-title"
+                    htmlFor="edit-date"
                     className="text-xs font-semibold uppercase tracking-wider text-slate-500"
                   >
-                    Judul Acara (EVENT_TITLE)
+                    Tanggal (DATE)
                   </Label>
                   <Input
-                    id="edit-event-title"
-                    type="text"
-                    placeholder="cth. Konser Melodi Senja"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    id="edit-date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => setDate(e.target.value)}
                   />
                 </div>
-
-                {/* Date & Time */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label
-                      htmlFor="edit-date"
-                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
-                    >
-                      Tanggal (DATE)
-                    </Label>
-                    <Input
-                      id="edit-date"
-                      type="date"
-                      value={date}
-                      onChange={(e) => setDate(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label
-                      htmlFor="edit-time"
-                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
-                    >
-                      Waktu (TIME)
-                    </Label>
-                    <Input
-                      id="edit-time"
-                      type="time"
-                      value={time}
-                      onChange={(e) => setTime(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Venue Select */}
                 <div>
                   <Label
-                    htmlFor="edit-venue"
+                    htmlFor="edit-time"
                     className="text-xs font-semibold uppercase tracking-wider text-slate-500"
                   >
-                    Venue (VENUE_ID)
+                    Waktu (TIME)
+                  </Label>
+                  <Input
+                    id="edit-time"
+                    type="time"
+                    value={time}
+                    onChange={(e) => setTime(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Venue Select */}
+              <div>
+                <Label
+                  htmlFor="edit-venue"
+                  className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                >
+                  Venue (VENUE_ID)
+                </Label>
+                <div className="relative mt-1">
+                  <select
+                    id="edit-venue"
+                    value={venueId}
+                    onChange={(e) => setVenueId(e.target.value)}
+                    className="w-full appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+                  >
+                    <option value="">Pilih Venue...</option>
+                    {venues.map((v: VenueOption) => (
+                      <option key={v.venue_id} value={v.venue_id}>
+                        {v.venue_name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {isAdmin && (
+                <div>
+                  <Label
+                    htmlFor="edit-organizer"
+                    className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                  >
+                    Organizer (ORGANIZER_ID)
                   </Label>
                   <div className="relative mt-1">
                     <select
-                      id="edit-venue"
-                      value={venueId}
-                      onChange={(e) => setVenueId(e.target.value)}
+                      id="edit-organizer"
+                      value={organizerId}
+                      onChange={(e) => setOrganizerId(e.target.value)}
                       className="w-full appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
                     >
-                      <option value="">Pilih Venue...</option>
-                      {venues.map((v: VenueOption) => (
-                        <option key={v.venue_id} value={v.venue_id}>
-                          {v.venue_name}
+                      <option value="">Pilih Organizer...</option>
+                      {organizers.map((o: Organizer) => (
+                        <option key={o.organizer_id} value={o.organizer_id}>
+                          {o.organizer_name}
                         </option>
                       ))}
                     </select>
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+              )}
 
-                {isAdmin && (
-                  <div>
-                    <Label
-                      htmlFor="edit-organizer"
-                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+              {/* Artists */}
+              <div>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  Artis (EVENT_ARTIST)
+                </Label>
+                <div className="flex flex-wrap gap-1.5 mt-1">
+                  {artists.map((artist: Artist) => (
+                    <Chip
+                      key={artist.artist_id}
+                      variant={selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"}
+                      size="sm"
+                      className="cursor-pointer"
+                      onClick={() => toggleArtist(artist.artist_id)}
                     >
-                      Organizer (ORGANIZER_ID)
-                    </Label>
-                    <div className="relative mt-1">
-                      <select
-                        id="edit-organizer"
-                        value={organizerId}
-                        onChange={(e) => setOrganizerId(e.target.value)}
-                        className="w-full appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
-                      >
-                        <option value="">Pilih Organizer...</option>
-                        {organizers.map((o: Organizer) => (
-                          <option key={o.organizer_id} value={o.organizer_id}>
-                            {o.organizer_name}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-                )}
-
-                {/* Artists */}
-                <div>
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                    Artis (EVENT_ARTIST)
-                  </Label>
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {artists.map((artist: Artist) => (
-                      <Chip
-                        key={artist.artist_id}
-                        variant={
-                          selectedArtistIds.includes(artist.artist_id) ? "default" : "outline"
-                        }
-                        size="sm"
-                        className="cursor-pointer"
-                        onClick={() => toggleArtist(artist.artist_id)}
-                      >
-                        {artist.name}
-                      </Chip>
-                    ))}
-                    {artists.length === 0 && (
-                      <p className="text-xs text-slate-400">Belum ada artis terdaftar</p>
-                    )}
-                  </div>
+                      {artist.name}
+                    </Chip>
+                  ))}
+                  {artists.length === 0 && (
+                    <p className="text-xs text-slate-400">Belum ada artis terdaftar</p>
+                  )}
                 </div>
               </div>
-
-              {/* ===== RIGHT COLUMN ===== */}
-              <div className="space-y-4">
-                <TicketCategoryEditor
-                  categories={ticketCategories}
-                  onChange={setTicketCategories}
-                  idPrefix={`edit-event-${event.event_id}`}
-                />
-              </div>
             </div>
-          </ModalBody>
-          <ModalFooter>
-            <ModalClose asChild>
-              <Button variant="outline">Batal</Button>
-            </ModalClose>
-            <Button onClick={handleSubmit} disabled={updateEventMutation.isPending}>
-              {updateEventMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
-              Simpan
-            </Button>
-          </ModalFooter>
-        </ModalPopup>
-      </Modal>
-    </div>
+
+            {/* ===== RIGHT COLUMN ===== */}
+            <div className="space-y-4">
+              <TicketCategoryEditor
+                categories={ticketCategories}
+                onChange={setTicketCategories}
+                idPrefix={`edit-event-${event.event_id}`}
+              />
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <ModalClose asChild>
+            <Button variant="outline">Batal</Button>
+          </ModalClose>
+          <Button onClick={handleSubmit} disabled={updateEventMutation.isPending}>
+            {updateEventMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Simpan
+          </Button>
+        </ModalFooter>
+      </ModalPopup>
+    </Modal>
   );
 }

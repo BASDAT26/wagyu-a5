@@ -39,13 +39,16 @@ export default function EventModule() {
     return Array.from(new Set((venues as VenueOption[]).map((v) => v.venue_name))).sort();
   }, [venues]);
 
-  const minPriceMap = useMemo(() => {
-    const map = new Map<string, number>();
+  const categoriesByEventMap = useMemo(() => {
+    const map = new Map<string, any[]>();
     for (const cat of allCategories as any[]) {
-      const price = Number(cat.price);
-      if (!map.has(cat.tevent_id) || price < map.get(cat.tevent_id)!) {
-        map.set(cat.tevent_id, price);
+      if (!map.has(cat.tevent_id)) {
+        map.set(cat.tevent_id, []);
       }
+      map.get(cat.tevent_id)!.push(cat);
+    }
+    for (const cats of map.values()) {
+      cats.sort((a, b) => Number(a.price) - Number(b.price));
     }
     return map;
   }, [allCategories]);
@@ -144,7 +147,7 @@ export default function EventModule() {
                 venueCity={venue?.city ?? ""}
                 dateStr={dateStr}
                 timeStr={timeStr}
-                minPrice={minPriceMap.get(event.event_id) ?? null}
+                categories={categoriesByEventMap.get(event.event_id) ?? []}
                 canModify={canModify}
               />
             );
@@ -162,7 +165,7 @@ function EventCard({
   venueCity,
   dateStr,
   timeStr,
-  minPrice,
+  categories,
   canModify,
 }: {
   event: Event;
@@ -170,7 +173,7 @@ function EventCard({
   venueCity: string;
   dateStr: string;
   timeStr: string;
-  minPrice: number | null;
+  categories: any[];
   canModify: boolean;
 }) {
   const { data: eventArtists = [] } = useQuery(
@@ -224,13 +227,22 @@ function EventCard({
           </span>
         </div>
 
-        {/* Price */}
-        {minPrice !== null && (
-          <div className="mt-1">
-            <span className="text-xs text-slate-500 dark:text-slate-400">Mulai dari </span>
-            <span className="font-bold text-slate-900 dark:text-slate-50 text-sm">
-              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(minPrice)}
-            </span>
+        {/* Price & Categories */}
+        {categories.length > 0 && (
+          <div className="mt-1 space-y-2">
+            <div>
+              <span className="text-sm text-slate-500 dark:text-slate-400">Mulai dari </span>
+              <span className="text-blue-500 font-semibold text-sm">
+                {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(Number(categories[0].price))}
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {categories.map((c: any) => (
+                <Chip key={c.category_id} variant="outline" size="sm" className="bg-blue-200 text-blue-500 border-blue-400 font-semibold  hover:bg-blue-300 rounded-md">
+                  {c.category_name}
+                </Chip>
+              ))}
+            </div>
           </div>
         )}
 
