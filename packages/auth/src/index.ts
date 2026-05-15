@@ -207,6 +207,8 @@ export function getSessionCookieOptions() {
 export function getSessionCookieClearOptions() {
   return {
     path: "/",
+    secure: env.NODE_ENV === "production",
+    sameSite: env.NODE_ENV === "production" ? ("none" as const) : ("lax" as const),
   };
 }
 
