@@ -18,6 +18,7 @@ import { toast } from "sonner";
 interface DeleteArtistProps {
   artistName?: string;
   artistId?: string;
+  artistGenre?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
 }
@@ -25,6 +26,7 @@ interface DeleteArtistProps {
 export default function DeleteArtist({
   artistName = "artis ini",
   artistId,
+  artistGenre = "Lainnya",
   open: controlledOpen,
   onOpenChange,
 }: DeleteArtistProps) {
@@ -72,6 +74,11 @@ export default function DeleteArtist({
           </ModalDescription>
         </ModalHeader>
         <ModalBody>
+          <div className="bg-muted p-4 rounded-md mb-4 text-sm font-mono text-muted-foreground">
+            <div>ID    : {artistId}</div>
+            <div>Nama  : {artistName}</div>
+            <div>Genre : {artistGenre}</div>
+          </div>
           <p className="text-sm text-muted-foreground">
             Data artis yang dihapus tidak dapat dikembalikan. Semua data terkait artis ini juga akan
             ikut terhapus.

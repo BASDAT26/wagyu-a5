@@ -248,7 +248,7 @@ export default function ReadArtist() {
                               currentName={artist.name}
                               currentGenre={artist.genre}
                             />
-                            <DeleteArtist artistId={artist.artist_id} artistName={artist.name} />
+                            <DeleteArtist artistId={artist.artist_id} artistName={artist.name} artistGenre={artist.genre} />
                           </div>
                         </td>
                       )}
@@ -294,7 +294,7 @@ export default function ReadArtist() {
                               currentName={artist.name}
                               currentGenre={artist.genre}
                             />
-                            <DeleteArtist artistId={artist.artist_id} artistName={artist.name} />
+                            <DeleteArtist artistId={artist.artist_id} artistName={artist.name} artistGenre={artist.genre} />
                           </div>
                         )}
                       </div>
