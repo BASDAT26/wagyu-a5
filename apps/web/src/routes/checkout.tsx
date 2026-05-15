@@ -20,23 +20,7 @@ import { toast } from "sonner";
 
 // Removed mock PROMOS
 
-// --- Mock Seats (6x8 grid) ---
-const TOTAL_ROWS = 6;
-const SEATS_PER_ROW = 8;
-const TAKEN_SEATS = new Set([
-  "A3",
-  "A4",
-  "B2",
-  "B5",
-  "C1",
-  "C6",
-  "D3",
-  "D4",
-  "D7",
-  "E2",
-  "F5",
-  "F6",
-]);
+
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -64,6 +48,20 @@ export default function CheckoutPage() {
     ...trpc.event.event.getById.queryOptions({ eventId: eventId ?? "" }),
     enabled: !!eventId && eventId.length === 36,
   });
+
+  const venueId = (dbEvent as any)?.venue_id;
+  const { data: dbSeats = [], isLoading: seatsLoading } = useQuery({
+    ...trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId: venueId ?? "" }),
+    enabled: !!venueId,
+  });
+
+  const seats = useMemo(() => {
+    return (dbSeats as any[]).map((s) => ({
+      id: s.seat_id,
+      label: `${s.section} - Baris ${s.row_number}, No. ${s.seat_number}`,
+      isTaken: s.is_assigned,
+    }));
+  }, [dbSeats]);
 
   const { data: dbCategories, isLoading: categoriesLoading } = useQuery(
     eventId && eventId.length === 36
@@ -180,7 +178,8 @@ export default function CheckoutPage() {
   };
 
   const handleToggleSeat = (seatId: string) => {
-    if (TAKEN_SEATS.has(seatId)) return;
+    const seat = seats.find(s => s.id === seatId);
+    if (!seat || seat.isTaken) return;
     setSelectedSeats((prev) => {
       if (prev.includes(seatId)) return prev.filter((s) => s !== seatId);
       if (prev.length >= ticketCount) return prev;
@@ -217,6 +216,7 @@ export default function CheckoutPage() {
         promoCode: appliedPromo?.code,
         ticketCount: ticketCount,
         categoryId: selectedCategoryId,
+        selectedSeats: selectedSeats.length > 0 ? selectedSeats : undefined,
       });
       setCreatedOrderId((createdOrder as any).order_id as string);
       await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
@@ -405,41 +405,38 @@ export default function CheckoutPage() {
                 <div className="w-2/3 h-3 bg-slate-300 dark:bg-slate-700 rounded-b-lg mb-3 text-center text-[9px] font-bold text-slate-500 leading-3">
                   PANGGUNG
                 </div>
-                {Array.from({ length: TOTAL_ROWS }, (_, r) => {
-                  const rowLabel = String.fromCharCode(65 + r);
-                  return (
-                    <div key={rowLabel} className="flex items-center gap-1.5">
-                      <span className="w-5 text-[10px] font-bold text-slate-400 text-right">
-                        {rowLabel}
-                      </span>
-                      {Array.from({ length: SEATS_PER_ROW }, (_, s) => {
-                        const seatId = `${rowLabel}${s + 1}`;
-                        const isTaken = TAKEN_SEATS.has(seatId);
-                        const isSelected = selectedSeats.includes(seatId);
-                        return (
-                          <button
-                            key={seatId}
-                            onClick={() => handleToggleSeat(seatId)}
-                            disabled={isTaken}
-                            title={seatId}
-                            className={`w-8 h-8 rounded-md text-[10px] font-bold transition-all border ${
-                              isTaken
-                                ? "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed border-transparent"
-                                : isSelected
-                                  ? "bg-blue-600 text-white border-blue-700 shadow-md shadow-blue-500/30"
-                                  : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400"
-                            }`}
-                          >
-                            {s + 1}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
+                {seatsLoading ? (
+                  <p className="text-sm text-slate-500 text-center w-full py-4">Memuat kursi...</p>
+                ) : seats.length === 0 ? (
+                  <p className="text-sm text-slate-500 text-center w-full py-4">Tidak ada kursi tersedia.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2 justify-center w-full">
+                    {seats.map((s) => {
+                      const isTaken = s.isTaken;
+                      const isSelected = selectedSeats.includes(s.id);
+                      return (
+                        <button
+                          key={s.id}
+                          onClick={() => handleToggleSeat(s.id)}
+                          disabled={isTaken}
+                          title={s.label}
+                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold transition-all border ${
+                            isTaken
+                              ? "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed border-transparent"
+                              : isSelected
+                                ? "bg-blue-600 text-white border-blue-700 shadow-md shadow-blue-500/30"
+                                : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 {selectedSeats.length > 0 && (
-                  <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-2">
-                    Kursi dipilih: {selectedSeats.sort().join(", ")}
+                  <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-4 text-center w-full">
+                    Kursi dipilih: {selectedSeats.map(id => seats.find(s => s.id === id)?.label).filter(Boolean).join(", ")}
                   </p>
                 )}
               </div>

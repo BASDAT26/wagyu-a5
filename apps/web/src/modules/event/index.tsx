@@ -16,6 +16,7 @@ export default function EventModule() {
   const { data: events = [], isLoading } = useQuery(trpc.event.event.list.queryOptions());
   const { data: venues = [] } = useQuery(trpc.venue.venue.list.queryOptions());
   const { data: artists = [] } = useQuery(trpc.event.artist.list.queryOptions());
+  const { data: allCategories = [] } = useQuery(trpc.ticket.category.listAll.queryOptions());
 
   const { data: session } = authClient.useSession();
   const role = (session?.user as { role?: string })?.role;
@@ -37,6 +38,17 @@ export default function EventModule() {
   const venueNames = useMemo(() => {
     return Array.from(new Set((venues as VenueOption[]).map((v) => v.venue_name))).sort();
   }, [venues]);
+
+  const minPriceMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const cat of allCategories as any[]) {
+      const price = Number(cat.price);
+      if (!map.has(cat.tevent_id) || price < map.get(cat.tevent_id)!) {
+        map.set(cat.tevent_id, price);
+      }
+    }
+    return map;
+  }, [allCategories]);
 
   // Filter events
   const filtered = useMemo(() => {
@@ -132,6 +144,7 @@ export default function EventModule() {
                 venueCity={venue?.city ?? ""}
                 dateStr={dateStr}
                 timeStr={timeStr}
+                minPrice={minPriceMap.get(event.event_id) ?? null}
                 canModify={canModify}
               />
             );
@@ -149,6 +162,7 @@ function EventCard({
   venueCity,
   dateStr,
   timeStr,
+  minPrice,
   canModify,
 }: {
   event: Event;
@@ -156,6 +170,7 @@ function EventCard({
   venueCity: string;
   dateStr: string;
   timeStr: string;
+  minPrice: number | null;
   canModify: boolean;
 }) {
   const { data: eventArtists = [] } = useQuery(
@@ -208,6 +223,16 @@ function EventCard({
             {venueCity ? `, ${venueCity}` : ""}
           </span>
         </div>
+
+        {/* Price */}
+        {minPrice !== null && (
+          <div className="mt-1">
+            <span className="text-xs text-slate-500 dark:text-slate-400">Mulai dari </span>
+            <span className="font-bold text-slate-900 dark:text-slate-50 text-sm">
+              {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(minPrice)}
+            </span>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-2 items-center justify-center mt-auto">
