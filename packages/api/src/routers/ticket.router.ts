@@ -52,7 +52,7 @@ const ticketCategoryRouter = router({
     .mutation(async ({ input }) => {
       // 1. Dapatkan kapasitas venue untuk event ini
       const capacityQuery = await query(
-        `SELECT v.kapasitas FROM tiktaktuk.event e 
+        `SELECT v.capacity FROM tiktaktuk.event e 
          JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id 
          WHERE e.event_id = $1`,
         [input.eventId]
@@ -62,7 +62,7 @@ const ticketCategoryRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Event tidak ditemukan" });
       }
       
-      const kapasitas = capacityQuery.rows[0].kapasitas;
+      const kapasitas = capacityQuery.rows[0].capacity;
 
       // 2. Dapatkan total kuota tiket yang sudah ada untuk event ini
       const quotaQuery = await query(

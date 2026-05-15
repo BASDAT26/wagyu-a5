@@ -21,8 +21,6 @@ import { toast } from "sonner";
 
 // Removed mock PROMOS
 
-
-
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
@@ -50,6 +48,10 @@ export default function CheckoutPage() {
   });
 
   const venueId = (dbEvent as any)?.venue_id;
+  const { data: dbVenue } = useQuery({
+    ...trpc.venue.venue.getById.queryOptions({ venueId: venueId ?? "" }),
+    enabled: !!venueId,
+  });
   const { data: dbSeats = [], isLoading: seatsLoading } = useQuery({
     ...trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId: venueId ?? "" }),
     enabled: !!venueId,
@@ -182,7 +184,7 @@ export default function CheckoutPage() {
   };
 
   const handleToggleSeat = (seatId: string) => {
-    const seat = seats.find(s => s.id === seatId);
+    const seat = seats.find((s) => s.id === seatId);
     if (!seat || seat.isTaken) return;
     setSelectedSeats((prev) => {
       if (prev.includes(seatId)) return prev.filter((s) => s !== seatId);
@@ -224,7 +226,7 @@ export default function CheckoutPage() {
         promoCode: appliedPromo?.code,
         ticketCount: ticketCount,
         categoryId: selectedCategoryId,
-        selectedSeats: selectedSeats.length > 0 ? selectedSeats : undefined,
+        seatIds: selectedSeats.length > 0 ? selectedSeats : undefined,
       });
       setCreatedOrderId((createdOrder as any).order_id as string);
       await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
@@ -300,10 +302,8 @@ export default function CheckoutPage() {
         <div className="lg:col-span-7 space-y-8">
           {/* Event Summary */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-            <div
-              className="w-full sm:w-32 h-32 object-cover bg-blue-600 rounded-2xl shadow-sm grid place-content-center"
-            >
-              <LucideMusic/>
+            <div className="w-full sm:w-32 h-32 object-cover bg-blue-600 rounded-2xl shadow-sm grid place-content-center">
+              <LucideMusic />
             </div>
             <div className="space-y-3 flex-1 text-center sm:text-left">
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
@@ -416,7 +416,9 @@ export default function CheckoutPage() {
                 {seatsLoading ? (
                   <p className="text-sm text-slate-500 text-center w-full py-4">Memuat kursi...</p>
                 ) : seats.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center w-full py-4">Tidak ada kursi tersedia.</p>
+                  <p className="text-sm text-slate-500 text-center w-full py-4">
+                    Tidak ada kursi tersedia.
+                  </p>
                 ) : (
                   <div className="flex flex-wrap gap-2 justify-center w-full">
                     {seats.map((s) => {
@@ -444,7 +446,11 @@ export default function CheckoutPage() {
                 )}
                 {selectedSeats.length > 0 && (
                   <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-4 text-center w-full">
-                    Kursi dipilih: {selectedSeats.map(id => seats.find(s => s.id === id)?.label).filter(Boolean).join(", ")}
+                    Kursi dipilih:{" "}
+                    {selectedSeats
+                      .map((id) => seats.find((s) => s.id === id)?.label)
+                      .filter(Boolean)
+                      .join(", ")}
                   </p>
                 )}
               </div>
@@ -467,7 +473,7 @@ export default function CheckoutPage() {
               <button
                 onClick={handleApplyPromo}
                 disabled={isCheckingPromo}
-                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center min-w-[100px]"
+                className="h-11 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center justify-center min-w-25"
               >
                 {isCheckingPromo ? "Mengecek..." : "Terapkan"}
               </button>
