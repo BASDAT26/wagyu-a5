@@ -13,6 +13,7 @@ import {
   Tag,
   Armchair,
   AlertCircle,
+  LucideMusic,
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { trpc, trpcClient, queryClient } from "@/utils/trpc";
@@ -20,29 +21,19 @@ import { toast } from "sonner";
 
 // Removed mock PROMOS
 
-// --- Mock Seats (6x8 grid) ---
-const TOTAL_ROWS = 6;
-const SEATS_PER_ROW = 8;
-const TAKEN_SEATS = new Set([
-  "A3",
-  "A4",
-  "B2",
-  "B5",
-  "C1",
-  "C6",
-  "D3",
-  "D4",
-  "D7",
-  "E2",
-  "F5",
-  "F6",
-]);
+type SeatWithStatus = {
+  seat_id: string;
+  section: string;
+  seat_number: string;
+  row_number: string;
+  venue_id: string;
+  is_assigned: boolean;
+};
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const [ticketCount, setTicketCount] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState("CAT1");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [appliedPromo, setAppliedPromo] = useState<{
@@ -63,6 +54,17 @@ export default function CheckoutPage() {
   const { data: dbEvent, isLoading: eventLoading } = useQuery({
     ...trpc.event.event.getById.queryOptions({ eventId: eventId ?? "" }),
     enabled: !!eventId && eventId.length === 36,
+  });
+
+  const venueId = (dbEvent as any)?.venue_id as string | undefined;
+  const { data: dbVenue } = useQuery({
+    ...trpc.venue.venue.getById.queryOptions({ venueId: venueId ?? "" }),
+    enabled: !!venueId,
+  });
+
+  const { data: dbSeats = [], isLoading: seatsLoading } = useQuery({
+    ...trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId: venueId ?? "" }),
+    enabled: !!venueId,
   });
 
   const { data: dbCategories, isLoading: categoriesLoading } = useQuery(
@@ -94,7 +96,9 @@ export default function CheckoutPage() {
           minute: "2-digit",
         })
       : "...",
-    location: "Gelora Bung Karno, Jakarta", // Venue details could be fetched too
+    location: dbVenue
+      ? `${(dbVenue as any).venue_name}${(dbVenue as any).city ? `, ${(dbVenue as any).city}` : ""}`
+      : "...",
     image:
       "https://images.unsplash.com/photo-1540039155733-d7696d4eb98b?q=80&w=800&auto=format&fit=crop",
   };
@@ -116,6 +120,8 @@ export default function CheckoutPage() {
   const isSeatingCategory =
     currentCat.name.toLowerCase().includes("seating") ||
     currentCat.name.toUpperCase().includes("CAT");
+  const isReservedSeating = !!(dbVenue as any)?.reserved_seating;
+  const showSeatSelection = isSeatingCategory && isReservedSeating;
   const subtotal = currentCat.price * ticketCount;
   const adminFee = 25000;
 
@@ -179,8 +185,67 @@ export default function CheckoutPage() {
     }
   };
 
-  const handleToggleSeat = (seatId: string) => {
-    if (TAKEN_SEATS.has(seatId)) return;
+  const seatRows = useMemo(() => {
+    if (!dbSeats || (dbSeats as SeatWithStatus[]).length === 0) return [];
+
+    const seats = [...(dbSeats as SeatWithStatus[])];
+    const sectionSet = new Set(seats.map((seat) => seat.section));
+    const hasSections = sectionSet.size > 1;
+
+    const byRow = new Map<string, { label: string; seats: SeatWithStatus[] }>();
+    for (const seat of seats) {
+      const rowKey = `${seat.section}||${seat.row_number}`;
+      const rowLabel = hasSections ? `${seat.section} ${seat.row_number}` : seat.row_number;
+      if (!byRow.has(rowKey)) {
+        byRow.set(rowKey, { label: rowLabel, seats: [] });
+      }
+      byRow.get(rowKey)!.seats.push(seat);
+    }
+
+    const rows = Array.from(byRow.entries())
+      .map(([key, value]) => ({ key, ...value }))
+      .sort((a, b) => a.label.localeCompare(b.label, "id", { numeric: true }));
+
+    for (const row of rows) {
+      row.seats.sort((a, b) => a.seat_number.localeCompare(b.seat_number, "id", { numeric: true }));
+    }
+
+    return rows;
+  }, [dbSeats]);
+
+  const seatLabelMap = useMemo(() => {
+    const map = new Map<string, string>();
+    const seats = dbSeats as SeatWithStatus[];
+    const sectionSet = new Set(seats.map((seat) => seat.section));
+    const hasSections = sectionSet.size > 1;
+    for (const seat of seats) {
+      const baseLabel = `${seat.row_number}${seat.seat_number}`;
+      map.set(seat.seat_id, hasSections ? `${seat.section}-${baseLabel}` : baseLabel);
+    }
+    return map;
+  }, [dbSeats]);
+
+  const selectedSeatLabels = useMemo(() => {
+    return selectedSeats
+      .map((id) => seatLabelMap.get(id))
+      .filter((label): label is string => Boolean(label));
+  }, [selectedSeats, seatLabelMap]);
+
+  const assignedSeatIds = useMemo(() => {
+    const seats = dbSeats as SeatWithStatus[];
+    return new Set(seats.filter((seat) => seat.is_assigned).map((seat) => seat.seat_id));
+  }, [dbSeats]);
+
+  useEffect(() => {
+    setSelectedSeats((prev) => prev.filter((seatId) => !assignedSeatIds.has(seatId)));
+  }, [assignedSeatIds]);
+
+  useEffect(() => {
+    setSelectedSeats((prev) => (prev.length > ticketCount ? prev.slice(0, ticketCount) : prev));
+  }, [ticketCount]);
+
+  const handleToggleSeat = (seatId: string, isTaken: boolean) => {
+    if (isTaken) return;
     setSelectedSeats((prev) => {
       if (prev.includes(seatId)) return prev.filter((s) => s !== seatId);
       if (prev.length >= ticketCount) return prev;
@@ -207,6 +272,10 @@ export default function CheckoutPage() {
       toast.error("Silakan pilih kategori tiket terlebih dahulu");
       return;
     }
+    if (showSeatSelection && selectedSeats.length !== ticketCount) {
+      toast.error(`Pilih ${ticketCount} kursi terlebih dahulu.`);
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -217,6 +286,7 @@ export default function CheckoutPage() {
         promoCode: appliedPromo?.code,
         ticketCount: ticketCount,
         categoryId: selectedCategoryId,
+        seatIds: showSeatSelection ? selectedSeats : undefined,
       });
       setCreatedOrderId((createdOrder as any).order_id as string);
       await queryClient.invalidateQueries(trpc.order.order.listForCurrentUser.queryOptions());
@@ -292,11 +362,11 @@ export default function CheckoutPage() {
         <div className="lg:col-span-7 space-y-8">
           {/* Event Summary */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-            <img
-              src={event.image}
-              alt={event.title}
-              className="w-full sm:w-32 h-32 object-cover rounded-2xl shadow-sm"
-            />
+            <div
+              className="w-full sm:w-32 h-32 object-cover bg-blue-600 rounded-2xl shadow-sm grid place-content-center"
+            >
+              <LucideMusic/>
+            </div>
             <div className="space-y-3 flex-1 text-center sm:text-left">
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
                 {event.title}
@@ -393,35 +463,38 @@ export default function CheckoutPage() {
           </div>
 
           {/* Seat Selection (Optional) */}
-          {isSeatingCategory && (
+          {showSeatSelection && (
             <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100 mb-2 flex items-center gap-2">
-                <Armchair className="text-blue-500" size={20} /> Pilih Kursi (Opsional)
+                <Armchair className="text-blue-500" size={20} /> Pilih Kursi
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                Pilih hingga {ticketCount} kursi. Abu-abu = terisi.
+                Pilih {ticketCount} kursi. Abu-abu = terisi.
               </p>
               <div className="flex flex-col items-center gap-2">
                 <div className="w-2/3 h-3 bg-slate-300 dark:bg-slate-700 rounded-b-lg mb-3 text-center text-[9px] font-bold text-slate-500 leading-3">
                   PANGGUNG
                 </div>
-                {Array.from({ length: TOTAL_ROWS }, (_, r) => {
-                  const rowLabel = String.fromCharCode(65 + r);
-                  return (
-                    <div key={rowLabel} className="flex items-center gap-1.5">
-                      <span className="w-5 text-[10px] font-bold text-slate-400 text-right">
-                        {rowLabel}
+                {seatsLoading ? (
+                  <div className="py-8 text-sm text-slate-400">Memuat kursi...</div>
+                ) : seatRows.length === 0 ? (
+                  <div className="py-8 text-sm text-slate-400">Kursi tidak tersedia.</div>
+                ) : (
+                  seatRows.map((row) => (
+                    <div key={row.key} className="flex items-center gap-1.5">
+                      <span className="w-12 text-[10px] font-bold text-slate-400 text-right">
+                        {row.label}
                       </span>
-                      {Array.from({ length: SEATS_PER_ROW }, (_, s) => {
-                        const seatId = `${rowLabel}${s + 1}`;
-                        const isTaken = TAKEN_SEATS.has(seatId);
-                        const isSelected = selectedSeats.includes(seatId);
+                      {row.seats.map((seat) => {
+                        const isTaken = seat.is_assigned;
+                        const isSelected = selectedSeats.includes(seat.seat_id);
+                        const seatLabel = seatLabelMap.get(seat.seat_id) ?? seat.seat_number;
                         return (
                           <button
-                            key={seatId}
-                            onClick={() => handleToggleSeat(seatId)}
+                            key={seat.seat_id}
+                            onClick={() => handleToggleSeat(seat.seat_id, isTaken)}
                             disabled={isTaken}
-                            title={seatId}
+                            title={seatLabel}
                             className={`w-8 h-8 rounded-md text-[10px] font-bold transition-all border ${
                               isTaken
                                 ? "bg-slate-200 dark:bg-slate-700 text-slate-400 cursor-not-allowed border-transparent"
@@ -430,16 +503,16 @@ export default function CheckoutPage() {
                                   : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400"
                             }`}
                           >
-                            {s + 1}
+                            {seat.seat_number}
                           </button>
                         );
                       })}
                     </div>
-                  );
-                })}
+                  ))
+                )}
                 {selectedSeats.length > 0 && (
                   <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mt-2">
-                    Kursi dipilih: {selectedSeats.sort().join(", ")}
+                    Kursi dipilih: {selectedSeatLabels.join(", ")}
                   </p>
                 )}
               </div>

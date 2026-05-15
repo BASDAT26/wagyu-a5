@@ -114,6 +114,7 @@ const orderRouter_ = router({
         promoCode: z.string().optional(),
         ticketCount: z.number().positive().optional(),
         categoryId: z.string().uuid().optional(),
+        seatIds: z.array(z.string().uuid()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -140,7 +141,7 @@ const orderRouter_ = router({
       let eventDatetime: string | null = null;
       if (input.categoryId && input.ticketCount) {
         const catResult = await query(
-          `SELECT tc.category_id, tc.quota, e.event_datetime 
+          `SELECT tc.category_id, tc.quota, e.event_datetime, e.venue_id
            FROM tiktaktuk.ticket_category tc
            JOIN tiktaktuk.event e ON tc.tevent_id = e.event_id
            WHERE tc.category_id = $1`,
@@ -205,6 +206,61 @@ const orderRouter_ = router({
         promoId = promo.promotion_id;
       }
 
+      const seatIds = input.seatIds ?? [];
+      if (seatIds.length > 0) {
+        if (!categoryData || !input.ticketCount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Seat selection requires a valid ticket category",
+          });
+        }
+        if (seatIds.length !== input.ticketCount) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: `Jumlah kursi harus sama dengan jumlah tiket (${input.ticketCount}).`,
+          });
+        }
+
+        const uniqueSeatIds = new Set(seatIds);
+        if (uniqueSeatIds.size !== seatIds.length) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Seat selection contains duplicates",
+          });
+        }
+
+        const seatResult = await query(
+          `SELECT s.seat_id, s.venue_id, hr.seat_id AS assigned_seat_id
+           FROM tiktaktuk.seat s
+           LEFT JOIN tiktaktuk.has_relationship hr ON s.seat_id = hr.seat_id
+           WHERE s.seat_id = ANY($1::uuid[])`,
+          [seatIds],
+        );
+
+        if (seatResult.rowCount !== seatIds.length) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Satu atau lebih kursi tidak valid",
+          });
+        }
+
+        const invalidVenue = seatResult.rows.find((row) => row.venue_id !== categoryData.venue_id);
+        if (invalidVenue) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Kursi tidak sesuai dengan venue event",
+          });
+        }
+
+        const alreadyAssigned = seatResult.rows.find((row) => row.assigned_seat_id);
+        if (alreadyAssigned) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Satu atau lebih kursi sudah terisi",
+          });
+        }
+      }
+
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.orders (order_id, order_date, payment_status, total_amount, customer_id)
@@ -243,14 +299,28 @@ const orderRouter_ = router({
           [input.ticketCount, categoryData.category_id],
         );
 
+        const createdTicketIds: string[] = [];
         // Buat tiket sebanyak ticketCount
         for (let i = 0; i < input.ticketCount; i++) {
           const ticketCode = `TCK-${randomUUID().slice(0, 8).toUpperCase()}`;
-          await query(
+          const ticketResult = await query(
             `INSERT INTO tiktaktuk.ticket (ticket_code, tcategory_id, torder_id)
-             VALUES ($1, $2, $3)`,
+             VALUES ($1, $2, $3)
+             RETURNING ticket_id`,
             [ticketCode, categoryData.category_id, createdOrder.order_id],
           );
+          if (ticketResult.rows[0]?.ticket_id) {
+            createdTicketIds.push(ticketResult.rows[0].ticket_id);
+          }
+        }
+
+        if (seatIds.length > 0 && createdTicketIds.length === seatIds.length) {
+          for (let i = 0; i < seatIds.length; i++) {
+            await query(
+              `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
+              [seatIds[i], createdTicketIds[i]],
+            );
+          }
         }
         console.log("Tickets created successfully.");
       } else {
