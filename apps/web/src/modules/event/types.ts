@@ -48,3 +48,11 @@ export interface VenueOption {
   address: string;
   city: string;
 }
+
+/** Organizer row */
+export interface Organizer {
+  organizer_id: string;
+  organizer_name: string;
+  contact_email: string | null;
+  user_id: string;
+}

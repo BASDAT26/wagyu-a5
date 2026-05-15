@@ -17,8 +17,9 @@ import { Plus, ChevronDown, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 import TicketCategoryEditor from "./ticket-category-editor";
-import type { VenueOption, Artist, TicketCategoryForm } from "./types";
+import type { VenueOption, Artist, TicketCategoryForm, Organizer } from "./types";
 
 export default function CreateEvent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,15 +33,26 @@ export default function CreateEvent() {
   ]);
   const queryClient = useQueryClient();
 
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string })?.role;
+  const isAdmin = role === "ADMIN";
+
+  const [organizerId, setOrganizerId] = useState("");
+
   // Fetch venues and artists from the backend
   const { data: venues = [] } = useQuery(trpc.venue.venue.list.queryOptions());
   const { data: artists = [] } = useQuery(trpc.event.artist.list.queryOptions());
+  const { data: organizers = [] } = useQuery({
+    ...trpc.user.organizer.list.queryOptions(),
+    enabled: isAdmin,
+  });
 
   const createEventMutation = useMutation({
     mutationFn: (data: {
       eventDatetime: string;
       eventTitle: string;
       venueId: string;
+      organizerId?: string;
       artistIds: string[];
       categories: TicketCategoryForm[];
     }) =>
@@ -48,6 +60,7 @@ export default function CreateEvent() {
         eventDatetime: data.eventDatetime,
         eventTitle: data.eventTitle,
         venueId: data.venueId,
+        ...(data.organizerId ? { organizerId: data.organizerId } : {}),
       }),
     onSuccess: async (newEvent, variables) => {
       for (const artistId of variables.artistIds) {
@@ -82,12 +95,13 @@ export default function CreateEvent() {
     setDate("");
     setTime("");
     setVenueId("");
+    setOrganizerId("");
     setSelectedArtistIds([]);
     setTicketCategories([{ name: "", price: "", quantity: "" }]);
   }
 
   function handleSubmit() {
-    if (!title || !date || !time || !venueId) {
+    if (!title || !date || !time || !venueId || (isAdmin && !organizerId)) {
       toast.error("Semua field wajib harus diisi");
       return;
     }
@@ -123,6 +137,7 @@ export default function CreateEvent() {
       eventDatetime,
       eventTitle: title,
       venueId,
+      organizerId: isAdmin ? organizerId : undefined,
       artistIds: selectedArtistIds,
       categories: normalizedCategories,
     });
@@ -208,7 +223,7 @@ export default function CreateEvent() {
                   >
                     Venue (VENUE_ID)
                   </Label>
-                  <div className="relative">
+                  <div className="relative mt-1">
                     <select
                       id="select-venue"
                       value={venueId}
@@ -225,6 +240,33 @@ export default function CreateEvent() {
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+
+                {isAdmin && (
+                  <div>
+                    <Label
+                      htmlFor="select-organizer"
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
+                      Organizer (ORGANIZER_ID)
+                    </Label>
+                    <div className="relative mt-1">
+                      <select
+                        id="select-organizer"
+                        value={organizerId}
+                        onChange={(e) => setOrganizerId(e.target.value)}
+                        className="w-full appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+                      >
+                        <option value="">Pilih Organizer...</option>
+                        {organizers.map((o: Organizer) => (
+                          <option key={o.organizer_id} value={o.organizer_id}>
+                            {o.organizer_name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-4">
                   {/* Artists */}
                   <div>

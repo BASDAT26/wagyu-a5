@@ -17,8 +17,9 @@ import { ChevronDown, Pencil, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trpcClient, trpc } from "@/utils/trpc";
 import { toast } from "sonner";
+import { authClient } from "@/lib/auth-client";
 import TicketCategoryEditor from "./ticket-category-editor";
-import type { Event, VenueOption, Artist, EventArtist, TicketCategoryForm } from "./types";
+import type { Event, VenueOption, Artist, EventArtist, TicketCategoryForm, Organizer } from "./types";
 
 interface UpdateEventProps {
   event: Event;
@@ -44,6 +45,12 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
   ]);
   const queryClient = useQueryClient();
 
+  const { data: session } = authClient.useSession();
+  const role = (session?.user as { role?: string })?.role;
+  const isAdmin = role === "ADMIN";
+
+  const [organizerId, setOrganizerId] = useState(event.organizer_id || "");
+
   const pad2 = (value: number) => String(value).padStart(2, "0");
   const toLocalDateInput = (dt: Date) =>
     `${dt.getFullYear()}-${pad2(dt.getMonth() + 1)}-${pad2(dt.getDate())}`;
@@ -61,11 +68,16 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
     setDate(toLocalDateInput(dt));
     setTime(toLocalTimeInput(dt));
     setVenueId(event.venue_id);
+    setOrganizerId(event.organizer_id || "");
   }, [event]);
 
   // Fetch venues, artists, and current event-artists from backend
   const { data: venues = [] } = useQuery(trpc.venue.venue.list.queryOptions());
   const { data: artists = [] } = useQuery(trpc.event.artist.list.queryOptions());
+  const { data: organizers = [] } = useQuery({
+    ...trpc.user.organizer.list.queryOptions(),
+    enabled: isAdmin,
+  });
   const eventArtistsQuery = useQuery({
     ...trpc.event.eventArtist.listByEvent.queryOptions({ eventId: event.event_id }),
     enabled: isValidEventId,
@@ -108,6 +120,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
       eventDatetime?: string;
       eventTitle?: string;
       venueId?: string;
+      organizerId?: string;
       categories: TicketCategoryFormWithId[];
     }) => {
       await trpcClient.event.event.update.mutate({
@@ -115,6 +128,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
         eventDatetime: data.eventDatetime,
         eventTitle: data.eventTitle,
         venueId: data.venueId,
+        ...(data.organizerId ? { organizerId: data.organizerId } : {}),
       });
 
       // Sync event artists: remove deselected, add newly selected
@@ -223,7 +237,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
   });
 
   function handleSubmit() {
-    if (!title || !date || !time || !venueId) {
+    if (!title || !date || !time || !venueId || (isAdmin && !organizerId)) {
       toast.error("Semua field wajib harus diisi");
       return;
     }
@@ -270,6 +284,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
       eventDatetime,
       eventTitle: title,
       venueId,
+      organizerId: isAdmin ? organizerId : undefined,
       categories: normalizedCategories,
     });
   }
@@ -354,7 +369,7 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
                   >
                     Venue (VENUE_ID)
                   </Label>
-                  <div className="relative">
+                  <div className="relative mt-1">
                     <select
                       id="edit-venue"
                       value={venueId}
@@ -371,6 +386,33 @@ export default function UpdateEvent({ event }: UpdateEventProps) {
                     <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+
+                {isAdmin && (
+                  <div>
+                    <Label
+                      htmlFor="edit-organizer"
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
+                      Organizer (ORGANIZER_ID)
+                    </Label>
+                    <div className="relative mt-1">
+                      <select
+                        id="edit-organizer"
+                        value={organizerId}
+                        onChange={(e) => setOrganizerId(e.target.value)}
+                        className="w-full appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+                      >
+                        <option value="">Pilih Organizer...</option>
+                        {organizers.map((o: Organizer) => (
+                          <option key={o.organizer_id} value={o.organizer_id}>
+                            {o.organizer_name}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                )}
 
                 {/* Artists */}
                 <div>
