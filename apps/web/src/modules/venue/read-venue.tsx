@@ -1,6 +1,16 @@
 import { Input } from "@wagyu-a5/ui/components/input";
 import { Card, CardContent } from "@wagyu-a5/ui/components/card";
-import { Search, MapPin, Armchair, Building2, ChevronDown, Loader2, LucideCheck, LucideXCircle, LucideCheckCircle } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  Armchair,
+  Building2,
+  ChevronDown,
+  Loader2,
+  LucideCheck,
+  LucideXCircle,
+  LucideCheckCircle,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { trpc } from "@/utils/trpc";
 import { authClient } from "@/lib/auth-client";
@@ -18,6 +28,7 @@ export default function ReadVenue() {
 
   const [search, setSearch] = useState("");
   const [cityFilter, setCityFilter] = useState("all");
+  const [seatingFilter, setSeatingFilter] = useState("all");
 
   const cities = useMemo(() => {
     const set = new Set(venues.map((v: Venue) => v.city));
@@ -30,9 +41,11 @@ export default function ReadVenue() {
       const matchesSearch =
         !q || v.venue_name.toLowerCase().includes(q) || v.address.toLowerCase().includes(q);
       const matchesCity = cityFilter === "all" || v.city === cityFilter;
-      return matchesSearch && matchesCity;
+      const matchesSeating =
+        seatingFilter === "all" || v.reserved_seating.toString() === seatingFilter;
+      return matchesSearch && matchesCity && matchesSeating;
     });
-  }, [venues, search, cityFilter]);
+  }, [venues, search, cityFilter, seatingFilter]);
 
   const totalVenue = venues.length;
   const totalCapacity = venues.reduce((sum: number, v: Venue) => sum + v.capacity, 0);
@@ -104,6 +117,19 @@ export default function ReadVenue() {
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
         </div>
+        <div className="relative">
+          <select
+            id="filter-seating"
+            value={seatingFilter}
+            onChange={(e) => setSeatingFilter(e.target.value)}
+            className="appearance-none h-10 rounded-md border border-input bg-background px-3 pr-8 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer"
+          >
+            <option value="all">Semua Tipe</option>
+            <option value="true">Reserved Seating</option>
+            <option value="false">Free Seating</option>
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+        </div>
       </div>
 
       {isLoading ? (
@@ -138,12 +164,17 @@ export default function ReadVenue() {
                   </div>
 
                   <span
-                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${venue.reserved_seating
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
-                      : "bg-neutral-200 text-neutral-500 dark:bg-neutral-900/30 dark:text-neutral-400"
-                      }`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wider ${
+                      venue.reserved_seating
+                        ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                        : "bg-neutral-200 text-neutral-500 dark:bg-neutral-900/30 dark:text-neutral-400"
+                    }`}
                   >
-                    {venue.reserved_seating ? <LucideCheckCircle className="w-3.5 h-3.5" /> : <LucideXCircle className="w-3.5 h-3.5" />}
+                    {venue.reserved_seating ? (
+                      <LucideCheckCircle className="w-3.5 h-3.5" />
+                    ) : (
+                      <LucideXCircle className="w-3.5 h-3.5" />
+                    )}
                     {venue.reserved_seating ? "RESERVED SEATING" : "FREE SEATING"}
                   </span>
                 </div>
