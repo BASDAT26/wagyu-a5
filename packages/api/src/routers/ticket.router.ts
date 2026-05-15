@@ -110,6 +110,52 @@ const ticketCategoryRouter = router({
         params.push(input.categoryName);
       }
       if (input.quota !== undefined) {
+        // 1. Dapatkan tevent_id dan kuota lama dari kategori tiket yang akan diupdate
+        const tcQuery = await query(
+          `SELECT tevent_id, quota FROM tiktaktuk.ticket_category WHERE category_id = $1`,
+          [input.categoryId]
+        );
+        
+        if (tcQuery.rowCount === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Kategori tiket tidak ditemukan" });
+        }
+        
+        const eventId = tcQuery.rows[0].tevent_id;
+        const kuotaLama = parseInt(tcQuery.rows[0].quota, 10);
+
+        // 2. Dapatkan kapasitas venue untuk event ini
+        const capacityQuery = await query(
+          `SELECT v.capacity FROM tiktaktuk.event e 
+           JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id 
+           WHERE e.event_id = $1`,
+          [eventId]
+        );
+        
+        if (capacityQuery.rowCount === 0) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Event tidak ditemukan" });
+        }
+        
+        const kapasitas = capacityQuery.rows[0].capacity;
+
+        // 3. Dapatkan total kuota tiket yang sudah ada untuk event ini
+        const quotaQuery = await query(
+          `SELECT COALESCE(SUM(quota), 0) as total_quota 
+           FROM tiktaktuk.ticket_category 
+           WHERE tevent_id = $1`,
+          [eventId]
+        );
+        
+        const totalQuotaSekarang = parseInt(quotaQuery.rows[0].total_quota, 10);
+        
+        // 4. Validasi apakah total kuota - kuota lama + kuota baru melebihi kapasitas
+        const totalQuotaBaru = totalQuotaSekarang - kuotaLama + input.quota;
+        if (totalQuotaBaru > kapasitas) {
+          throw new TRPCError({ 
+            code: "BAD_REQUEST", 
+            message: `Gagal: Total kuota tiket (${totalQuotaBaru}) melebihi kapasitas venue (${kapasitas}). Sisa kapasitas yang bisa ditambahkan: ${kapasitas - totalQuotaSekarang + kuotaLama}`
+          });
+        }
+
         sets.push(`quota = $${idx++}`);
         params.push(input.quota);
       }
