@@ -2,6 +2,7 @@ import { z } from "zod";
 import { query } from "@wagyu-a5/db";
 import { publicProcedure, protectedProcedure, router } from "../index";
 import { randomUUID } from "crypto";
+import { TRPCError } from "@trpc/server";
 
 // ─── TicketCategory ──────────────────────────────────────────────────────────
 
@@ -49,6 +50,38 @@ const ticketCategoryRouter = router({
       }),
     )
     .mutation(async ({ input }) => {
+      // 1. Dapatkan kapasitas venue untuk event ini
+      const capacityQuery = await query(
+        `SELECT v.kapasitas FROM tiktaktuk.event e 
+         JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id 
+         WHERE e.event_id = $1`,
+        [input.eventId]
+      );
+      
+      if (capacityQuery.rowCount === 0) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Event tidak ditemukan" });
+      }
+      
+      const kapasitas = capacityQuery.rows[0].kapasitas;
+
+      // 2. Dapatkan total kuota tiket yang sudah ada untuk event ini
+      const quotaQuery = await query(
+        `SELECT COALESCE(SUM(quota), 0) as total_quota 
+         FROM tiktaktuk.ticket_category 
+         WHERE tevent_id = $1`,
+        [input.eventId]
+      );
+      
+      const totalQuotaSekarang = parseInt(quotaQuery.rows[0].total_quota, 10);
+
+      // 3. Validasi apakah total kuota + kuota baru melebihi kapasitas
+      if (totalQuotaSekarang + input.quota > kapasitas) {
+        throw new TRPCError({ 
+          code: "BAD_REQUEST", 
+          message: `Gagal: Total kuota tiket (${totalQuotaSekarang + input.quota}) melebihi kapasitas venue (${kapasitas}). Sisa kapasitas yang bisa ditambahkan: ${kapasitas - totalQuotaSekarang}`
+        });
+      }
+
       const id = randomUUID();
       const result = await query(
         `INSERT INTO tiktaktuk.ticket_category (category_id, category_name, quota, price, tevent_id)
