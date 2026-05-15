@@ -362,10 +362,8 @@ export default function CheckoutPage() {
         <div className="lg:col-span-7 space-y-8">
           {/* Event Summary */}
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-6 items-center sm:items-start">
-            <div
-              className="w-full sm:w-32 h-32 object-cover bg-blue-600 rounded-2xl shadow-sm grid place-content-center"
-            >
-              <LucideMusic/>
+            <div className="w-full sm:w-32 h-32 object-cover bg-blue-600 rounded-2xl shadow-sm grid place-content-center">
+              <LucideMusic />
             </div>
             <div className="space-y-3 flex-1 text-center sm:text-left">
               <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
