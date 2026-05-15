@@ -66,7 +66,11 @@ app.post("/auth/login", async (c) => {
 });
 
 app.post("/auth/logout", async (c) => {
-  deleteCookie(c, SESSION_COOKIE_NAME, getSessionCookieClearOptions());
+  setCookie(c, SESSION_COOKIE_NAME, "", {
+    ...getSessionCookieOptions(),
+    maxAge: 0,
+    expires: new Date(0),
+  });
   return c.json({ ok: true });
 });
 
