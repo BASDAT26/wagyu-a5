@@ -184,6 +184,9 @@ importers:
       dotenv:
         specifier: 'catalog:'
         version: 17.4.2
+      framer-motion:
+        specifier: ^12.38.0
+        version: 12.38.0(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       isbot:
         specifier: ^5.1.39
         version: 5.1.39
