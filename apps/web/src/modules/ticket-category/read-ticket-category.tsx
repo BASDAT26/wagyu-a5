@@ -19,7 +19,7 @@ function formatRupiah(value: number): string {
 // ── Component ─────────────────────────────────────────────────────
 export default function ReadTicketCategory() {
   const { data: session } = authClient.useSession();
-  const role = (session?.user as { role?: string })?.role;
+  const role = (session?.user as { role?: string })?.role ?? "CUSTOMER";
   const isAdmin = role === "ADMIN" || role === "ORGANIZER";
 
   const [search, setSearch] = useState("");
