@@ -84,7 +84,9 @@ export default function UpdateArtist({
         </ModalHeader>
         <ModalBody>
           <div className="space-y-2">
-            <Label htmlFor={`update-artist-name-${artistId}`}>Nama Artis <span className="text-destructive">*</span></Label>
+            <Label htmlFor={`update-artist-name-${artistId}`}>
+              Nama Artis <span className="text-destructive">*</span>
+            </Label>
             <Input
               id={`update-artist-name-${artistId}`}
               placeholder="Masukkan nama artis..."

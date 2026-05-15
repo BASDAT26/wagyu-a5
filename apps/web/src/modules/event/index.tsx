@@ -233,12 +233,21 @@ function EventCard({
             <div>
               <span className="text-sm text-slate-500 dark:text-slate-400">Mulai dari </span>
               <span className="text-blue-500 font-semibold text-sm">
-                {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(Number(categories[0].price))}
+                {new Intl.NumberFormat("id-ID", {
+                  style: "currency",
+                  currency: "IDR",
+                  minimumFractionDigits: 0,
+                }).format(Number(categories[0].price))}
               </span>
             </div>
             <div className="flex flex-wrap gap-1">
               {categories.map((c: any) => (
-                <Chip key={c.category_id} variant="outline" size="sm" className="bg-blue-200 text-blue-500 border-blue-400 font-semibold  hover:bg-blue-300 rounded-md">
+                <Chip
+                  key={c.category_id}
+                  variant="outline"
+                  size="sm"
+                  className="bg-blue-200 text-blue-500 border-blue-400 font-semibold  hover:bg-blue-300 rounded-md"
+                >
                   {c.category_name}
                 </Chip>
               ))}

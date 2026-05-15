@@ -43,11 +43,8 @@ export default function CreateTicket() {
   const availableSeats = (seats as any[]).filter((s: any) => !s.is_assigned);
 
   const createMutation = useMutation({
-    mutationFn: (data: {
-      categoryId: string;
-      orderId: string;
-      seatId?: string;
-    }) => trpcClient.ticket.ticket.create.mutate(data),
+    mutationFn: (data: { categoryId: string; orderId: string; seatId?: string }) =>
+      trpcClient.ticket.ticket.create.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.ticket.ticket.listForCurrentUser.queryOptions());
       if (venueId) {

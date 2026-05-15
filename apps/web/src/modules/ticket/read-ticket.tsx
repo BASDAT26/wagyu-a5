@@ -81,11 +81,11 @@ export default function ReadTicket() {
 
   const visibleTickets = useMemo(() => {
     let filtered = tickets as TicketEnriched[];
-    
+
     if (statusFilter !== "ALL") {
       filtered = filtered.filter((t) => t.status === statusFilter);
     }
-    
+
     if (search) {
       const q = search.toLowerCase();
       filtered = filtered.filter(

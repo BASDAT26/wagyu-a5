@@ -25,7 +25,8 @@ export default function CreateArtist() {
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
-    mutationFn: (data: { name: string; genre?: string }) => trpcClient.event.artist.create.mutate(data),
+    mutationFn: (data: { name: string; genre?: string }) =>
+      trpcClient.event.artist.create.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.event.artist.list.queryOptions());
       toast.success("Artis berhasil ditambahkan");
@@ -61,7 +62,9 @@ export default function CreateArtist() {
         </ModalHeader>
         <ModalBody>
           <div className="space-y-2">
-            <Label htmlFor="create-artist-name">Nama Artis <span className="text-destructive">*</span></Label>
+            <Label htmlFor="create-artist-name">
+              Nama Artis <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="create-artist-name"
               placeholder="Masukkan nama artis..."

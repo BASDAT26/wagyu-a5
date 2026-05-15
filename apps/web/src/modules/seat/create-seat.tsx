@@ -39,8 +39,7 @@ export default function CreateSeat({ venueId }: CreateSeatProps) {
 
   useEffect(() => {
     if (selectedVenueId) return;
-    const initial =
-      reservedVenues.find((v) => v.venue_id === venueId) ?? reservedVenues[0];
+    const initial = reservedVenues.find((v) => v.venue_id === venueId) ?? reservedVenues[0];
     if (initial) {
       setSelectedVenueId(initial.venue_id);
     }

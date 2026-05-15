@@ -37,7 +37,7 @@ export default function UpdateTicket({ ticket }: UpdateTicketProps) {
   const { data: currentSeatRelations } = useQuery({
     ...trpc.ticket.hasRelationship.listByTicket.queryOptions({ ticketId: ticket.ticket_id }),
   });
-  
+
   const currentSeatId = currentSeatRelations?.[0]?.seat_id;
   const [seatId, setSeatId] = useState<string>("");
 
@@ -48,16 +48,21 @@ export default function UpdateTicket({ ticket }: UpdateTicketProps) {
   }, [currentSeatId, seatId]);
 
   const availableAndCurrentSeats = (seats as any[]).filter(
-    (s: any) => !s.is_assigned || s.seat_id === currentSeatId
+    (s: any) => !s.is_assigned || s.seat_id === currentSeatId,
   );
 
   const updateMutation = useMutation({
-    mutationFn: (data: { ticketId: string; status: "VALID" | "TERPAKAI" | "BATAL"; seatId?: string | null }) =>
-      trpcClient.ticket.ticket.updateStatus.mutate(data),
+    mutationFn: (data: {
+      ticketId: string;
+      status: "VALID" | "TERPAKAI" | "BATAL";
+      seatId?: string | null;
+    }) => trpcClient.ticket.ticket.updateStatus.mutate(data),
     onSuccess: () => {
       queryClient.invalidateQueries(trpc.ticket.ticket.listForCurrentUser.queryOptions());
       if (venueId) {
-        queryClient.invalidateQueries(trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }));
+        queryClient.invalidateQueries(
+          trpc.venue.seat.listByVenueWithStatus.queryOptions({ venueId }),
+        );
       }
       toast.success("Status tiket berhasil diperbarui");
       setOpen(false);

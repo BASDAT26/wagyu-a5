@@ -131,9 +131,7 @@ export default function CreateVenue() {
                   checked={reservedSeating}
                   onCheckedChange={(value) => setReservedSeating(value === true)}
                 />
-                <Label htmlFor="input-reserved-seating">
-                  Has Reserved Seating
-                </Label>
+                <Label htmlFor="input-reserved-seating">Has Reserved Seating</Label>
               </div>
             </div>
           </ModalBody>

@@ -69,7 +69,6 @@ export default function Navbar({ role: propRole }: NavbarProps) {
           to="/"
           className="flex items-center gap-2 text-base font-bold tracking-tight text-foreground hover:opacity-80 transition-opacity"
         >
-          
           <span className="hidden sm:inline">wagyu-a5</span>
         </NavLink>
 

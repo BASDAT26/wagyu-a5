@@ -55,13 +55,13 @@ const ticketCategoryRouter = router({
         `SELECT v.capacity FROM tiktaktuk.event e 
          JOIN tiktaktuk.venue v ON e.venue_id = v.venue_id 
          WHERE e.event_id = $1`,
-        [input.eventId]
+        [input.eventId],
       );
-      
+
       if (capacityQuery.rowCount === 0) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Event tidak ditemukan" });
       }
-      
+
       const kapasitas = capacityQuery.rows[0].capacity;
 
       // 2. Dapatkan total kuota tiket yang sudah ada untuk event ini
@@ -69,16 +69,16 @@ const ticketCategoryRouter = router({
         `SELECT COALESCE(SUM(quota), 0) as total_quota 
          FROM tiktaktuk.ticket_category 
          WHERE tevent_id = $1`,
-        [input.eventId]
+        [input.eventId],
       );
-      
+
       const totalQuotaSekarang = parseInt(quotaQuery.rows[0].total_quota, 10);
 
       // 3. Validasi apakah total kuota + kuota baru melebihi kapasitas
       if (totalQuotaSekarang + input.quota > kapasitas) {
-        throw new TRPCError({ 
-          code: "BAD_REQUEST", 
-          message: `Gagal: Total kuota tiket (${totalQuotaSekarang + input.quota}) melebihi kapasitas venue (${kapasitas}). Sisa kapasitas yang bisa ditambahkan: ${kapasitas - totalQuotaSekarang}`
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: `Gagal: Total kuota tiket (${totalQuotaSekarang + input.quota}) melebihi kapasitas venue (${kapasitas}). Sisa kapasitas yang bisa ditambahkan: ${kapasitas - totalQuotaSekarang}`,
         });
       }
 
@@ -141,10 +141,9 @@ const ticketCategoryRouter = router({
   getQuotaByEvent: publicProcedure
     .input(z.object({ eventId: z.string().uuid() }))
     .query(async ({ input }) => {
-      const result = await query(
-        `SELECT * FROM tiktaktuk.sp_get_ticket_category_quota($1)`,
-        [input.eventId],
-      );
+      const result = await query(`SELECT * FROM tiktaktuk.sp_get_ticket_category_quota($1)`, [
+        input.eventId,
+      ]);
       return result.rows;
     }),
 });
@@ -378,21 +377,23 @@ const ticketRouter_ = router({
          RETURNING ticket_id, ticket_code, tcategory_id, torder_id, status`,
         [input.status, input.ticketId],
       );
-      
+
       const ticket = result.rows[0];
       if (!ticket) return null;
 
       // Handle seat updates
       if (input.seatId !== undefined) {
         // First delete existing seat relationship
-        await query(`DELETE FROM tiktaktuk.has_relationship WHERE ticket_id = $1`, [input.ticketId]);
-        
+        await query(`DELETE FROM tiktaktuk.has_relationship WHERE ticket_id = $1`, [
+          input.ticketId,
+        ]);
+
         // Add new if provided
         if (input.seatId !== null) {
-           await query(`INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`, [
-             input.seatId,
-             input.ticketId,
-           ]);
+          await query(
+            `INSERT INTO tiktaktuk.has_relationship (seat_id, ticket_id) VALUES ($1, $2)`,
+            [input.seatId, input.ticketId],
+          );
         }
       }
 
